@@ -1,36 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const multer = require('multer');
-const path = require('path');
 const characterController = require('../controllers/characterController');
 const { isAuthenticated } = require('../middleware/auth');
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/characters');
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png|gif/;
-    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = fileTypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'));
-    }
-  }
-});
 
 // List all characters
 router.get('/', characterController.getAllCharacters);
@@ -49,7 +21,6 @@ router.get('/create', isAuthenticated, (req, res) => {
 router.post(
   '/create',
   isAuthenticated,
-  upload.single('avatar'),
   [
     body('name')
       .trim()
@@ -69,7 +40,12 @@ router.post(
       .optional()
       .trim()
       .isLength({ max: 30 })
-      .withMessage('Gender cannot exceed 30 characters')
+      .withMessage('Gender cannot exceed 30 characters'),
+    body('avatarUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Avatar image must be a valid URL')
   ],
   characterController.createCharacter
 );
@@ -84,7 +60,6 @@ router.get('/edit/:id', isAuthenticated, characterController.getEditCharacter);
 router.put(
   '/edit/:id',
   isAuthenticated,
-  upload.single('avatar'),
   [
     body('name')
       .trim()
@@ -94,7 +69,12 @@ router.put(
       .optional()
       .trim()
       .isLength({ max: 255 })
-      .withMessage('Short bio cannot exceed 255 characters')
+      .withMessage('Short bio cannot exceed 255 characters'),
+    body('avatarUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Avatar image must be a valid URL')
   ],
   characterController.updateCharacter
 );

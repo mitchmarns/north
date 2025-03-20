@@ -1,7 +1,5 @@
 const { Character, User, Relationship, sequelize } = require('../models');
 const { validationResult } = require('express-validator');
-const fs = require('fs');
-const path = require('path');
 
 // Get all characters (public)
 exports.getAllCharacters = async (req, res) => {
@@ -161,14 +159,8 @@ exports.createCharacter = async (req, res) => {
     const {
       name, nickname, age, gender, shortBio, fullBio,
       appearance, personality, background, skills,
-      likes, dislikes, fears, goals, faceclaim, isPrivate
+      likes, dislikes, fears, goals, faceclaim, avatarUrl, isPrivate
     } = req.body;
-
-    // Handle avatar upload
-    let avatarUrl = null;
-    if (req.file) {
-      avatarUrl = `/uploads/characters/${req.file.filename}`;
-    }
 
     // Create character
     const character = await Character.create({
@@ -177,7 +169,7 @@ exports.createCharacter = async (req, res) => {
       nickname: nickname || null,
       age: age || null,
       gender: gender || null,
-      avatarUrl,
+      avatarUrl: avatarUrl || null,
       faceclaim: faceclaim || null,
       shortBio: shortBio || null,
       fullBio: fullBio || null,
@@ -234,21 +226,8 @@ exports.updateCharacter = async (req, res) => {
     const {
       name, nickname, age, gender, shortBio, fullBio,
       appearance, personality, background, skills,
-      likes, dislikes, fears, goals, faceclaim, isPrivate, isArchived
+      likes, dislikes, fears, goals, faceclaim, avatarUrl, isPrivate, isArchived
     } = req.body;
-
-    // Handle avatar upload
-    let avatarUrl = character.avatarUrl;
-    if (req.file) {
-      // Delete old avatar if exists
-      if (character.avatarUrl) {
-        const oldAvatarPath = path.join(__dirname, '../public', character.avatarUrl);
-        if (fs.existsSync(oldAvatarPath)) {
-          fs.unlinkSync(oldAvatarPath);
-        }
-      }
-      avatarUrl = `/uploads/characters/${req.file.filename}`;
-    }
 
     // Update character
     await character.update({
@@ -256,7 +235,7 @@ exports.updateCharacter = async (req, res) => {
       nickname: nickname || null,
       age: age || null,
       gender: gender || null,
-      avatarUrl,
+      avatarUrl: avatarUrl || character.avatarUrl,
       faceclaim: faceclaim || null,
       shortBio: shortBio || null,
       fullBio: fullBio || null,
@@ -300,14 +279,6 @@ exports.deleteCharacter = async (req, res) => {
     
     // Check if character has posts
     // This would require additional validation in a real app
-    
-    // Delete character's avatar if exists
-    if (character.avatarUrl) {
-      const avatarPath = path.join(__dirname, '../public', character.avatarUrl);
-      if (fs.existsSync(avatarPath)) {
-        fs.unlinkSync(avatarPath);
-      }
-    }
     
     // Delete character
     await character.destroy();

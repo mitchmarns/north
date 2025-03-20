@@ -7,7 +7,7 @@
 
 <div class="card">
   <div class="card-body">
-    <form action="/characters/create" method="POST" enctype="multipart/form-data">
+    <form action="/characters/create" method="POST">
       <div class="row">
         <!-- Basic Information -->
         <div class="col" style="flex: 0 0 70%;">
@@ -79,26 +79,27 @@
           </div>
         </div>
         
-        <!-- Avatar Upload -->
+        <!-- Avatar URL and preview -->
         <div class="col" style="flex: 0 0 30%;">
           <h3>Character Image</h3>
           
           <div class="form-group">
             <div class="mb-2" id="avatar-preview-container">
-              <div style="width: 100%; height: 250px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 100%; height: 250px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="avatar-preview">
                 <i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>
               </div>
             </div>
             
-            <label for="avatar">Upload Avatar</label>
+            <label for="avatarUrl">Avatar Image URL</label>
             <input 
-              type="file" 
-              id="avatar" 
-              name="avatar" 
+              type="url" 
+              id="avatarUrl" 
+              name="avatarUrl" 
               class="form-control" 
-              accept="image/*"
+              placeholder="https://example.com/image.jpg"
+              value="<%= typeof character !== 'undefined' ? character.avatarUrl : '' %>"
             />
-            <small style="color: rgba(255, 255, 255, 0.5);">Max file size: 2MB. Recommended size: 400x600px</small>
+            <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
           </div>
           
           <div class="form-group">
@@ -261,24 +262,41 @@
 
 <script>
   // Handle image preview
-  document.getElementById('avatar').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const previewContainer = document.getElementById('avatar-preview-container');
-        previewContainer.innerHTML = `
-          <img src="${e.target.result}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);">
-        `;
-      }
-      reader.readAsDataURL(file);
+  document.getElementById('avatarUrl').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const previewContainer = document.getElementById('avatar-preview');
+    
+    if (url) {
+      previewContainer.innerHTML = `
+        <img src="${url}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+      `;
+    } else {
+      previewContainer.innerHTML = `<i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>`;
     }
   });
+  
+  function imageLoadError(img) {
+    img.onerror = null;
+    img.parentNode.innerHTML = `
+      <div style="width: 100%; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <span>Invalid image URL</span>
+      </div>
+    `;
+  }
   
   // Tabs functionality
   document.addEventListener('DOMContentLoaded', function() {
     const tabLinks = document.querySelectorAll('.character-tab-link');
     const tabContents = document.querySelectorAll('.character-tab-pane');
+    
+    // Show avatar preview if URL exists on page load
+    const avatarUrl = document.getElementById('avatarUrl').value;
+    if (avatarUrl) {
+      document.getElementById('avatar-preview').innerHTML = `
+        <img src="${avatarUrl}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+      `;
+    }
     
     tabLinks.forEach(link => {
       link.addEventListener('click', function(e) {
@@ -329,4 +347,3 @@
     display: block;
   }
 </style>
-=
