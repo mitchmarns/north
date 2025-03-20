@@ -8,6 +8,9 @@ module.exports = {
     database: process.env.DB_NAME || 'roleplay_site',
     host: process.env.DB_HOST || 'localhost',
     dialect: 'mysql',
+	dialectOptions: {
+    socketPath: process.env.DB_SOCKET || '/var/run/mysqld/mysqld.sock'
+  },
     logging: false,
     pool: {
       max: 5,
