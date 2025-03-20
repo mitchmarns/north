@@ -1,0 +1,121 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Dashboard</h1>
+  <div>
+    <a href="/characters/create" class="btn btn-sm">
+      <i class="fas fa-plus"></i> New Character
+    </a>
+    <a href="/writing/create" class="btn btn-sm ml-2">
+      <i class="fas fa-plus"></i> New Thread
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Character Summary -->
+  <div class="col">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-between align-center">
+        <h3 class="mb-0">Your Characters</h3>
+        <a href="/characters/my-characters" class="btn btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+          <div class="character-list">
+            <% characters.slice(0, 3).forEach(character => { %>
+              <div class="d-flex align-center mb-2">
+                <% if (character.avatarUrl) { %>
+                  <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" 
+                       style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; margin-right: 10px;">
+                <% } else { %>
+                  <div style="width: 40px; height: 40px; background-color: #555; border-radius: 50%; margin-right: 10px; 
+                              display: flex; align-items: center; justify-content: center; color: #eee;">
+                    <%= character.name.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+                <div>
+                  <a href="/characters/<%= character.id %>"><%= character.name %></a>
+                  <% if (character.shortBio) { %>
+                    <div style="font-size: var(--text-xs); color: rgba(255, 255, 255, 0.7);">
+                      <%= character.shortBio.length > 60 ? character.shortBio.substring(0, 60) + '...' : character.shortBio %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p>You haven't created any characters yet.</p>
+          <a href="/characters/create" class="btn">Create Your First Character</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Active Threads -->
+  <div class="col">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-between align-center">
+        <h3 class="mb-0">Active Threads</h3>
+        <a href="/writing/my-threads" class="btn btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        <% if (typeof threads !== 'undefined' && threads.length > 0) { %>
+          <ul class="thread-list">
+            <% threads.forEach(thread => { %>
+              <li class="thread-item">
+                <a href="/writing/thread/<%= thread.id %>" class="thread-link">
+                  <div class="thread-content">
+                    <div class="thread-title"><%= thread.title %></div>
+                    <div class="thread-meta">
+                      <span><%= thread.posts.length %> posts</span>
+                      <span>Updated <%= new Date(thread.updatedAt).toLocaleDateString() %></span>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        <% } else { %>
+          <p>You don't have any active threads.</p>
+          <a href="/writing/create" class="btn">Start a New Thread</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Feed -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">Recent Activity</h3>
+  </div>
+  <div class="card-body">
+    <% if (typeof activities !== 'undefined' && activities.length > 0) { %>
+      <ul style="list-style: none; padding: 0;">
+        <% activities.forEach(activity => { %>
+          <li style="padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="d-flex align-center">
+              <div style="width: 30px; text-align: center; margin-right: 10px;">
+                <% if (activity.type === 'post') { %>
+                  <i class="fas fa-pen" style="color: var(--info);"></i>
+                <% } else if (activity.type === 'character') { %>
+                  <i class="fas fa-user" style="color: var(--info);"></i>
+                <% } else if (activity.type === 'thread') { %>
+                  <i class="fas fa-book" style="color: var(--info);"></i>
+                <% } %>
+              </div>
+              <div>
+                <%= activity.message %>
+                <div style="font-size: var(--text-xs); color: rgba(255, 255, 255, 0.5);">
+                  <%= new Date(activity.date).toLocaleDateString() %> at <%= new Date(activity.date).toLocaleTimeString() %>
+                </div>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <p>No recent activity to display.</p>
+    <% } %>
+  </div>
+</div>

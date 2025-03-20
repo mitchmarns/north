@@ -1,0 +1,87 @@
+:root {
+  /* Colors */
+  --bg: #2f2f2f;
+  --card-bg: #474747;
+  --navbar-bg: #d4d5d4;
+  --overlay: rgba(47, 47, 47, 0.85);
+  --shadow: #1e1f1e;
+  --border: #2f2f2f;
+  --gradient1: rgba(72, 114, 153, 1); 
+  --gradient2: rgba(86, 130, 124, 1); 
+  --gradient3: rgba(106, 122, 137, 1); 
+  --gradient-bg: radial-gradient(
+      circle closest-side,
+      rgba(47, 47, 47, 1) 50%,
+      rgba(80, 133, 139, 0) 300%
+  );
+  --graypicture: grayscale(80%) contrast(110%);
+
+  --header: #5a8095;
+  --header-hover: #6c96ad;
+  --lighttext: #e8e9e8;
+  --darktext: #3c474b;
+
+  /* State Colors */
+  --success: #75b798;
+  --success-bg: rgba(40, 167, 69, 0.2);
+  --danger: #ff6b6b;
+  --danger-bg: rgba(220, 53, 69, 0.2);
+  --warning: #ffc107;
+  --warning-bg: rgba(255, 193, 7, 0.2);
+  --info: #5a8095;
+  --info-bg: rgba(90, 128, 149, 0.1);
+
+  /* Spacing */
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 20px;
+  --spacing-lg: 40px;
+
+  /* Typography */
+  --mainfont: 'proxima-nova', sans-serif;
+  --accentfont: 'freight-display-pro', serif;
+  --decorfont: 'industry-inc-base', sans-serif;
+
+  /* Font Weights */
+  --light: 300;
+  --regular: 400;
+  --medium: 500;
+  --semibold: 600;
+  --bold: 700;
+
+  /* Font Size */
+  --text-4xl: 2.5rem;
+  --text-3xl: 2rem;
+  --text-2xl: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-lg: 1.125rem;
+  --text-base: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+
+   /* Line Height */
+   --leading-tight: 1.25;
+   --leading-normal: 1.5;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-round: 50%;
+
+  /* Transitions */
+  --transition-fast: 0.3s ease-in-out;
+  --transition-medium: 0.5s ease-in-out;
+  --transition-slow: 1s ease-in-out;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  /* Z-indices */
+  --z-backdrop: 10;
+  --z-modal: 20;
+  --z-dropdown: 30;
+  --z-tooltip: 40;
+}

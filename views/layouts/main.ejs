@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>1x1 Roleplay Hub</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/main.css">
+  
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://use.typekit.net/abc1234.css"> <!-- Replace with your Adobe fonts kit -->
+  
+  <!-- Optional: Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <!-- Header -->
+  <%- include('../partials/header') %>
+
+  <!-- Flash Messages -->
+  <div class="container">
+    <% if(typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+      <div class="alert alert-success">
+        <%= success_msg %>
+      </div>
+    <% } %>
+
+    <% if(typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+      <div class="alert alert-danger">
+        <%= error_msg %>
+      </div>
+    <% } %>
+
+    <% if(typeof error !== 'undefined' && error.length > 0) { %>
+      <div class="alert alert-danger">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <% if(typeof errors !== 'undefined' && errors.length > 0) { %>
+      <% errors.forEach(function(error) { %>
+        <div class="alert alert-danger">
+          <%= error.msg %>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <%- body %>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

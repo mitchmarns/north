@@ -1,0 +1,62 @@
+<header class="site-header">
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">1x1 Roleplay Hub</a>
+    
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a href="/characters" class="nav-link">Characters</a>
+      </li>
+      <li class="nav-item">
+        <a href="/writing/threads" class="nav-link">Threads</a>
+      </li>
+      
+      <% if(user) { %>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown">
+            <%= user.username %> <i class="fas fa-caret-down"></i>
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="/dashboard">Dashboard</a>
+            <a class="dropdown-item" href="/characters/my-characters">My Characters</a>
+            <a class="dropdown-item" href="/writing/my-threads">My Threads</a>
+            <a class="dropdown-item" href="/auth/profile">Profile</a>
+            <hr>
+            <a class="dropdown-item" href="/auth/logout">Logout</a>
+          </div>
+        </li>
+      <% } else { %>
+        <li class="nav-item">
+          <a href="/auth/login" class="btn btn-sm">Login</a>
+        </li>
+        <li class="nav-item">
+          <a href="/auth/register" class="btn btn-sm btn-outline">Register</a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // Dropdown toggle
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropdownToggle = document.querySelector('.dropdown-toggle');
+    if (dropdownToggle) {
+      dropdownToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector('.dropdown-menu').classList.toggle('show');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.matches('.dropdown-toggle') && !e.target.closest('.dropdown-menu')) {
+          const dropdowns = document.querySelectorAll('.dropdown-menu');
+          dropdowns.forEach(dropdown => {
+            if (dropdown.classList.contains('show')) {
+              dropdown.classList.remove('show');
+            }
+          });
+        }
+      });
+    }
+  });
+</script>
