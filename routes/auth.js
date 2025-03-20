@@ -8,7 +8,8 @@ const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 // Register Page
 router.get('/register', isNotAuthenticated, (req, res) => {
   res.render('register', {
-    title: 'Create an Account'
+    title: 'Create an Account',
+    user: {} 
   });
 });
 
