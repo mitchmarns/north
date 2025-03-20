@@ -4,23 +4,25 @@ const config = require('../config/database')[env];
 
 // Initialize Sequelize with MySQL database
 let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(
-    config.database,
-    config.username,
-    config.password,
-    config
-  );
-}
+sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  {
+    ...config,
+    dialect: 'mysql',
+    dialectOptions: {
+      socketPath: '/var/run/mysqld/mysqld.sock'
+    }
+  }
+);
 
 // Import models
-const User = require('./User')(sequelize, Sequelize.DataTypes);
-const Character = require('./Character')(sequelize, Sequelize.DataTypes);
-const Relationship = require('./Relationship')(sequelize, Sequelize.DataTypes);
-const Thread = require('./Thread')(sequelize, Sequelize.DataTypes);
-const Post = require('./Post')(sequelize, Sequelize.DataTypes);
+const User = require('./user')(sequelize, Sequelize.DataTypes);
+const Character = require('./character')(sequelize, Sequelize.DataTypes);
+const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
+const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
+const Post = require('./post')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });

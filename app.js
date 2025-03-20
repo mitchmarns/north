@@ -68,6 +68,11 @@ app.use((req, res) => {
 // Database Connection & Server Start
 async function startServer() {
   try {
+    // Force correct configuration for database connection
+    sequelize.options.dialectOptions = {
+      socketPath: '/var/run/mysqld/mysqld.sock'
+    };
+    
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
