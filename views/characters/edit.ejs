@@ -1,0 +1,351 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Character: <%= character.name %></h1>
+  <div>
+    <a href="/characters/<%= character.id %>" class="btn btn-outline mr-2">
+      <i class="fas fa-eye"></i> View Character
+    </a>
+    <a href="/characters/my-characters" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to My Characters
+    </a>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <form action="/characters/edit/<%= character.id %>?_method=PUT" method="POST">
+      <div class="row">
+        <!-- Basic Information -->
+        <div class="col" style="flex: 0 0 70%;">
+          <h3>Basic Information</h3>
+Copy      <div class="form-group">
+        <label for="name">Character Name *</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          class="form-control" 
+          value="<%= character.name %>"
+          required
+        />
+      </div>
+      
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="nickname">Nickname</label>
+            <input 
+              type="text" 
+              id="nickname" 
+              name="nickname" 
+              class="form-control" 
+              value="<%= character.nickname || '' %>"
+            />
+          </div>
+        </div>
+        
+        <div class="col">
+          <div class="form-group">
+            <label for="age">Age</label>
+            <input 
+              type="text" 
+              id="age" 
+              name="age" 
+              class="form-control" 
+              value="<%= character.age || '' %>"
+            />
+          </div>
+        </div>
+        
+        <div class="col">
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <input 
+              type="text" 
+              id="gender" 
+              name="gender" 
+              class="form-control" 
+              value="<%= character.gender || '' %>"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="shortBio">Short Bio</label>
+        <textarea 
+          id="shortBio" 
+          name="shortBio" 
+          class="form-control" 
+          placeholder="A brief summary of your character (max 255 characters)"
+          maxlength="255" 
+          rows="3"
+        ><%= character.shortBio || '' %></textarea>
+      </div>
+    </div>
+    
+    <!-- Avatar URL and preview -->
+    <div class="col" style="flex: 0 0 30%;">
+      <h3>Character Image</h3>
+      
+      <div class="form-group">
+        <div class="mb-2" id="avatar-preview-container">
+          <div style="width: 100%; height: 250px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="avatar-preview">
+            <% if (character.avatarUrl) { %>
+              <img src="<%= character.avatarUrl %>" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);">
+            <% } else { %>
+              <i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>
+            <% } %>
+          </div>
+        </div>
+        
+        <label for="avatarUrl">Avatar Image URL</label>
+        <input 
+          type="url" 
+          id="avatarUrl" 
+          name="avatarUrl" 
+          class="form-control" 
+          placeholder="https://example.com/image.jpg"
+          value="<%= character.avatarUrl || '' %>"
+        />
+        <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="faceclaim">Faceclaim (Optional)</label>
+        <input 
+          type="text" 
+          id="faceclaim" 
+          name="faceclaim" 
+          class="form-control" 
+          value="<%= character.faceclaim || '' %>"
+          placeholder="Actor/Model name"
+        />
+      </div>
+      
+      <div class="form-group mt-4">
+        <div class="d-flex align-center mb-2">
+          <input type="checkbox" id="isPrivate" name="isPrivate" <%= character.isPrivate ? 'checked' : '' %>>
+          <label for="isPrivate" style="margin-left: 10px; margin-bottom: 0;">Make this character private</label>
+        </div>
+        <div class="d-flex align-center">
+          <input type="checkbox" id="isArchived" name="isArchived" <%= character.isArchived ? 'checked' : '' %>>
+          <label for="isArchived" style="margin-left: 10px; margin-bottom: 0;">Archive this character</label>
+        </div>
+        <small style="color: rgba(255, 255, 255, 0.5);">Archived characters won't appear in the main listings</small>
+      </div>
+    </div>
+  </div>
+  
+  <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 30px 0;">
+  
+  <!-- Character Details Tabs -->
+  <div class="character-tabs mb-4">
+    <div class="character-tab-links">
+      <a href="#tab-personality" class="character-tab-link active">Personality</a>
+      <a href="#tab-appearance" class="character-tab-link">Appearance</a>
+      <a href="#tab-background" class="character-tab-link">Background</a>
+      <a href="#tab-details" class="character-tab-link">Additional Details</a>
+    </div>
+    
+    <div class="character-tab-content">
+      <!-- Personality Tab -->
+      <div id="tab-personality" class="character-tab-pane active">
+        <div class="form-group">
+          <label for="personality">Personality</label>
+          <textarea 
+            id="personality" 
+            name="personality" 
+            class="form-control" 
+            rows="8"
+          ><%= character.personality || '' %></textarea>
+        </div>
+        
+        <div class="row">
+          <div class="col">
+            <div class="form-group">
+              <label for="likes">Likes</label>
+              <textarea 
+                id="likes" 
+                name="likes" 
+                class="form-control" 
+                rows="4"
+              ><%= character.likes || '' %></textarea>
+            </div>
+          </div>
+          
+          <div class="col">
+            <div class="form-group">
+              <label for="dislikes">Dislikes</label>
+              <textarea 
+                id="dislikes" 
+                name="dislikes" 
+                class="form-control" 
+                rows="4"
+              ><%= character.dislikes || '' %></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col">
+            <div class="form-group">
+              <label for="fears">Fears</label>
+              <textarea 
+                id="fears" 
+                name="fears" 
+                class="form-control" 
+                rows="4"
+              ><%= character.fears || '' %></textarea>
+            </div>
+          </div>
+          
+          <div class="col">
+            <div class="form-group">
+              <label for="goals">Goals</label>
+              <textarea 
+                id="goals" 
+                name="goals" 
+                class="form-control" 
+                rows="4"
+              ><%= character.goals || '' %></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Appearance Tab -->
+      <div id="tab-appearance" class="character-tab-pane">
+        <div class="form-group">
+          <label for="appearance">Physical Appearance</label>
+          <textarea 
+            id="appearance" 
+            name="appearance" 
+            class="form-control" 
+            rows="12"
+          ><%= character.appearance || '' %></textarea>
+        </div>
+      </div>
+      
+      <!-- Background Tab -->
+      <div id="tab-background" class="character-tab-pane">
+        <div class="form-group">
+          <label for="background">Character Background</label>
+          <textarea 
+            id="background" 
+            name="background" 
+            class="form-control" 
+            rows="12"
+          ><%= character.background || '' %></textarea>
+        </div>
+      </div>
+      
+      <!-- Additional Details Tab -->
+      <div id="tab-details" class="character-tab-pane">
+        <div class="form-group">
+          <label for="skills">Skills & Abilities</label>
+          <textarea 
+            id="skills" 
+            name="skills" 
+            class="form-control" 
+            rows="6"
+          ><%= character.skills || '' %></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="fullBio">Full Biography</label>
+          <textarea 
+            id="fullBio" 
+            name="fullBio" 
+            class="form-control" 
+            rows="12"
+          ><%= character.fullBio || '' %></textarea>
+          <small style="color: rgba(255, 255, 255, 0.5);">Use this for any additional information about your character</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="form-group text-right">
+    <a href="/characters/my-characters" class="btn btn-outline mr-2">Cancel</a>
+    <button type="submit" class="btn">Save Changes</button>
+  </div>
+</form>
+  </div>
+</div>
+<script>
+  // Handle image preview
+  document.getElementById('avatarUrl').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const previewContainer = document.getElementById('avatar-preview');
+    
+    if (url) {
+      previewContainer.innerHTML = `
+        <img src="${url}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+      `;
+    } else {
+      previewContainer.innerHTML = `<i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>`;
+    }
+  });
+  
+  function imageLoadError(img) {
+    img.onerror = null;
+    img.parentNode.innerHTML = `
+      <div style="width: 100%; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <span>Invalid image URL</span>
+      </div>
+    `;
+  }
+  
+  // Tabs functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabLinks = document.querySelectorAll('.character-tab-link');
+    const tabContents = document.querySelectorAll('.character-tab-pane');
+    
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs
+        tabLinks.forEach(link => link.classList.remove('active'));
+        tabContents.forEach(tab => tab.classList.remove('active'));
+        
+        // Add active class to current tab
+        this.classList.add('active');
+        const targetId = this.getAttribute('href');
+        document.querySelector(targetId).classList.add('active');
+      });
+    });
+  });
+</script>
+<style>
+  .character-tab-links {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .character-tab-link {
+    padding: 10px 20px;
+    color: var(--lighttext);
+    font-weight: var(--medium);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-tab-link:hover {
+    color: var(--header);
+  }
+  
+  .character-tab-link.active {
+    color: var(--header);
+    border-bottom-color: var(--header);
+  }
+  
+  .character-tab-pane {
+    display: none;
+  }
+  
+  .character-tab-pane.active {
+    display: block;
+  }
+</style>

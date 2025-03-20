@@ -1,0 +1,256 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1><%= character.name %>'s Relationships</h1>
+  <div>
+    <a href="/characters/<%= character.id %>" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to Character
+    </a>
+  </div>
+</div>
+<div class="row">
+  <!-- Left Column: Existing Relationships -->
+  <div class="col" style="flex: 0 0 60%;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0">Existing Relationships</h3>
+      </div>
+      <div class="card-body">
+        <% if (typeof relationships !== 'undefined' && relationships.length > 0) { %>
+          <div class="relationship-list">
+            <% relationships.forEach(rel => { %>
+              <div class="relationship-item">
+                <div class="relationship-header">
+                  <div class="d-flex align-center">
+                    <% if (rel.otherCharacter.avatarUrl) { %>
+                      <img src="<%= rel.otherCharacter.avatarUrl %>" alt="<%= rel.otherCharacter.name %>" 
+                           style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%; margin-right: 15px;">
+                    <% } else { %>
+                      <div style="width: 50px; height: 50px; background-color: #555; border-radius: 50%; margin-right: 15px; 
+                                  display: flex; align-items: center; justify-content: center; color: #eee;">
+                        <%= rel.otherCharacter.name.charAt(0).toUpperCase() %>
+                      </div>
+                    <% } %>
+Copy                <div style="flex: 1;">
+                  <h4 class="mb-0">
+                    <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
+                  </h4>
+                  <div class="d-flex align-center">
+                    <span class="relationship-type"><%= rel.relationshipType %></span>
+                    <% if (rel.status) { %>
+                      <span class="relationship-status <%= rel.status.toLowerCase() %>">
+                        <%= rel.status %>
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+                
+                <div class="relationship-actions">
+                  <button class="btn btn-sm" onclick="editRelationship('<%= rel.id %>', '<%= rel.relationshipType %>', `<%= rel.description || '' %>`, '<%= rel.status %>')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <form action="/characters/relationships/<%= rel.id %>?_method=DELETE" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            
+            <% if (rel.description) { %>
+              <div class="relationship-description">
+                <%= rel.description %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="text-center">No relationships have been defined yet.</p>
+    <% } %>
+  </div>
+</div>
+  </div>
+  <!-- Right Column: Add New Relationship -->
+  <div class="col" style="flex: 0 0 40%;">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Add New Relationship</h3>
+      </div>
+      <div class="card-body">
+        <% if (typeof otherCharacters !== 'undefined' && otherCharacters.length > 0) { %>
+          <form action="/characters/<%= character.id %>/relationships" method="POST">
+            <div class="form-group">
+              <label for="character2Id">Select Character</label>
+              <select id="character2Id" name="character2Id" class="form-control" required>
+                <option value="">-- Select a character --</option>
+                <% otherCharacters.forEach(char => { %>
+                  <option value="<%= char.id %>"><%= char.name %></option>
+                <% }); %>
+              </select>
+            </div>
+Copy        <div class="form-group">
+          <label for="relationshipType">Relationship Type</label>
+          <input type="text" id="relationshipType" name="relationshipType" class="form-control" placeholder="e.g., Friend, Enemy, Sibling, etc." required>
+        </div>
+        
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status" class="form-control">
+            <option value="Neutral">Neutral</option>
+            <option value="Positive">Positive</option>
+            <option value="Negative">Negative</option>
+            <option value="Complicated">Complicated</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description (Optional)</label>
+          <textarea id="description" name="description" class="form-control" rows="4" placeholder="Describe the relationship between these characters"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <button type="submit" class="btn btn-block">Add Relationship</button>
+        </div>
+      </form>
+    <% } else { %>
+      <p class="text-center">You need to create more characters before you can add relationships.</p>
+      <div class="text-center mt-3">
+        <a href="/characters/create" class="btn">Create a New Character</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Edit Relationship Modal -->
+<div id="editRelationshipModal" class="card" style="display: none;">
+  <div class="card-header">
+    <h3 class="mb-0">Edit Relationship</h3>
+  </div>
+  <div class="card-body">
+    <form id="editRelationshipForm" method="POST">
+      <input type="hidden" name="_method" value="PUT">
+      
+      <div class="form-group">
+        <label for="edit_relationshipType">Relationship Type</label>
+        <input type="text" id="edit_relationshipType" name="relationshipType" class="form-control" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit_status">Status</label>
+        <select id="edit_status" name="status" class="form-control">
+          <option value="Neutral">Neutral</option>
+          <option value="Positive">Positive</option>
+          <option value="Negative">Negative</option>
+          <option value="Complicated">Complicated</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit_description">Description (Optional)</label>
+        <textarea id="edit_description" name="description" class="form-control" rows="4"></textarea>
+      </div>
+      
+      <div class="form-group d-flex gap-2">
+        <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+        <button type="submit" class="btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+  </div>
+</div>
+<script>
+  function editRelationship(id, type, description, status) {
+    // Show the edit form and hide the add form
+    document.getElementById('editRelationshipModal').style.display = 'block';
+    
+    // Set up the form action
+    document.getElementById('editRelationshipForm').action = `/characters/relationships/${id}?_method=PUT`;
+    
+    // Populate the form fields
+    document.getElementById('edit_relationshipType').value = type;
+    document.getElementById('edit_description').value = description;
+    
+    // Select the correct status option
+    const statusSelect = document.getElementById('edit_status');
+    for (let i = 0; i < statusSelect.options.length; i++) {
+      if (statusSelect.options[i].value === status) {
+        statusSelect.selectedIndex = i;
+        break;
+      }
+    }
+    
+    // Scroll to the edit form
+    document.getElementById('editRelationshipModal').scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  function cancelEdit() {
+    document.getElementById('editRelationshipModal').style.display = 'none';
+  }
+</script>
+<style>
+  .relationship-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .relationship-item {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    transition: background-color var(--transition-fast);
+  }
+  
+  .relationship-item:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .relationship-header {
+    margin-bottom: 10px;
+  }
+  
+  .relationship-type {
+    font-size: var(--text-sm);
+    color: var(--lighttext);
+  }
+  
+  .relationship-status {
+    display: inline-block;
+    font-size: var(--text-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 5px;
+  }
+  
+  .relationship-status.positive {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: var(--success);
+  }
+  
+  .relationship-status.neutral {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--lighttext);
+  }
+  
+  .relationship-status.negative {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .relationship-status.complicated {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
+  .relationship-description {
+    padding-left: 65px;
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .relationship-actions {
+    display: flex;
+    gap: 5px;
+  }
+</style>

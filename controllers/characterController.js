@@ -277,9 +277,6 @@ exports.deleteCharacter = async (req, res) => {
       return res.redirect('/characters/my-characters');
     }
     
-    // Check if character has posts
-    // This would require additional validation in a real app
-    
     // Delete character
     await character.destroy();
 
@@ -311,7 +308,7 @@ exports.getCharacterRelationships = async (req, res) => {
     // Get relationships
     const relationships = await Relationship.findAll({
       where: {
-        [sequelize.Op.or]: [
+        [Sequelize.Op.or]: [
           { character1Id: character.id },
           { character2Id: character.id }
         ]
@@ -345,7 +342,7 @@ exports.getCharacterRelationships = async (req, res) => {
       where: {
         userId: req.user.id,
         id: {
-          [sequelize.Op.ne]: character.id
+          [Sequelize.Op.ne]: character.id
         },
         isArchived: false
       }
@@ -394,7 +391,7 @@ exports.addRelationship = async (req, res) => {
     // Check if relationship already exists
     const existingRelationship = await Relationship.findOne({
       where: {
-        [sequelize.Op.or]: [
+        [Sequelize.Op.or]: [
           {
             character1Id: character1Id,
             character2Id: character2Id

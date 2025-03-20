@@ -1,0 +1,264 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Thread Directory</h1>
+  <% if(user) { %>
+    <a href="/writing/create" class="btn">
+      <i class="fas fa-plus"></i> Create Thread
+    </a>
+  <% } %>
+</div>
+<!-- Search and Filter -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form id="thread-filter-form">
+      <div class="row">
+        <div class="col">
+          <div class="form-group mb-0">
+            <input type="text" id="thread-search" class="form-control" placeholder="Search threads...">
+          </div>
+        </div>
+Copy    <div class="col" style="flex: 0 0 auto;">
+      <div class="form-group mb-0 d-flex">
+        <select id="thread-status-filter" class="form-control mr-2">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="paused">Paused</option>
+          <option value="completed">Completed</option>
+          <option value="abandoned">Abandoned</option>
+        </select>
+        
+        <button type="submit" class="btn">Filter</button>
+      </div>
+    </div>
+  </div>
+</form>
+  </div>
+</div>
+<!-- Thread List -->
+<% if (typeof threads !== 'undefined' && threads.length > 0) { %>
+  <div class="thread-directory-list">
+    <% threads.forEach(thread => { %>
+      <div class="thread-directory-item" data-title="<%= thread.title.toLowerCase() %>" data-status="<%= thread.status.toLowerCase() %>">
+        <div class="thread-content">
+          <% if (thread.featuredImage) { %>
+            <div class="thread-thumbnail">
+              <img src="<%= thread.featuredImage %>" alt="<%= thread.title %>">
+            </div>
+          <% } else { %>
+            <div class="thread-thumbnail thread-thumbnail-placeholder">
+              <i class="fas fa-book"></i>
+            </div>
+          <% } %>
+Copy      <div class="thread-info">
+        <h3 class="thread-title">
+          <a href="/writing/thread/<%= thread.id %>"><%= thread.title %></a>
+        </h3>
+        
+        <div class="thread-meta">
+          <span>
+            <i class="fas fa-user"></i> <%= thread.creator.username %>
+          </span>
+          <span>
+            <i class="fas fa-comments"></i> <%= thread.posts.length %> posts
+          </span>
+          <span>
+            <i class="fas fa-calendar-alt"></i> Last active: <%= new Date(thread.lastPostAt || thread.updatedAt).toLocaleDateString() %>
+          </span>
+          <% if (thread.status !== 'Active') { %>
+            <span class="thread-status <%= thread.status.toLowerCase() %>">
+              <%= thread.status %>
+            </span>
+          <% } %>
+        </div>
+        
+        <% if (thread.description) { %>
+          <div class="thread-description">
+            <%= thread.description.length > 150 ? thread.description.substring(0, 150) + '...' : thread.description %>
+          </div>
+        <% } %>
+        
+        <% if (thread.tags && thread.tags.length > 0) { %>
+          <div class="thread-tags">
+            <% thread.tags.forEach(tag => { %>
+              <span class="thread-tag"><%= tag %></span>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+<% }); %>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="card-body text-center">
+      <p>No threads have been created yet.</p>
+      <% if(user) { %>
+        <a href="/writing/create" class="btn">Create the First Thread</a>
+      <% } else { %>
+        <a href="/auth/login" class="btn">Login to Create Threads</a>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+<script>
+  // Thread search and filter
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('thread-search');
+    const statusFilter = document.getElementById('thread-status-filter');
+    const threadItems = document.querySelectorAll('.thread-directory-item');
+    const filterForm = document.getElementById('thread-filter-form');
+    
+    if (filterForm) {
+      filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        filterThreads();
+      });
+    }
+    
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        filterThreads();
+      });
+    }
+    
+    if (statusFilter) {
+      statusFilter.addEventListener('change', function() {
+        filterThreads();
+      });
+    }
+    
+    function filterThreads() {
+      const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+      const statusValue = statusFilter ? statusFilter.value.toLowerCase() : '';
+      
+      threadItems.forEach(item => {
+        const title = item.dataset.title || '';
+        const status = item.dataset.status || '';
+        
+        const matchesSearch = searchTerm === '' || title.includes(searchTerm);
+        const matchesStatus = statusValue === '' || status === statusValue;
+        
+        if (matchesSearch && matchesStatus) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
+<style>
+  .thread-directory-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .thread-directory-item {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  }
+  
+  .thread-directory-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  
+  .thread-content {
+    display: flex;
+    padding: var(--spacing-md);
+  }
+  
+  .thread-thumbnail {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-right: var(--spacing-md);
+    flex-shrink: 0;
+  }
+  
+  .thread-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .thread-thumbnail-placeholder {
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 2rem;
+  }
+  
+  .thread-info {
+    flex: 1;
+  }
+  
+  .thread-title {
+    font-size: var(--text-xl);
+    margin-bottom: 5px;
+  }
+  
+  .thread-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+  }
+  
+  .thread-status {
+    display: inline-block;
+    font-size: var(--text-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .thread-status.active {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: var(--success);
+  }
+  
+  .thread-status.paused {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
+  .thread-status.completed {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--info);
+  }
+  
+  .thread-status.abandoned {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .thread-description {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 10px;
+  }
+  
+  .thread-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .thread-tag {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--lighttext);
+    font-size: var(--text-xs);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+  }
+</style>

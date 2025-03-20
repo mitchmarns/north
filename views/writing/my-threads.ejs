@@ -1,0 +1,216 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>My Threads</h1>
+  <a href="/writing/create" class="btn">
+    <i class="fas fa-plus"></i> Create New Thread
+  </a>
+</div>
+<!-- Status Tabs -->
+<div class="thread-status-tabs mb-4">
+  <a href="#" class="thread-status-tab active" data-status="all">All</a>
+  <a href="#" class="thread-status-tab" data-status="active">Active</a>
+  <a href="#" class="thread-status-tab" data-status="paused">Paused</a>
+  <a href="#" class="thread-status-tab" data-status="completed">Completed</a>
+  <a href="#" class="thread-status-tab" data-status="abandoned">Abandoned</a>
+</div>
+<!-- Thread List -->
+<% if (typeof threads !== 'undefined' && threads.length > 0) { %>
+  <div class="thread-list">
+    <% threads.forEach(thread => { %>
+      <div class="thread-item" data-status="<%= thread.status.toLowerCase() %>">
+        <a href="/writing/thread/<%= thread.id %>" class="thread-link">
+          <div class="thread-content">
+            <h3 class="thread-title"><%= thread.title %></h3>
+            <div class="thread-meta">
+              <span><%= thread.posts.length %> posts</span>
+              <span>Created <%= new Date(thread.createdAt).toLocaleDateString() %></span>
+              <span class="thread-status <%= thread.status.toLowerCase() %>"><%= thread.status %></span>
+              <% if (thread.isPrivate) { %>
+                <span class="thread-privacy">Private</span>
+              <% } %>
+            </div>
+            <% if (thread.description) { %>
+              <div class="thread-description">
+                <%= thread.description.length > 100 ? thread.description.substring(0, 100) + '...' : thread.description %>
+              </div>
+            <% } %>
+          </div>
+          <div class="thread-activity">
+            <div class="thread-last-post">
+              <% if (thread.lastPostAt) { %>
+                Last post: <%= new Date(thread.lastPostAt).toLocaleDateString() %>
+              <% } else { %>
+                No posts yet
+              <% } %>
+            </div>
+          </div>
+        </a>
+        <div class="thread-actions">
+          <a href="/writing/edit/<%= thread.id %>" class="btn btn-sm">
+            <i class="fas fa-edit"></i> Edit
+          </a>
+          <form action="/writing/thread/<%= thread.id %>?_method=DELETE" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </form>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="card-body text-center">
+      <p>You haven't created any threads yet.</p>
+      <a href="/writing/create" class="btn">Create Your First Thread</a>
+    </div>
+  </div>
+<% } %>
+<script>
+  // Thread status filtering
+  document.addEventListener('DOMContentLoaded', function() {
+    const statusTabs = document.querySelectorAll('.thread-status-tab');
+    const threadItems = document.querySelectorAll('.thread-item');
+    
+    statusTabs.forEach(tab => {
+      tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Update active tab
+        statusTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Filter threads
+        const statusFilter = this.dataset.status;
+        
+        threadItems.forEach(item => {
+          if (statusFilter === 'all' || item.dataset.status === statusFilter) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
+<style>
+  .thread-status-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .thread-status-tab {
+    padding: 10px 20px;
+    color: var(--lighttext);
+    font-weight: var(--medium);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .thread-status-tab:hover {
+    color: var(--header);
+  }
+  
+  .thread-status-tab.active {
+    color: var(--header);
+    border-bottom-color: var(--header);
+  }
+  
+  .thread-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .thread-item {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+  }
+  
+  .thread-item:hover {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .thread-link {
+    display: flex;
+    padding: var(--spacing-md);
+    color: var(--lighttext);
+  }
+  
+  .thread-content {
+    flex: 1;
+  }
+  
+  .thread-title {
+    font-size: var(--text-lg);
+    color: var(--header);
+    margin-bottom: 5px;
+  }
+  
+  .thread-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+  }
+  
+  .thread-description {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .thread-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .thread-status.active {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: var(--success);
+  }
+  
+  .thread-status.paused {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
+  .thread-status.completed {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--info);
+  }
+  
+  .thread-status.abandoned {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .thread-privacy {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .thread-activity {
+    min-width: 150px;
+    text-align: right;
+    font-size: var(--text-xs);
+  }
+  
+  .thread-last-post {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .thread-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+</style>

@@ -1,0 +1,165 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Thread: <%= thread.title %></h1>
+  <div>
+    <a href="/writing/thread/<%= thread.id %>" class="btn btn-outline mr-2">
+      <i class="fas fa-eye"></i> View Thread
+    </a>
+    <a href="/writing/my-threads" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to My Threads
+    </a>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <form action="/writing/edit/<%= thread.id %>?_method=PUT" method="POST">
+      <div class="row">
+        <!-- Main Thread Info -->
+        <div class="col" style="flex: 0 0 70%;">
+          <h3>Thread Information</h3>
+Copy      <div class="form-group">
+        <label for="title">Thread Title *</label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          class="form-control" 
+          value="<%= thread.title %>"
+          required
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          name="description" 
+          class="form-control" 
+          rows="3"
+          placeholder="A brief description of what this thread is about"
+        ><%= thread.description || '' %></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="setting">Setting</label>
+        <textarea 
+          id="setting" 
+          name="setting" 
+          class="form-control" 
+          rows="3"
+          placeholder="Describe the setting or location of this thread"
+        ><%= thread.setting || '' %></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="tags">Tags</label>
+        <input 
+          type="text" 
+          id="tags" 
+          name="tags" 
+          class="form-control" 
+          value="<%= Array.isArray(thread.tags) ? thread.tags.join(', ') : thread.tags %>"
+          placeholder="Comma-separated tags (e.g., fantasy, romance, action)"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="status">Thread Status</label>
+        <select id="status" name="status" class="form-control">
+          <option value="Active" <%= thread.status === 'Active' ? 'selected' : '' %>>Active</option>
+          <option value="Paused" <%= thread.status === 'Paused' ? 'selected' : '' %>>Paused</option>
+          <option value="Completed" <%= thread.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+          <option value="Abandoned" <%= thread.status === 'Abandoned' ? 'selected' : '' %>>Abandoned</option>
+        </select>
+        <small style="color: rgba(255, 255, 255, 0.5);">
+          Note: Only 'Active' threads can receive new posts.
+        </small>
+      </div>
+    </div>
+    
+    <!-- Featured Image URL and Preview -->
+    <div class="col" style="flex: 0 0 30%;">
+      <h3>Featured Image</h3>
+      
+      <div class="form-group">
+        <div class="mb-2" id="image-preview-container">
+          <div style="width: 100%; height: 180px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="image-preview">
+            <% if (thread.featuredImage) { %>
+              <img src="<%= thread.featuredImage %>" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);">
+            <% } else { %>
+              <i class="fas fa-image" style="font-size: 3rem; color: #999;"></i>
+            <% } %>
+          </div>
+        </div>
+        
+        <label for="featuredImage">Image URL</label>
+        <input 
+          type="url" 
+          id="featuredImage" 
+          name="featuredImage" 
+          class="form-control" 
+          placeholder="https://example.com/image.jpg"
+          value="<%= thread.featuredImage || '' %>"
+        />
+        <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
+      </div>
+      
+      <div class="form-group">
+        <div class="d-flex align-center">
+          <input type="checkbox" id="isPrivate" name="isPrivate" <%= thread.isPrivate ? 'checked' : '' %>>
+          <label for="isPrivate" style="margin-left: 10px; margin-bottom: 0;">Make this thread private</label>
+        </div>
+        <small style="color: rgba(255, 255, 255, 0.5);">Private threads are only visible to you</small>
+      </div>
+      
+      <div class="mt-4">
+        <h4>Thread Statistics</h4>
+        <ul style="list-style: none; padding: 0;">
+          <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <span>Posts:</span>
+            <span><%= thread.posts ? thread.posts.length : 0 %></span>
+          </li>
+          <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <span>Created:</span>
+            <span><%= new Date(thread.createdAt).toLocaleDateString() %></span>
+          </li>
+          <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+            <span>Last Post:</span>
+            <span><%= thread.lastPostAt ? new Date(thread.lastPostAt).toLocaleDateString() : 'No posts yet' %></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="form-group text-right mt-4">
+    <a href="/writing/thread/<%= thread.id %>" class="btn btn-outline mr-2">Cancel</a>
+    <button type="submit" class="btn">Save Changes</button>
+  </div>
+</form>
+  </div>
+</div>
+<script>
+  // Handle featured image preview
+  document.getElementById('featuredImage').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const previewContainer = document.getElementById('image-preview');
+    
+    if (url) {
+      previewContainer.innerHTML = `
+        <img src="${url}" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+      `;
+    } else {
+      previewContainer.innerHTML = `<i class="fas fa-image" style="font-size: 3rem; color: #999;"></i>`;
+    }
+  });
+  
+  function imageLoadError(img) {
+    img.onerror = null;
+    img.parentNode.innerHTML = `
+      <div style="width: 100%; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <span>Invalid image URL</span>
+      </div>
+    `;
+  }
+</script>

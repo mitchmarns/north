@@ -1,0 +1,164 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Post</h1>
+  <a href="/writing/thread/<%= post.threadId %>" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Thread
+  </a>
+</div>
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">Editing Post in "<%= post.Thread.title %>"</h3>
+  </div>
+  <div class="card-body">
+    <form action="/writing/post/<%= post.id %>?_method=PUT" method="POST">
+      <div class="form-group">
+        <label>Post as:</label>
+        <div class="character-select-grid">
+          <div class="character-select-item">
+            <input type="radio" name="characterId" id="asUser" value="" <%= !post.characterId ? 'checked' : '' %>>
+            <label for="asUser" class="character-select-label">
+              <div class="character-select-avatar user-avatar">
+                <%= user.username.charAt(0).toUpperCase() %>
+              </div>
+              <div class="character-select-name"><%= user.username %></div>
+            </label>
+          </div>
+Copy      <% if (characters && characters.length > 0) { %>
+        <% characters.forEach(char => { %>
+          <div class="character-select-item">
+            <input type="radio" name="characterId" id="char<%= char.id %>" value="<%= char.id %>" <%= post.characterId == char.id ? 'checked' : '' %>>
+            <label for="char<%= char.id %>" class="character-select-label">
+              <div class="character-select-avatar">
+                <% if (char.avatarUrl) { %>
+                  <img src="<%= char.avatarUrl %>" alt="<%= char.name %>">
+                <% } else { %>
+                  <div class="character-avatar-placeholder"><%= char.name.charAt(0).toUpperCase() %></div>
+                <% } %>
+              </div>
+              <div class="character-select-name"><%= char.name %></div>
+            </label>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label for="content">Post Content</label>
+    <textarea id="post-content" name="content" class="form-control" rows="12" required><%= post.content %></textarea>
+    <div class="mt-2 text-right">
+      <span id="word-counter">0 words</span>
+    </div>
+  </div>
+  
+  <div class="form-group d-flex justify-between">
+    <div>
+      <small style="color: rgba(255, 255, 255, 0.7);">
+        <i class="fas fa-info-circle"></i> Originally posted on <%= new Date(post.createdAt).toLocaleDateString() %>.
+        <% if (post.isEdited) { %>
+          Last edited on <%= new Date(post.lastEditedAt).toLocaleDateString() %>.
+        <% } %>
+      </small>
+    </div>
+    <div>
+      <a href="/writing/thread/<%= post.threadId %>" class="btn btn-outline mr-2">Cancel</a>
+      <button type="submit" class="btn">Save Changes</button>
+    </div>
+  </div>
+</form>
+  </div>
+</div>
+<style>
+  .character-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .character-select-item {
+    text-align: center;
+  }
+  
+  .character-select-item input[type="radio"] {
+    display: none;
+  }
+  
+  .character-select-label {
+    display: block;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-select-label:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .character-select-item input[type="radio"]:checked + .character-select-label {
+    border-color: var(--header);
+    background-color: rgba(90, 128, 149, 0.1);
+  }
+  
+  .character-select-avatar {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 5px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #555;
+  }
+  
+  .character-select-avatar.user-avatar {
+    background-color: var(--header);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .character-select-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .character-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #eee;
+  }
+  
+  .character-select-name {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+<script>
+  // Word counter for post content
+  document.addEventListener('DOMContentLoaded', function() {
+    const postContent = document.getElementById('post-content');
+    const wordCounter = document.getElementById('word-counter');
+    
+    if (postContent && wordCounter) {
+      const countWords = function() {
+        const text = postContent.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
+        wordCounter.textContent = wordCount + ' ' + (wordCount === 1 ? 'word' : 'words');
+      };
+      
+      postContent.addEventListener('input', countWords);
+      
+      // Count on page load
+      countWords();
+    }
+  });
+</script>

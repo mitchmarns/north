@@ -1,0 +1,454 @@
+<div class="d-flex justify-between align-center mb-4">
+  <div>
+    <h1><%= thread.title %></h1>
+    <div style="color: rgba(255, 255, 255, 0.7);">
+      Created by <a href="/auth/profile/<%= thread.creator.id %>"><%= thread.creator.username %></a>
+      • <%= new Date(thread.createdAt).toLocaleDateString() %>
+      <% if (thread.status !== 'Active') { %>
+        • <span class="thread-status <%= thread.status.toLowerCase() %>"><%= thread.status %></span>
+      <% } %>
+    </div>
+  </div>
+  <div>
+    <% if (isCreator) { %>
+      <a href="/writing/edit/<%= thread.id %>" class="btn btn-sm btn-outline">
+        <i class="fas fa-edit"></i> Edit Thread
+      </a>
+    <% } %>
+    <a href="/writing/threads" class="btn btn-sm btn-outline ml-2">
+      <i class="fas fa-arrow-left"></i> Back to Threads
+    </a>
+  </div>
+</div>
+<% if (thread.featuredImage) { %>
+  <div class="thread-featured-image mb-4">
+    <img src="<%= thread.featuredImage %>" alt="<%= thread.title %>" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);">
+  </div>
+<% } %>
+<div class="row">
+  <!-- Thread Details -->
+  <div class="col" style="flex: 0 0 30%;">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Thread Details</h3>
+      </div>
+      <div class="card-body">
+        <% if (thread.description) { %>
+          <div class="mb-4">
+            <h4>Description</h4>
+            <p><%= thread.description %></p>
+          </div>
+        <% } %>
+Copy    <% if (thread.setting) { %>
+      <div class="mb-4">
+        <h4>Setting</h4>
+        <p><%= thread.setting %></p>
+      </div>
+    <% } %>
+    
+    <% if (thread.tags && thread.tags.length > 0) { %>
+      <div>
+        <h4>Tags</h4>
+        <div class="thread-tags">
+          <% thread.tags.forEach(tag => { %>
+            <span class="thread-tag"><%= tag %></span>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (thread.status === 'Active' && user) { %>
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Quick Reply</h3>
+    </div>
+    <div class="card-body">
+      <form action="/writing/thread/<%= thread.id %>/post" method="POST">
+        <div class="form-group">
+          <label>Post as:</label>
+          <div class="d-flex align-center">
+            <div style="flex: 1;">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="characterId" id="asUser" value="" checked>
+                <label class="form-check-label" for="asUser">
+                  <strong><%= user.username %></strong> (Yourself)
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <% if (userCharacters && userCharacters.length > 0) { %>
+            <div class="character-select mt-2">
+              <% userCharacters.forEach(char => { %>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="characterId" id="char<%= char.id %>" value="<%= char.id %>">
+                  <label class="form-check-label" for="char<%= char.id %>">
+                    <strong><%= char.name %></strong> (Character)
+                  </label>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="form-group">
+          <textarea name="content" class="form-control" rows="3" placeholder="Write a quick reply..."></textarea>
+        </div>
+        
+        <div class="form-group text-right">
+          <button type="submit" class="btn">Post Reply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } %>
+  </div>
+  <!-- Thread Posts -->
+  <div class="col" style="flex: 0 0 70%;">
+    <div class="thread-posts">
+      <% if (typeof posts !== 'undefined' && posts.length > 0) { %>
+        <% posts.forEach(post => { %>
+          <div class="post" id="post-<%= post.id %>">
+            <div class="post-header">
+              <% if (post.Character) { %>
+                <!-- Posted as character -->
+                <% if (post.Character.avatarUrl) { %>
+                  <img src="<%= post.Character.avatarUrl %>" alt="<%= post.Character.name %>" class="post-avatar">
+                <% } else { %>
+                  <div class="post-avatar-placeholder">
+                    <%= post.Character.name.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+Copy            <div class="post-info">
+              <div class="post-character"><%= post.Character.name %></div>
+              <div class="post-author">
+                Played by <%= post.User.username %>
+                • <%= new Date(post.createdAt).toLocaleDateString() %>
+                <% if (post.isEdited) { %>
+                  (Edited <%= new Date(post.lastEditedAt).toLocaleDateString() %>)
+                <% } %>
+              </div>
+            </div>
+          <% } else { %>
+            <!-- Posted as user -->
+            <div class="post-avatar-placeholder user-avatar">
+              <%= post.User.username.charAt(0).toUpperCase() %>
+            </div>
+            
+            <div class="post-info">
+              <div class="post-character"><%= post.User.username %></div>
+              <div class="post-author">
+                <%= new Date(post.createdAt).toLocaleDateString() %>
+                <% if (post.isEdited) { %>
+                  (Edited <%= new Date(post.lastEditedAt).toLocaleDateString() %>)
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+          
+          <% if (user && (user.id === post.userId || isCreator)) { %>
+            <div class="post-actions">
+              <% if (user.id === post.userId) { %>
+                <a href="/writing/post/<%= post.id %>/edit" class="btn btn-sm">
+                  <i class="fas fa-edit"></i>
+                </a>
+              <% } %>
+              <form action="/writing/post/<%= post.id %>?_method=DELETE" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="post-content">
+          <%= post.content.replace(/\n/g, '<br>') %>
+        </div>
+        
+        <div class="post-footer">
+          <div class="post-wordcount">
+            <i class="fas fa-font fa-sm"></i> <%= post.wordCount %> <%= post.wordCount === 1 ? 'word' : 'words' %>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body text-center">
+        <p>No posts in this thread yet. Be the first to post!</p>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<% if (thread.status === 'Active' && user) { %>
+  <div class="card mt-4">
+    <div class="card-header">
+      <h3 class="mb-0">Write a New Post</h3>
+    </div>
+    <div class="card-body">
+      <form action="/writing/thread/<%= thread.id %>/post" method="POST">
+        <div class="form-group">
+          <label>Post as:</label>
+          <div class="character-select-grid">
+            <div class="character-select-item">
+              <input type="radio" name="characterId" id="fullAsUser" value="" checked>
+              <label for="fullAsUser" class="character-select-label">
+                <div class="character-select-avatar user-avatar">
+                  <%= user.username.charAt(0).toUpperCase() %>
+                </div>
+                <div class="character-select-name"><%= user.username %></div>
+              </label>
+            </div>
+            
+            <% if (userCharacters && userCharacters.length > 0) { %>
+              <% userCharacters.forEach(char => { %>
+                <div class="character-select-item">
+                  <input type="radio" name="characterId" id="fullChar<%= char.id %>" value="<%= char.id %>">
+                  <label for="fullChar<%= char.id %>" class="character-select-label">
+                    <div class="character-select-avatar">
+                      <% if (char.avatarUrl) { %>
+                        <img src="<%= char.avatarUrl %>" alt="<%= char.name %>">
+                      <% } else { %>
+                        <div class="character-avatar-placeholder"><%= char.name.charAt(0).toUpperCase() %></div>
+                      <% } %>
+                    </div>
+                    <div class="character-select-name"><%= char.name %></div>
+                  </label>
+                </div>
+              <% }); %>
+            <% } %>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <textarea id="post-content" name="content" class="form-control" rows="8" placeholder="Write your post here..."></textarea>
+          <div class="mt-2 text-right">
+            <span id="word-counter">0 words</span>
+          </div>
+        </div>
+        
+        <div class="form-group text-right">
+          <button type="submit" class="btn">Post Reply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } else if (thread.status !== 'Active') { %>
+  <div class="alert alert-warning mt-4">
+    <i class="fas fa-exclamation-triangle"></i> This thread is currently <strong><%= thread.status %></strong> and not accepting new posts.
+  </div>
+<% } else if (!user) { %>
+  <div class="alert alert-info mt-4">
+    <i class="fas fa-info-circle"></i> <a href="/auth/login">Login</a> or <a href="/auth/register">register</a> to reply to this thread.
+  </div>
+<% } %>
+  </div>
+</div>
+<style>
+  .thread-status {
+    display: inline-block;
+    font-size: var(--text-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .thread-status.active {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: var(--success);
+  }
+  
+  .thread-status.paused {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
+  .thread-status.completed {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--info);
+  }
+  
+  .thread-status.abandoned {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .thread-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .thread-tag {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--lighttext);
+    font-size: var(--text-xs);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .thread-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .post {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: var(--spacing-sm);
+    object-fit: cover;
+  }
+  
+  .post-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: var(--spacing-sm);
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .post-avatar-placeholder.user-avatar {
+    background-color: var(--header);
+  }
+  
+  .post-info {
+    flex: 1;
+  }
+  
+  .post-character {
+    font-weight: var(--semibold);
+    color: var(--header);
+  }
+  
+  .post-author {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .post-content {
+    padding: var(--spacing-md);
+    line-height: 1.7;
+    white-space: pre-line;
+  }
+  
+  .post-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .character-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .character-select-item {
+    text-align: center;
+  }
+  
+  .character-select-item input[type="radio"] {
+    display: none;
+  }
+  
+  .character-select-label {
+    display: block;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-select-label:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .character-select-item input[type="radio"]:checked + .character-select-label {
+    border-color: var(--header);
+    background-color: rgba(90, 128, 149, 0.1);
+  }
+  
+  .character-select-avatar {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 5px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #555;
+  }
+  
+  .character-select-avatar.user-avatar {
+    background-color: var(--header);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .character-select-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .character-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #eee;
+  }
+  
+  .character-select-name {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+<script>
+  // Word counter for post content
+  document.addEventListener('DOMContentLoaded', function() {
+    const postContent = document.getElementById('post-content');
+    const wordCounter = document.getElementById('word-counter');
+    
+    if (postContent && wordCounter) {
+      postContent.addEventListener('input', function() {
+        const text = this.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
+        wordCounter.textContent = wordCount + ' ' + (wordCount === 1 ? 'word' : 'words');
+      });
+    }
+  });
+</script>

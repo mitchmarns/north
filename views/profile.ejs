@@ -1,0 +1,391 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Your Profile</h1>
+  <a href="/dashboard" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </a>
+</div>
+<div class="row">
+  <!-- Profile Information -->
+  <div class="col" style="flex: 0 0 70%;">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-between align-center">
+        <h3 class="mb-0">Profile Information</h3>
+        <button class="btn btn-sm" id="editProfileBtn">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+      </div>
+      <div class="card-body">
+        <!-- View Profile Form -->
+        <div id="viewProfileForm">
+          <div class="row mb-3">
+            <div class="col">
+              <h4>Username</h4>
+              <p><%= user.username %></p>
+            </div>
+            <div class="col">
+              <h4>Email</h4>
+              <p><%= user.email %></p>
+            </div>
+          </div>
+Copy      <div class="row mb-3">
+        <div class="col">
+          <h4>Display Name</h4>
+          <p><%= user.displayName || user.username %></p>
+        </div>
+        <div class="col">
+          <h4>Member Since</h4>
+          <p><%= new Date(user.createdAt).toLocaleDateString() %></p>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <h4>Bio</h4>
+        <p><%= user.bio || 'No bio provided.' %></p>
+      </div>
+    </div>
+    
+    <!-- Edit Profile Form (hidden by default) -->
+    <form id="editProfileForm" action="/auth/profile?_method=PUT" method="POST" style="display: none;">
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input 
+          type="text" 
+          id="displayName" 
+          name="displayName" 
+          class="form-control" 
+          value="<%= user.displayName || '' %>"
+          placeholder="How you want to be known"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="bio">Bio</label>
+        <textarea 
+          id="bio" 
+          name="bio" 
+          class="form-control" 
+          rows="4"
+          placeholder="Tell others about yourself"
+        ><%= user.bio || '' %></textarea>
+      </div>
+      
+      <div class="form-group text-right">
+        <button type="button" id="cancelProfileEditBtn" class="btn btn-outline mr-2">Cancel</button>
+        <button type="submit" class="btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Password -->
+<div class="card">
+  <div class="card-header d-flex justify-between align-center">
+    <h3 class="mb-0">Change Password</h3>
+    <button class="btn btn-sm" id="changePasswordBtn">
+      <i class="fas fa-key"></i> Change
+    </button>
+  </div>
+  <div class="card-body">
+    <form id="changePasswordForm" action="/auth/change-password?_method=PUT" method="POST" style="display: none;">
+      <div class="form-group">
+        <label for="currentPassword">Current Password</label>
+        <div class="input-group">
+          <input 
+            type="password" 
+            id="currentPassword" 
+            name="currentPassword" 
+            class="form-control" 
+            required
+          />
+          <div class="input-group-append">
+            <button type="button" class="btn toggle-password" data-target="#currentPassword">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <div class="input-group">
+          <input 
+            type="password" 
+            id="newPassword" 
+            name="newPassword" 
+            class="form-control" 
+            required
+            minlength="6"
+          />
+          <div class="input-group-append">
+            <button type="button" class="btn toggle-password" data-target="#newPassword">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <small style="color: rgba(255, 255, 255, 0.5);">At least 6 characters</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm New Password</label>
+        <div class="input-group">
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            class="form-control" 
+            required
+          />
+          <div class="input-group-append">
+            <button type="button" class="btn toggle-password" data-target="#confirmPassword">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group text-right">
+        <button type="button" id="cancelPasswordChangeBtn" class="btn btn-outline mr-2">Cancel</button>
+        <button type="submit" class="btn">Update Password</button>
+      </div>
+    </form>
+    
+    <div id="passwordChangeInfo">
+      <p>You can change your password here. For security reasons, you'll need to enter your current password.</p>
+      <p><strong>Last login:</strong> <%= user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never' %></p>
+    </div>
+  </div>
+</div>
+  </div>
+  <!-- Character Preview -->
+  <div class="col" style="flex: 0 0 30%;">
+    <div class="card">
+      <div class="card-header d-flex justify-between align-center">
+        <h3 class="mb-0">Your Characters</h3>
+        <a href="/characters/my-characters" class="btn btn-sm">View All</a>
+      </div>
+      <div class="card-body">
+        <% if (user.characters && user.characters.length > 0) { %>
+          <div class="character-preview-list">
+            <% user.characters.slice(0, 5).forEach(character => { %>
+              <div class="character-preview-item">
+                <div class="d-flex align-center">
+                  <% if (character.avatarUrl) { %>
+                    <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-preview-avatar">
+                  <% } else { %>
+                    <div class="character-preview-avatar-placeholder">
+                      <%= character.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+Copy              <div class="character-preview-info">
+                <h4 class="character-preview-name">
+                  <a href="/characters/<%= character.id %>"><%= character.name %></a>
+                </h4>
+                <% if (character.isPrivate || character.isArchived) { %>
+                  <div>
+                    <% if (character.isPrivate) { %>
+                      <span class="character-preview-tag private">Private</span>
+                    <% } %>
+                    <% if (character.isArchived) { %>
+                      <span class="character-preview-tag archived">Archived</span>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+        
+        <% if (user.characters.length > 5) { %>
+          <div class="text-center mt-3">
+            <a href="/characters/my-characters">View all <%= user.characters.length %> characters</a>
+          </div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <p class="text-center">You haven't created any characters yet.</p>
+      <div class="text-center mt-3">
+        <a href="/characters/create" class="btn">Create Your First Character</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Account Stats -->
+<div class="card mt-4">
+  <div class="card-header">
+    <h3 class="mb-0">Account Statistics</h3>
+  </div>
+  <div class="card-body">
+    <ul style="list-style: none; padding: 0;">
+      <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <span>Characters:</span>
+        <span><%= user.characters ? user.characters.length : 0 %></span>
+      </li>
+      <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <span>Threads:</span>
+        <span><%= user.createdThreads ? user.createdThreads.length : 0 %></span>
+      </li>
+      <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <span>Posts:</span>
+        <span><%= user.posts ? user.posts.length : 0 %></span>
+      </li>
+      <li style="display: flex; justify-content: space-between; padding: 5px 0;">
+        <span>Member for:</span>
+        <span id="memberTime"></span>
+      </li>
+    </ul>
+  </div>
+</div>
+  </div>
+</div>
+<style>
+  .character-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .character-preview-item {
+    padding: 5px;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+  }
+  
+  .character-preview-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .character-preview-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+  }
+  
+  .character-preview-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .character-preview-info {
+    flex: 1;
+  }
+  
+  .character-preview-name {
+    font-size: var(--text-base);
+    margin-bottom: 0;
+  }
+  
+  .character-preview-tag {
+    display: inline-block;
+    font-size: var(--text-xs);
+    padding: 1px 5px;
+    border-radius: var(--radius-sm);
+    margin-right: 5px;
+  }
+  
+  .character-preview-tag.private {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .character-preview-tag.archived {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Calculate member time
+    const createdAt = new Date('<%= user.createdAt %>');
+    const now = new Date();
+    const diffTime = Math.abs(now - createdAt);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    let memberTimeText = '';
+    if (diffDays < 30) {
+      memberTimeText = diffDays + ' day' + (diffDays === 1 ? '' : 's');
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      memberTimeText = months + ' month' + (months === 1 ? '' : 's');
+    } else {
+      const years = Math.floor(diffDays / 365);
+      const remainingMonths = Math.floor((diffDays % 365) / 30);
+      memberTimeText = years + ' year' + (years === 1 ? '' : 's');
+      if (remainingMonths > 0) {
+        memberTimeText += ', ' + remainingMonths + ' month' + (remainingMonths === 1 ? '' : 's');
+      }
+    }
+    
+    document.getElementById('memberTime').textContent = memberTimeText;
+    
+    // Edit profile toggle
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const viewProfileForm = document.getElementById('viewProfileForm');
+    const editProfileForm = document.getElementById('editProfileForm');
+    const cancelProfileEditBtn = document.getElementById('cancelProfileEditBtn');
+    
+    if (editProfileBtn && viewProfileForm && editProfileForm && cancelProfileEditBtn) {
+      editProfileBtn.addEventListener('click', function() {
+        viewProfileForm.style.display = 'none';
+        editProfileForm.style.display = 'block';
+      });
+      
+      cancelProfileEditBtn.addEventListener('click', function() {
+        editProfileForm.style.display = 'none';
+        viewProfileForm.style.display = 'block';
+      });
+    }
+    
+    // Change password toggle
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const passwordChangeInfo = document.getElementById('passwordChangeInfo');
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const cancelPasswordChangeBtn = document.getElementById('cancelPasswordChangeBtn');
+    
+    if (changePasswordBtn && passwordChangeInfo && changePasswordForm && cancelPasswordChangeBtn) {
+      changePasswordBtn.addEventListener('click', function() {
+        passwordChangeInfo.style.display = 'none';
+        changePasswordForm.style.display = 'block';
+      });
+      
+      cancelPasswordChangeBtn.addEventListener('click', function() {
+        changePasswordForm.style.display = 'none';
+        passwordChangeInfo.style.display = 'block';
+      });
+    }
+    
+    // Toggle password visibility
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    
+    if (togglePasswordButtons) {
+      togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const targetSelector = this.getAttribute('data-target');
+          const passwordField = document.querySelector(targetSelector);
+          
+          if (passwordField) {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            // Toggle icon
+            const icon = this.querySelector('i');
+            if (icon) {
+              icon.classList.toggle('fa-eye');
+              icon.classList.toggle('fa-eye-slash');
+            }
+          }
+        });
+      });
+    }
+  });
+</script>
