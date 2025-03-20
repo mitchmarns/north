@@ -1,4 +1,4 @@
-const { Character, User, Relationship, sequelize } = require('../models');
+const { Character, User, Relationship, sequelize, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
 
 // Get all characters (public)
@@ -74,7 +74,7 @@ exports.getCharacter = async (req, res) => {
     // Get character relationships
     const relationships = await Relationship.findAll({
       where: {
-        [sequelize.Op.or]: [
+        [Sequelize.Op.or]: [
           { character1Id: character.id },
           { character2Id: character.id }
         ]
