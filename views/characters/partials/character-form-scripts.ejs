@@ -24,41 +24,34 @@
     `;
   }
   
-  // Tabs functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    toggleTeamFields();
-    const tabLinks = document.querySelectorAll('.character-tab-link');
-    const tabContents = document.querySelectorAll('.character-tab-pane');
-    
-    tabLinks.forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Remove active class from all tabs
-        tabLinks.forEach(link => link.classList.remove('active'));
-        tabContents.forEach(tab => tab.classList.remove('active'));
-        
-        // Add active class to current tab
-        this.classList.add('active');
-        const targetId = this.getAttribute('href');
-        document.querySelector(targetId).classList.add('active');
-      });
-    });
-  });
-
   function toggleTeamFields() {
-  const role = document.getElementById('role').value;
-  const teamFields = document.getElementById('teamFields');
-  const playerFields = document.getElementById('playerFields');
-  
-  if (role === 'Player' || role === 'Staff') {
-    teamFields.style.display = 'block';
+    const role = document.getElementById('role').value;
+    const teamFields = document.getElementById('teamFields');
+    const playerFields = document.getElementById('playerFields');
     
-    if (role === 'Player') {
-      playerFields.style.display = 'block';
+    if (role === 'Player' || role === 'Staff') {
+      teamFields.style.display = 'block';
+      
+      if (role === 'Player') {
+        playerFields.style.display = 'block';
+      } else {
+        playerFields.style.display = 'none';
+        // Clear player-specific fields when not in Player role
+        if (document.getElementById('position')) {
+          document.getElementById('position').value = '';
+        }
+        if (document.getElementById('jerseyNumber')) {
+          document.getElementById('jerseyNumber').value = '';
+        }
+      }
     } else {
+      teamFields.style.display = 'none';
       playerFields.style.display = 'none';
-      // Clear player-specific fields when not in Player role
+      
+      // Clear team and player fields when in Civilian role
+      if (document.getElementById('teamId')) {
+        document.getElementById('teamId').value = '';
+      }
       if (document.getElementById('position')) {
         document.getElementById('position').value = '';
       }
@@ -66,75 +59,126 @@
         document.getElementById('jerseyNumber').value = '';
       }
     }
-  } else {
-    teamFields.style.display = 'none';
-    playerFields.style.display = 'none';
-    
-    // Clear team and player fields when in Civilian role
-    if (document.getElementById('teamId')) {
-      document.getElementById('teamId').value = '';
-    }
-    if (document.getElementById('position')) {
-      document.getElementById('position').value = '';
-    }
-    if (document.getElementById('jerseyNumber')) {
-      document.getElementById('jerseyNumber').value = '';
-    }
   }
   
-  console.log('Role changed to:', role);
-  console.log('Team fields display:', teamFields.style.display);
-  console.log('Player fields display:', playerFields ? playerFields.style.display : 'N/A');
-}
-
-function toggleCharacterTab(tabId, event) {
-  if (event) event.preventDefault();
-  
-  // Hide all tab content
-  document.querySelectorAll('.character-tab-content').forEach(content => {
-    content.style.display = 'none';
+  // Fixed tab functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set up team fields first
+    toggleTeamFields();
+    
+    // Tab functionality
+    const tabLinks = document.querySelectorAll('.character-tab-link');
+    const tabContents = document.querySelectorAll('.character-tab-pane');
+    
+    // Make sure we have tabs to work with
+    if (tabLinks.length > 0 && tabContents.length > 0) {
+      // First, ensure all tabs are inactive
+      tabContents.forEach(tab => tab.style.display = 'none');
+      
+      // Find the active tab link
+      const activeTabLink = document.querySelector('.character-tab-link.active');
+      
+      if (activeTabLink) {
+        // Get the target tab content ID
+        const targetId = activeTabLink.getAttribute('href');
+        // Make the target tab content visible
+        const targetContent = document.querySelector(targetId);
+        if (targetContent) {
+          targetContent.style.display = 'block';
+          targetContent.classList.add('active');
+        }
+      } else if (tabLinks.length > 0) {
+        // If no tab is active, activate the first one
+        tabLinks[0].classList.add('active');
+        const firstTabId = tabLinks[0].getAttribute('href');
+        const firstTabContent = document.querySelector(firstTabId);
+        if (firstTabContent) {
+          firstTabContent.style.display = 'block';
+          firstTabContent.classList.add('active');
+        }
+      }
+      
+      // Add click handlers to all tab links
+      tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active class from all tabs
+          tabLinks.forEach(link => link.classList.remove('active'));
+          tabContents.forEach(tab => {
+            tab.classList.remove('active');
+            tab.style.display = 'none';
+          });
+          
+          // Add active class to current tab
+          this.classList.add('active');
+          const targetId = this.getAttribute('href');
+          const targetContent = document.querySelector(targetId);
+          if (targetContent) {
+            targetContent.classList.add('active');
+            targetContent.style.display = 'block';
+          }
+        });
+      });
+      
+      // Load the avatar preview if URL exists
+      const avatarUrl = document.getElementById('avatarUrl').value;
+      if (avatarUrl) {
+        document.getElementById('avatar-preview').innerHTML = `
+          <img src="${avatarUrl}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+        `;
+      }
+    }
   });
-  
-  // Remove active class from all tab links
-  document.querySelectorAll('.character-tab-link').forEach(link => {
-    link.classList.remove('active');
-  });
-  
-  // Show the selected tab content and mark tab as active
-  document.getElementById(tabId).style.display = 'block';
-  event.target.classList.add('active');
-  
-  // This is the important fix - we need to enable only one character2Id field at a time
-  if (tabId === 'myCharacters') {
-    // Enable the dropdown for user's own characters, disable the other
-    document.getElementById('character2Id_own').setAttribute('name', 'character2Id');
-    document.getElementById('character2Id_own').disabled = false;
-    
-    if (document.getElementById('character2Id_other')) {
-      document.getElementById('character2Id_other').removeAttribute('name');
-      document.getElementById('character2Id_other').disabled = true;
-    }
-  } else {
-    // Enable the dropdown for other players' characters, disable the user's own
-    if (document.getElementById('character2Id_other')) {
-      document.getElementById('character2Id_other').setAttribute('name', 'character2Id');
-      document.getElementById('character2Id_other').disabled = false;
-    }
-    
-    document.getElementById('character2Id_own').removeAttribute('name');
-    document.getElementById('character2Id_own').disabled = true;
-  }
-}
 
-// Make sure this function runs on page load to set the initial state correctly
-document.addEventListener('DOMContentLoaded', function() {
-  // Set initial tab state - by default "myCharacters" should be active
-  const activeTab = document.querySelector('.character-tab-link.active');
-  if (activeTab) {
-    const tabId = activeTab.getAttribute('href').substring(1); // Remove the # from the href
-    toggleCharacterTab(tabId, { preventDefault: () => {}, target: activeTab });
+  function toggleCharacterTab(tabId, event) {
+    if (event) event.preventDefault();
+    
+    // Hide all tab content
+    document.querySelectorAll('.character-tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    // Remove active class from all tab links
+    document.querySelectorAll('.character-tab-link').forEach(link => {
+      link.classList.remove('active');
+    });
+    
+    // Show the selected tab content and mark tab as active
+    document.getElementById(tabId).style.display = 'block';
+    event.target.classList.add('active');
+    
+    // This is the important fix - we need to enable only one character2Id field at a time
+    if (tabId === 'myCharacters') {
+      // Enable the dropdown for user's own characters, disable the other
+      document.getElementById('character2Id_own').setAttribute('name', 'character2Id');
+      document.getElementById('character2Id_own').disabled = false;
+      
+      if (document.getElementById('character2Id_other')) {
+        document.getElementById('character2Id_other').removeAttribute('name');
+        document.getElementById('character2Id_other').disabled = true;
+      }
+    } else {
+      // Enable the dropdown for other players' characters, disable the user's own
+      if (document.getElementById('character2Id_other')) {
+        document.getElementById('character2Id_other').setAttribute('name', 'character2Id');
+        document.getElementById('character2Id_other').disabled = false;
+      }
+      
+      document.getElementById('character2Id_own').removeAttribute('name');
+      document.getElementById('character2Id_own').disabled = true;
+    }
   }
-});
+
+  // Make sure this function runs on page load to set the initial state correctly
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set initial tab state - by default "myCharacters" should be active
+    const activeTab = document.querySelector('.character-tab-link.active');
+    if (activeTab) {
+      const tabId = activeTab.getAttribute('href').substring(1); // Remove the # from the href
+      toggleCharacterTab(tabId, { preventDefault: () => {}, target: activeTab });
+    }
+  });
 </script>
 
 <style>
@@ -170,18 +214,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .show-team-fields {
-  display: block;
-}
+    display: block;
+  }
 
-.hide-team-fields {
-  display: none;
-}
+  .hide-team-fields {
+    display: none;
+  }
 
-.show-player-fields {
-  display: block;
-}
+  .show-player-fields {
+    display: block;
+  }
 
-.hide-player-fields {
-  display: none;
-}
+  .hide-player-fields {
+    display: none;
+  }
 </style>
