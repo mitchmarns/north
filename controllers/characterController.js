@@ -134,6 +134,9 @@ exports.getCharacter = async (req, res) => {
 // Get character for editing
 exports.getEditCharacter = async (req, res) => {
   try {
+    const { Character, Team } = require('../models');
+    
+    // Get the character
     const character = await Character.findByPk(req.params.id);
 
     if (!character) {
@@ -146,10 +149,19 @@ exports.getEditCharacter = async (req, res) => {
       req.flash('error_msg', 'Not authorized');
       return res.redirect('/characters/my-characters');
     }
+    
+    // Get teams for the dropdown
+    const teams = await Team.findAll({
+      where: {
+        isActive: true
+      },
+      order: [['name', 'ASC']]
+    });
 
     res.render('characters/edit', {
       title: `Edit ${character.name}`,
-      character
+      character,
+      teams: teams || []
     });
   } catch (error) {
     console.error('Error fetching character for edit:', error);
