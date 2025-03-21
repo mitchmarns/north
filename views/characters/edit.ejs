@@ -78,31 +78,33 @@ Copy      <div class="form-group">
         </select>
       </div>
       
-      <div id="teamFields" style="display: <%= character.role === 'Player' || character.role === 'Staff' ? 'block' : 'none' %>;">
+      <div id="playerFields" class="<%= character.role === 'Player' ? 'show-player-fields' : 'hide-player-fields' %>">
         <div class="form-group">
-          <label for="teamId">Team</label>
-          <select id="teamId" name="teamId" class="form-control">
-            <option value="">-- Select a team --</option>
-            <% if (typeof teams !== 'undefined' && teams.length > 0) { %>
-              <% teams.forEach(team => { %>
-                <option value="<%= team.id %>" <%= character.teamId == team.id ? 'selected' : '' %>><%= team.name %></option>
-              <% }); %>
-            <% } %>
-          </select>
+          <label for="position">Position</label>
+          <input 
+            type="text" 
+            id="position" 
+            name="position" 
+            class="form-control" 
+            value="<%= character.position || '' %>" 
+            placeholder="e.g., Center, Left Wing, Goalie, etc."
+          />
         </div>
         
-        <div id="playerFields" style="display: <%= character.role === 'Player' ? 'block' : 'none' %>;">
-          <div class="form-group">
-            <label for="position">Position</label>
-            <input 
-              type="text" 
-              id="position" 
-              name="position" 
-              class="form-control" 
-              value="<%= character.position || '' %>" 
-              placeholder="e.g., Center, Left Wing, Goalie, etc."
-            />
-          </div>
+        <div class="form-group">
+          <label for="jerseyNumber">Jersey Number</label>
+          <input 
+            type="number" 
+            id="jerseyNumber" 
+            name="jerseyNumber" 
+            class="form-control" 
+            min="1"
+            max="99"
+            value="<%= character.jerseyNumber || '' %>" 
+            placeholder="1-99"
+          />
+        </div>
+      </div>
           
           <div class="form-group">
             <label for="jerseyNumber">Jersey Number</label>
@@ -416,4 +418,8 @@ document.addEventListener('DOMContentLoaded', toggleTeamFields);
   .character-tab-pane.active {
     display: block;
   }
+
+  .show-player-fields { display: block; }
+  .hide-player-fields { display: none; }
+
 </style>
