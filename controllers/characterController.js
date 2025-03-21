@@ -77,6 +77,43 @@ exports.getCharacter = async (req, res) => {
       return res.redirect('/characters');
     }
 
+    // Get user's characters for messaging (if user is logged in)
+    let userCharacters = [];
+    let canMessage = false;
+    
+    if (req.user && req.user.id !== character.userId) {
+      userCharacters = await Character.findAll({
+        where: {
+          userId: req.user.id,
+          isArchived: false
+        }
+      });
+      
+      // Check if there are relationships between any of the user's characters and this character
+      if (userCharacters.length > 0) {
+        const characterIds = userCharacters.map(char => char.id);
+        
+        const relationship = await Relationship.findOne({
+          where: {
+            [Sequelize.Op.or]: [
+              {
+                character1Id: { [Sequelize.Op.in]: characterIds },
+                character2Id: character.id,
+                isApproved: true
+              },
+              {
+                character1Id: character.id,
+                character2Id: { [Sequelize.Op.in]: characterIds },
+                isApproved: true
+              }
+            ]
+          }
+        });
+        
+        canMessage = !!relationship;
+      }
+    }
+
     // Try/catch for just the relationships query
     try {
       // Get character relationships
@@ -85,7 +122,8 @@ exports.getCharacter = async (req, res) => {
           [Sequelize.Op.or]: [
             { character1Id: character.id },
             { character2Id: character.id }
-          ]
+          ],
+          isApproved: true // Only show approved relationships
         },
         include: [
           {
@@ -117,7 +155,9 @@ exports.getCharacter = async (req, res) => {
         title: character.name,
         character,
         relationships: formattedRelationships,
-        isOwner: req.user && req.user.id === character.userId
+        isOwner: req.user && req.user.id === character.userId,
+        userCharacters,
+        canMessage
       });
     } catch (relationshipError) {
       console.error('Error fetching relationships:', relationshipError);
@@ -126,7 +166,9 @@ exports.getCharacter = async (req, res) => {
         title: character.name,
         character,
         relationships: [],
-        isOwner: req.user && req.user.id === character.userId
+        isOwner: req.user && req.user.id === character.userId,
+        userCharacters,
+        canMessage
       });
     }
   } catch (error) {

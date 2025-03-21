@@ -1,4 +1,4 @@
-<!-- Updated views/partials/header.ejs with Teams navigation -->
+<!-- views/partials/header.ejs (updated with Phosphor Icons) -->
 <header class="site-header">
   <nav class="navbar">
     <a href="/" class="navbar-brand">1x1 Roleplay Hub</a>
@@ -18,33 +18,54 @@
         <li class="nav-item dropdown">
           <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown">
             <%= user.username %>
-            <% if (typeof pendingRequests !== 'undefined' && pendingRequests > 0) { %>
-              <span class="notification-badge"><%= pendingRequests %></span>
+            <% if ((typeof pendingRequests !== 'undefined' && pendingRequests > 0) || 
+                  (typeof unreadMessages !== 'undefined' && unreadMessages > 0)) { %>
+              <span class="notification-badge"><%= pendingRequests + (unreadMessages || 0) %></span>
             <% } %>
-            <i class="fas fa-caret-down"></i>
+            <i class="ph-caret-down-duotone"></i>
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="/dashboard">Dashboard</a>
-            <a class="dropdown-item" href="/characters/my-characters">My Characters</a>
+            <a class="dropdown-item" href="/dashboard">
+              <i class="ph-gauge-duotone"></i> Dashboard
+            </a>
+            <a class="dropdown-item" href="/characters/my-characters">
+              <i class="ph-user-duotone"></i> My Characters
+            </a>
             
-            <!-- New item for relationship requests -->
+            <!-- New item for messages -->
+            <a class="dropdown-item" href="/characters/my-characters">
+              <i class="ph-chat-text-duotone"></i> Messages
+              <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
+                <span class="notification-badge-small"><%= unreadMessages %></span>
+              <% } %>
+            </a>
+            
+            <!-- Item for relationship requests -->
             <a class="dropdown-item" href="/characters/relationship-requests">
-              Relationship Requests
+              <i class="ph-users-duotone"></i> Relationship Requests
               <% if (typeof pendingRequests !== 'undefined' && pendingRequests > 0) { %>
                 <span class="notification-badge-small"><%= pendingRequests %></span>
               <% } %>
             </a>
             
-            <a class="dropdown-item" href="/writing/my-threads">My Threads</a>
+            <a class="dropdown-item" href="/writing/my-threads">
+              <i class="ph-book-open-duotone"></i> My Threads
+            </a>
             
             <% if (user.isAdmin) { %>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="/teams/admin/teams">Manage Teams</a>
+              <a class="dropdown-item" href="/teams/admin/teams">
+                <i class="ph-shield-duotone"></i> Manage Teams
+              </a>
             <% } %>
             
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="/auth/profile">Profile</a>
-            <a class="dropdown-item" href="/auth/logout">Logout</a>
+            <a class="dropdown-item" href="/auth/profile">
+              <i class="ph-gear-duotone"></i> Profile Settings
+            </a>
+            <a class="dropdown-item" href="/auth/logout">
+              <i class="ph-sign-out-duotone"></i> Logout
+            </a>
           </div>
         </li>
       <% } else { %>
@@ -93,6 +114,16 @@
     font-size: var(--text-xs);
     padding: 0 3px;
     margin-left: 5px;
+  }
+  
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .dropdown-item i {
+    margin-right: 8px;
+    opacity: 0.8;
   }
 </style>
 

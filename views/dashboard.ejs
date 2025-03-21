@@ -1,11 +1,12 @@
+<!-- views/dashboard.ejs (updated with Phosphor Icons) -->
 <div class="d-flex justify-between align-center mb-4">
   <h1>Dashboard</h1>
   <div>
     <a href="/characters/create" class="btn btn-sm">
-      <i class="fas fa-plus"></i> New Character
+      <i class="ph-plus-duotone"></i> New Character
     </a>
     <a href="/writing/create" class="btn btn-sm ml-2">
-      <i class="fas fa-plus"></i> New Thread
+      <i class="ph-plus-duotone"></i> New Thread
     </a>
   </div>
 </div>
@@ -84,8 +85,75 @@
   </div>
 </div>
 
+<!-- Recent Messages -->
+<div class="card mt-4">
+  <div class="card-header d-flex justify-between align-center">
+    <h3 class="mb-0">Recent Messages</h3>
+    <% if (characters && characters.length > 0) { %>
+      <a href="/messages/<%= characters[0].id %>" class="btn btn-sm">View All Messages</a>
+    <% } %>
+  </div>
+  <div class="card-body">
+    <% if (typeof recentMessages !== 'undefined' && recentMessages.length > 0) { %>
+      <div class="recent-messages-list">
+        <% recentMessages.forEach(message => { %>
+          <div class="recent-message-item">
+            <div class="recent-message-header">
+              <div class="d-flex align-center">
+                <% if (message.sender.avatarUrl) { %>
+                  <img src="<%= message.sender.avatarUrl %>" alt="<%= message.sender.name %>" class="recent-message-avatar">
+                <% } else { %>
+                  <div class="recent-message-avatar-placeholder">
+                    <%= message.sender.name.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+                
+                <div class="recent-message-participants">
+                  <span class="message-from"><%= message.sender.name %></span>
+                  <i class="ph-arrow-right-duotone mx-1"></i>
+                  <span class="message-to"><%= message.receiver.name %></span>
+                </div>
+              </div>
+              
+              <div class="recent-message-time">
+                <%= new Date(message.createdAt).toLocaleDateString() %>
+              </div>
+            </div>
+            
+            <div class="recent-message-content">
+              <%= message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content %>
+            </div>
+            
+            <div class="recent-message-actions mt-2">
+              <a href="/messages/<%= message.isReceived ? message.receiver.id : message.sender.id %>/<%= message.isReceived ? message.sender.id : message.receiver.id %>" class="btn btn-sm">
+                <i class="ph-chat-dots-duotone"></i> View Conversation
+              </a>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="text-center">No recent messages to display.</p>
+      <% if (characters && characters.length > 0) { %>
+        <div class="text-center mt-3">
+          <a href="/messages/<%= characters[0].id %>/new" class="btn">
+            <i class="ph-chat-text-plus-duotone"></i> Send a Message
+          </a>
+        </div>
+      <% } else { %>
+        <div class="text-center mt-3">
+          <p>Create a character to start messaging with other characters.</p>
+          <a href="/characters/create" class="btn">
+            <i class="ph-user-plus-duotone"></i> Create a Character
+          </a>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
 <!-- Activity Feed -->
-<div class="card">
+<div class="card mt-4">
   <div class="card-header">
     <h3 class="mb-0">Recent Activity</h3>
   </div>
@@ -97,11 +165,11 @@
             <div class="d-flex align-center">
               <div style="width: 30px; text-align: center; margin-right: 10px;">
                 <% if (activity.type === 'post') { %>
-                  <i class="fas fa-pen" style="color: var(--info);"></i>
+                  <i class="ph-pen-duotone" style="color: var(--info);"></i>
                 <% } else if (activity.type === 'character') { %>
-                  <i class="fas fa-user" style="color: var(--info);"></i>
+                  <i class="ph-user-duotone" style="color: var(--info);"></i>
                 <% } else if (activity.type === 'thread') { %>
-                  <i class="fas fa-book" style="color: var(--info);"></i>
+                  <i class="ph-book-duotone" style="color: var(--info);"></i>
                 <% } %>
               </div>
               <div>
@@ -115,7 +183,77 @@
         <% }); %>
       </ul>
     <% } else { %>
-      <p>No recent activity to display.</p>
+      <p class="text-center">No recent activity to display.</p>
     <% } %>
   </div>
 </div>
+
+<style>
+  .recent-messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .recent-message-item {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    padding: 15px;
+  }
+  
+  .recent-message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .recent-message-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+  }
+  
+  .recent-message-avatar-placeholder {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+    margin-right: 10px;
+  }
+  
+  .recent-message-participants {
+    font-size: var(--text-sm);
+  }
+  
+  .message-from, .message-to {
+    font-weight: var(--medium);
+    color: var(--header);
+  }
+  
+  .recent-message-time {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .recent-message-content {
+    padding-left: 40px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: var(--text-sm);
+  }
+  
+  .recent-message-actions {
+    text-align: right;
+  }
+  
+  .mx-1 {
+    margin: 0 5px;
+  }
+</style>

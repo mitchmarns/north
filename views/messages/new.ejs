@@ -1,0 +1,77 @@
+<!-- views/messages/new.ejs (updated with Phosphor Icons) -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>New Message</h1>
+  <a href="/messages/<%= character.id %>" class="btn btn-outline">
+    <i class="ph-arrow-left-duotone"></i> Back to Inbox
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">Start a New Conversation</h3>
+  </div>
+  <div class="card-body">
+    <form action="/messages/send" method="POST">
+      <input type="hidden" name="characterId" value="<%= character.id %>">
+      
+      <div class="form-group">
+        <label for="receiverId">Send To</label>
+        <select id="receiverId" name="receiverId" class="form-control" required>
+          <option value="">-- Select a character --</option>
+          
+          <% if (recipients && recipients.length > 0) { %>
+            <% if (recipients.some(r => r.isOwn)) { %>
+              <optgroup label="Your Characters">
+                <% recipients.filter(r => r.isOwn).forEach(recipient => { %>
+                  <option value="<%= recipient.id %>"><%= recipient.name %></option>
+                <% }); %>
+              </optgroup>
+            <% } %>
+            
+            <% if (recipients.some(r => !r.isOwn)) { %>
+              <optgroup label="Other Characters">
+                <% recipients.filter(r => !r.isOwn).forEach(recipient => { %>
+                  <option value="<%= recipient.id %>"><%= recipient.name %> (by <%= recipient.username %>)</option>
+                <% }); %>
+              </optgroup>
+            <% } %>
+          <% } %>
+        </select>
+        
+        <% if (!recipients || recipients.length === 0) { %>
+          <small style="color: rgba(255, 255, 255, 0.5);">
+            <i class="ph-info-duotone"></i> No characters available. You need to create relationships with other characters first.
+            <a href="/characters/<%= character.id %>/relationships">Manage Relationships</a>
+          </small>
+        <% } %>
+      </div>
+      
+      <div class="form-group">
+        <label for="content">Message</label>
+        <textarea 
+          id="content"
+          name="content" 
+          class="form-control" 
+          rows="6" 
+          placeholder="Type your message here..."
+          required
+        ></textarea>
+      </div>
+      
+      <div class="form-group text-right">
+        <a href="/messages/<%= character.id %>" class="btn btn-outline mr-2">
+          <i class="ph-x-duotone"></i> Cancel
+        </a>
+        <button type="submit" class="btn">
+          <i class="ph-paper-plane-right-duotone"></i> Send Message
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .mr-2 {
+    margin-right: var(--spacing-sm);
+  }
+</style>

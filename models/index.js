@@ -24,6 +24,7 @@ const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
 const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
 const Team = require('./team')(sequelize, Sequelize.DataTypes);
+const Message = require('./message')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
@@ -55,6 +56,13 @@ Post.belongsTo(User, { foreignKey: 'userId' });
 Team.hasMany(Character, { foreignKey: 'teamId', as: 'members' });
 Character.belongsTo(Team, { foreignKey: 'teamId' });
 
+Character.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
+Message.belongsTo(Character, { foreignKey: 'senderId', as: 'sender' });
+
+Character.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
+Message.belongsTo(Character, { foreignKey: 'receiverId', as: 'receiver' });
+
+
 // Export models and Sequelize instance
 module.exports = {
   sequelize,
@@ -64,5 +72,6 @@ module.exports = {
   Relationship,
   Thread,
   Post,
-  Team
+  Team,
+  Message
 };

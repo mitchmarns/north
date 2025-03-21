@@ -6,7 +6,7 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
 const methodOverride = require('method-override');
-const { sequelize, Character, Relationship, Sequelize } = require('./models');
+const { sequelize, Character, Relationship, Message, Sequelize } = require('./models');
 
 // Initialize Express
 const app = express();

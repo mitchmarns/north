@@ -1,0 +1,187 @@
+<!-- views/messages/inbox.ejs (updated with Phosphor Icons) -->
+<div class="d-flex justify-between align-center mb-4">
+  <div>
+    <h1><%= character.name %>'s Messages</h1>
+    <div style="color: rgba(255, 255, 255, 0.7);">
+      <%= conversations.length %> conversations
+      <% if (totalUnread > 0) { %>
+        • <span class="unread-badge"><%= totalUnread %> unread</span>
+      <% } %>
+    </div>
+  </div>
+  
+  <div>
+    <a href="/messages/<%= character.id %>/new" class="btn mr-2">
+      <i class="ph-plus-duotone"></i> New Message
+    </a>
+    <a href="/characters/<%= character.id %>" class="btn btn-outline">
+      <i class="ph-arrow-left-duotone"></i> Back to Character
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Conversations List -->
+  <div class="col" style="flex: 0 0 100%;">
+    <div class="card">
+      <div class="card-body">
+        <% if (conversations && conversations.length > 0) { %>
+          <div class="conversation-list">
+            <% conversations.forEach(conv => { %>
+              <a href="/messages/<%= character.id %>/<%= conv.character.id %>" class="conversation-item">
+                <div class="conversation-avatar">
+                  <% if (conv.character.avatarUrl) { %>
+                    <img src="<%= conv.character.avatarUrl %>" alt="<%= conv.character.name %>" class="avatar-image">
+                  <% } else { %>
+                    <div class="avatar-placeholder">
+                      <%= conv.character.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                  
+                  <% if (conv.unreadCount > 0) { %>
+                    <span class="unread-count"><%= conv.unreadCount %></span>
+                  <% } %>
+                </div>
+                
+                <div class="conversation-content">
+                  <div class="conversation-header">
+                    <h4 class="conversation-name">
+                      <%= conv.character.name %>
+                    </h4>
+                    <div class="conversation-time">
+                      <%= new Date(conv.lastMessageAt).toLocaleDateString() %>
+                      <%= new Date(conv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                    </div>
+                  </div>
+                  
+                  <div class="conversation-meta">
+                    <span class="character-owner">
+                      By <%= conv.character.User ? conv.character.User.username : 'Unknown' %>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="text-center p-4">
+            <div style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.5);">
+              <i class="ph-chat-dots-duotone" style="font-size: 3rem;"></i>
+            </div>
+            <h3>No messages yet</h3>
+            <p>Start a new conversation to begin messaging with other characters.</p>
+            <a href="/messages/<%= character.id %>/new" class="btn mt-3">Start a New Conversation</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .conversation-list {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .conversation-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--lighttext);
+    transition: background-color var(--transition-fast);
+  }
+  
+  .conversation-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .conversation-item:last-child {
+    border-bottom: none;
+  }
+  
+  .conversation-avatar {
+    position: relative;
+    margin-right: 15px;
+  }
+  
+  .avatar-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: var(--semibold);
+  }
+  
+  .unread-count {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background-color: var(--danger);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xs);
+    font-weight: var(--bold);
+  }
+  
+  .conversation-content {
+    flex: 1;
+  }
+  
+  .conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .conversation-name {
+    font-size: var(--text-lg);
+    margin: 0;
+  }
+  
+  .conversation-time {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .conversation-meta {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .character-owner {
+    font-style: italic;
+  }
+  
+  .unread-badge {
+    display: inline-block;
+    background-color: var(--danger);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: var(--text-xs);
+    font-weight: var(--medium);
+  }
+  
+  .p-4 {
+    padding: 2rem;
+  }
+</style>
