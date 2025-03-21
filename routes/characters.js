@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const characterController = require('../controllers/characterController');
 const { isAuthenticated } = require('../middleware/auth');
 
-// List all characters
+// List all characters - This should load all registered characters, not just the user's own
 router.get('/', characterController.getAllCharacters);
 
 // Character listing for current user
@@ -50,10 +50,7 @@ router.post(
   characterController.createCharacter
 );
 
-// View character
-router.get('/:id', characterController.getCharacter);
-
-// Edit character form
+// Edit character form - Must be before /:id route
 router.get('/edit/:id', isAuthenticated, characterController.getEditCharacter);
 
 // Update character
@@ -82,7 +79,7 @@ router.put(
 // Delete character
 router.delete('/delete/:id', isAuthenticated, characterController.deleteCharacter);
 
-// Character relationships
+// Character relationships - Must be before /:id route
 router.get('/:id/relationships', isAuthenticated, characterController.getCharacterRelationships);
 
 // Add relationship
@@ -126,5 +123,8 @@ router.delete(
   isAuthenticated,
   characterController.deleteRelationship
 );
+
+// View character - This must be the last route because it uses a catch-all parameter
+router.get('/:id', characterController.getCharacter);
 
 module.exports = router;
