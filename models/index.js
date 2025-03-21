@@ -24,7 +24,7 @@ const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
 const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
 const Team = require('./team')(sequelize, Sequelize.DataTypes);
-const Message = require('./message')(sequelize, Sequelize.DataTypes);
+const Message = require('./messages')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
