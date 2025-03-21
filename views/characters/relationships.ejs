@@ -140,7 +140,7 @@
             <% if (typeof otherUsersCharacters !== 'undefined' && otherUsersCharacters.length > 0) { %>
               <div class="form-group">
                 <label for="character2Id_other">Select Character</label>
-                <select id="character2Id_other" class="form-control">
+                <select id="character2Id_other" name="character2Id" class="form-control">
                   <option value="">-- Select a character --</option>
                   <% otherUsersCharacters.forEach(char => { %>
                     <option value="<%= char.id %>"><%= char.name %> (by <%= char.User.username %>)</option>
