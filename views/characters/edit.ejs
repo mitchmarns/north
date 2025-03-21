@@ -38,6 +38,40 @@
       </div>
     </form>
   </div>
+  <script>
+    // Run this after the page is fully loaded
+    window.addEventListener('load', function() {
+      console.log('Emergency tab fix running');
+      
+      // Make all tabs visible
+      const tabPanes = document.querySelectorAll('.character-tab-pane');
+      console.log('Found tab panes:', tabPanes.length);
+      
+      // If we found tab panes, make them visible
+      if (tabPanes.length > 0) {
+        tabPanes.forEach(function(pane) {
+          pane.style.display = 'block';
+        });
+        
+        // Make the first one active
+        tabPanes[0].classList.add('active');
+        
+        // Make the corresponding tab link active
+        const firstTabLink = document.querySelector('.character-tab-link');
+        if (firstTabLink) {
+          firstTabLink.classList.add('active');
+        }
+      } else {
+        // If no tab panes found, try direct ID approach
+        ['tab-personality', 'tab-appearance', 'tab-background', 'tab-details'].forEach(function(id) {
+          const tab = document.getElementById(id);
+          if (tab) {
+            tab.style.display = 'block';
+          }
+        });
+      }
+    });
+  </script>
 </div>
 
 <!-- JavaScript for tab functionality and image preview -->
