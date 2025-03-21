@@ -63,73 +63,68 @@
   
   // Fixed tab functionality
   document.addEventListener('DOMContentLoaded', function() {
-    // Set up team fields first
-    toggleTeamFields();
-    
-    // Tab functionality
-    const tabLinks = document.querySelectorAll('.character-tab-link');
-    const tabContents = document.querySelectorAll('.character-tab-pane');
-    
-    // Make sure we have tabs to work with
-    if (tabLinks.length > 0 && tabContents.length > 0) {
-      // First, ensure all tabs are inactive
-      tabContents.forEach(tab => tab.style.display = 'none');
+  // Tab functionality
+  const tabLinks = document.querySelectorAll('.character-tab-link');
+  const tabContents = document.querySelectorAll('.character-tab-pane');
+  
+  // Initialize tabs - hide all tab content first
+  tabContents.forEach(tab => {
+    tab.style.display = 'none';
+  });
+  
+  // Show the first tab by default
+  if (tabLinks.length > 0 && tabContents.length > 0) {
+    tabLinks[0].classList.add('active');
+    const firstTabId = tabLinks[0].getAttribute('href');
+    const firstTab = document.querySelector(firstTabId);
+    if (firstTab) {
+      firstTab.style.display = 'block';
+    }
+  }
+  
+  // Add click handlers to tab links
+  tabLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
       
-      // Find the active tab link
-      const activeTabLink = document.querySelector('.character-tab-link.active');
-      
-      if (activeTabLink) {
-        // Get the target tab content ID
-        const targetId = activeTabLink.getAttribute('href');
-        // Make the target tab content visible
-        const targetContent = document.querySelector(targetId);
-        if (targetContent) {
-          targetContent.style.display = 'block';
-          targetContent.classList.add('active');
-        }
-      } else if (tabLinks.length > 0) {
-        // If no tab is active, activate the first one
-        tabLinks[0].classList.add('active');
-        const firstTabId = tabLinks[0].getAttribute('href');
-        const firstTabContent = document.querySelector(firstTabId);
-        if (firstTabContent) {
-          firstTabContent.style.display = 'block';
-          firstTabContent.classList.add('active');
-        }
-      }
-      
-      // Add click handlers to all tab links
-      tabLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          
-          // Remove active class from all tabs
-          tabLinks.forEach(link => link.classList.remove('active'));
-          tabContents.forEach(tab => {
-            tab.classList.remove('active');
-            tab.style.display = 'none';
-          });
-          
-          // Add active class to current tab
-          this.classList.add('active');
-          const targetId = this.getAttribute('href');
-          const targetContent = document.querySelector(targetId);
-          if (targetContent) {
-            targetContent.classList.add('active');
-            targetContent.style.display = 'block';
-          }
-        });
+      // Remove active class from all tabs and hide tab content
+      tabLinks.forEach(l => l.classList.remove('active'));
+      tabContents.forEach(t => {
+        t.style.display = 'none';
       });
       
-      // Load the avatar preview if URL exists
-      const avatarUrl = document.getElementById('avatarUrl').value;
-      if (avatarUrl) {
-        document.getElementById('avatar-preview').innerHTML = `
-          <img src="${avatarUrl}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
-        `;
+      // Add active class to clicked tab and show its content
+      this.classList.add('active');
+      const targetId = this.getAttribute('href');
+      const targetTab = document.querySelector(targetId);
+      if (targetTab) {
+        targetTab.style.display = 'block';
       }
-    }
+    });
   });
+  
+  // Team/Role fields visibility toggle
+  const roleSelect = document.getElementById('role');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', toggleTeamFields);
+    // Initialize on page load
+    toggleTeamFields();
+  }
+  
+  // Avatar preview handler
+  const avatarInput = document.getElementById('avatarUrl');
+  if (avatarInput) {
+    // Initialize preview if there's an existing URL
+    if (avatarInput.value) {
+      updateAvatarPreview(avatarInput.value);
+    }
+    
+    // Add listener for changes
+    avatarInput.addEventListener('input', function(e) {
+      updateAvatarPreview(this.value.trim());
+    });
+  }
+});
 
   function toggleCharacterTab(tabId, event) {
     if (event) event.preventDefault();
