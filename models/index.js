@@ -28,11 +28,15 @@ const Post = require('./post')(sequelize, Sequelize.DataTypes);
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
 Character.belongsTo(User, { foreignKey: 'userId' });
 
+Character.belongsToMany(Character, {
+  through: Relationship,
+  as: 'connections',
+  foreignKey: 'character1Id',
+  otherKey: 'character2Id'
+});
+
 Relationship.belongsTo(Character, { foreignKey: 'character1Id', as: 'character1' });
 Relationship.belongsTo(Character, { foreignKey: 'character2Id', as: 'character2' });
-Character.hasMany(Relationship, { foreignKey: 'character1Id', as: 'relationships1' });
-Character.hasMany(Relationship, { foreignKey: 'character2Id', as: 'relationships2' });
-
 Relationship.belongsTo(User, { foreignKey: 'requestedById', as: 'requestedBy' });
 
 User.hasMany(Thread, { foreignKey: 'creatorId', as: 'createdThreads' });
