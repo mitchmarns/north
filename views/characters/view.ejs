@@ -42,19 +42,32 @@
               <% if (character.Team) { %>
                 <div class="d-flex align-center mb-2">
                   <% if (character.Team.logo) { %>
-                    <img src="<%= character.Team.logo %>" alt="<%= character.Team.name %>" style="width: 50px; height: 50px; margin-right: 15px;">
+                    <img src="<%= character.Team.logo %>" alt="<%= character.Team.name %>" style="width: 50px; height: 50px; margin-right: 15px; object-fit: contain;">
+                  <% } else { %>
+                    <div style="width: 50px; height: 50px; background-color: rgba(0, 0, 0, 0.2); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-family: var(--decorfont);">
+                      <%= character.Team.shortName %>
+                    </div>
                   <% } %>
                   <div>
                     <h4><%= character.Team.name %></h4>
                     <p><%= character.Team.city %></p>
                   </div>
                 </div>
-                <% if (character.role === 'Player' && character.position) { %>
-                  <p><strong>Position:</strong> <%= character.position %></p>
+                <% if (character.role === 'Player') { %>
+                  <% if (character.position) { %>
+                    <p><strong>Position:</strong> <%= character.position %></p>
+                  <% } %>
+                  <% if (character.jerseyNumber) { %>
+                    <p><strong>Jersey Number:</strong> #<%= character.jerseyNumber %></p>
+                  <% } %>
                 <% } %>
                 <a href="/teams/<%= character.Team.id %>" class="btn btn-sm">View Team</a>
               <% } else { %>
                 <p>Not currently associated with any team.</p>
+                <!-- Debug info -->
+                <% if (character.teamId) { %>
+                  <p style="color: red;">Debug: TeamId is set to <%= character.teamId %> but Team object is not loaded</p>
+                <% } %>
               <% } %>
             </div>
           </div>

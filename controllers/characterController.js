@@ -59,6 +59,9 @@ exports.getCharacter = async (req, res) => {
         {
           model: User,
           attributes: ['username', 'id']
+        },
+        {
+          model: Team
         }
       ]
     });
@@ -107,6 +110,8 @@ exports.getCharacter = async (req, res) => {
           status: rel.status
         };
       });
+
+      console.log('Character team info:', character.Team ? character.Team.name : 'No team');
 
       res.render('characters/view', {
         title: character.name,
