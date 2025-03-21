@@ -134,8 +134,6 @@ exports.getCharacter = async (req, res) => {
 // Get character for editing
 exports.getEditCharacter = async (req, res) => {
   try {
-    const { Character, Team } = require('../models');
-    
     // Get the character
     const character = await Character.findByPk(req.params.id);
 
@@ -151,12 +149,18 @@ exports.getEditCharacter = async (req, res) => {
     }
     
     // Get teams for the dropdown
-    const teams = await Team.findAll({
-      where: {
-        isActive: true
-      },
-      order: [['name', 'ASC']]
-    });
+    let teams = [];
+    try {
+      teams = await Team.findAll({
+        where: {
+          isActive: true
+        },
+        order: [['name', 'ASC']]
+      });
+    } catch (teamError) {
+      console.error('Error fetching teams:', teamError);
+      // Continue without teams data
+    }
 
     res.render('characters/edit', {
       title: `Edit ${character.name}`,

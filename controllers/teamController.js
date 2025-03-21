@@ -11,21 +11,27 @@ exports.getAllTeams = async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    // Count players and staff for each team
+    // Count players and staff for each team (with error handling)
     for (let team of teams) {
-      team.playerCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Player'
-        }
-      });
-      
-      team.staffCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Staff'
-        }
-      });
+      try {
+        team.playerCount = await Character.count({
+          where: {
+            teamId: team.id,
+            role: 'Player'
+          }
+        });
+        
+        team.staffCount = await Character.count({
+          where: {
+            teamId: team.id,
+            role: 'Staff'
+          }
+        });
+      } catch (countError) {
+        console.error('Error counting team members:', countError);
+        team.playerCount = 0;
+        team.staffCount = 0;
+      }
     }
 
     res.render('teams/index', {
