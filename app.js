@@ -104,6 +104,7 @@ app.use('/', require('./routes/index'));
 app.use('/auth', require('./routes/auth'));
 app.use('/characters', require('./routes/characters'));
 app.use('/writing', require('./routes/writing'));
+app.use('/teams', require('./routes/teams'));
 
 // Error handling
 app.use((req, res) => {
