@@ -307,104 +307,73 @@ exports.deleteCharacter = async (req, res) => {
 // Get character relationships
 exports.getCharacterRelationships = async (req, res) => {
   try {
-    console.log('Getting relationships for character ID:', req.params.id);
+    console.log('==========================================');
+    console.log('DEBUG: Getting relationships for character ID:', req.params.id);
     
+    // Get the character
     const character = await Character.findByPk(req.params.id);
     
     if (!character) {
-      console.log('Character not found');
+      console.log('DEBUG: Character not found');
       req.flash('error_msg', 'Character not found');
       return res.redirect('/characters');
     }
     
+    console.log('DEBUG: Found character:', character.name);
+    console.log('DEBUG: Character owner ID:', character.userId);
+    console.log('DEBUG: Current user ID:', req.user.id);
+    
     // Check if user owns the character
     if (character.userId !== req.user.id) {
-      console.log('User not authorized - character belongs to:', character.userId);
+      console.log('DEBUG: User not authorized');
       req.flash('error_msg', 'Not authorized');
       return res.redirect('/characters');
     }
     
-    console.log('Fetching relationships...');
+    console.log('DEBUG: User authorized, fetching relationships...');
     
-    // Get relationships
-    const relationships = await Relationship.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          { character1Id: character.id },
-          { character2Id: character.id }
+    // Try fetching relationships with error handling for each step
+    try {
+      // Get relationships - simplify the query to isolate the issue
+      const relationships = await Relationship.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            { character1Id: character.id },
+            { character2Id: character.id }
+          ]
+        }
+      });
+      
+      console.log('DEBUG: Raw relationships found:', relationships.length);
+      
+      // Now try to include the character data
+      const fullRelationships = await Relationship.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            { character1Id: character.id },
+            { character2Id: character.id }
+          ]
+        },
+        include: [
+          { model: Character, as: 'character1' },
+          { model: Character, as: 'character2' }
         ]
-      },
-      include: [
-        {
-          model: Character,
-          as: 'character1',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: Character,
-          as: 'character2',
-          include: [{ model: User, attributes: ['username'] }]
-        }
-      ]
-    });
+      });
+      
+      console.log('DEBUG: Full relationships with character data:', 
+                 fullRelationships ? fullRelationships.length : 'null');
+      
+      // Continue with the rest of your existing code...
+      // ...
+    } catch (relError) {
+      console.error('DEBUG: Specific error in relationship query:', relError);
+      throw relError; // Rethrow to be caught by the outer catch block
+    }
     
-    console.log('Found relationships:', relationships.length);
+    // Rest of your existing code...
     
-    // Format relationships for display
-    const formattedRelationships = relationships.map(rel => {
-      const isCharacter1 = rel.character1Id === character.id;
-      const otherCharacter = isCharacter1 ? rel.character2 : rel.character1;
-      return {
-        id: rel.id,
-        otherCharacter: otherCharacter,
-        relationshipType: rel.relationshipType,
-        description: rel.description,
-        status: rel.status,
-        isPending: rel.isPending || false,
-        isApproved: rel.isApproved || false,
-        canEdit: otherCharacter.userId === req.user.id || character.userId === req.user.id,
-        otherUserName: otherCharacter.User ? otherCharacter.User.username : 'Unknown'
-      };
-    });
-    
-    // Get user's other characters for relationship creation
-    const userCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        id: {
-          [Sequelize.Op.ne]: character.id
-        },
-        isArchived: false
-      }
-    });
-    
-    // Get public characters from other users
-    const otherUsersCharacters = await Character.findAll({
-      where: {
-        userId: {
-          [Sequelize.Op.ne]: req.user.id
-        },
-        isPrivate: false,
-        isArchived: false
-      },
-      include: [
-        {
-          model: User,
-          attributes: ['username']
-        }
-      ],
-      limit: 50
-    });
-    
-    res.render('characters/relationships', {
-      title: `${character.name}'s Relationships`,
-      character,
-      relationships: formattedRelationships,
-      userCharacters,
-      otherUsersCharacters
-    });
   } catch (error) {
-    console.error('Error fetching relationships:', error.message);
+    console.error('ERROR in getCharacterRelationships:', error);
     console.error(error.stack);
     req.flash('error_msg', 'An error occurred while fetching relationships');
     res.redirect(`/characters/${req.params.id}`);
