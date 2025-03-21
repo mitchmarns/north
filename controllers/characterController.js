@@ -1,4 +1,4 @@
-const { Character, User, Relationship, sequelize, Sequelize } = require('../models');
+const { Character, User, Relationship, Team, sequelize, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
 
 // Get all characters (public)
@@ -134,6 +134,9 @@ exports.getCharacter = async (req, res) => {
 // Get character for editing
 exports.getEditCharacter = async (req, res) => {
   try {
+    // Import Team model directly to ensure it's available
+    const { Character, Team } = require('../models');
+    
     // Get the character
     const character = await Character.findByPk(req.params.id);
 
@@ -157,6 +160,7 @@ exports.getEditCharacter = async (req, res) => {
         },
         order: [['name', 'ASC']]
       });
+      console.log(`Found ${teams.length} teams for dropdown`);
     } catch (teamError) {
       console.error('Error fetching teams:', teamError);
       // Continue without teams data
