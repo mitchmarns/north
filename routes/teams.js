@@ -14,14 +14,14 @@ router.get('/:id', teamController.getTeam);
 // View team roster
 router.get('/:id/roster', teamController.getTeamRoster);
 
-// Admin routes for team management
-router.get('/admin/teams', isAuthenticated, isAdmin, teamController.getAdminTeams);
-router.get('/admin/teams/create', isAuthenticated, isAdmin, teamController.getCreateTeam);
-router.post('/admin/teams/create', isAuthenticated, isAdmin, [
+// Change these routes to be accessible by any authenticated user
+router.get('/admin/teams', isAuthenticated, teamController.getAdminTeams);
+router.get('/admin/teams/create', isAuthenticated, teamController.getCreateTeam);
+router.post('/admin/teams/create', isAuthenticated, [
   // Validation
 ], teamController.createTeam);
-router.get('/admin/teams/edit/:id', isAuthenticated, isAdmin, teamController.getEditTeam);
-router.put('/admin/teams/edit/:id', isAuthenticated, isAdmin, [
+router.get('/admin/teams/edit/:id', isAuthenticated, teamController.getEditTeam);
+router.put('/admin/teams/edit/:id', isAuthenticated, [
   // Validation
 ], teamController.updateTeam);
 
