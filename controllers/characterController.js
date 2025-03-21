@@ -332,45 +332,101 @@ exports.getCharacterRelationships = async (req, res) => {
     
     console.log('DEBUG: User authorized, fetching relationships...');
     
-    // Try fetching relationships with error handling for each step
-    try {
-      // Get relationships - simplify the query to isolate the issue
-      const relationships = await Relationship.findAll({
-        where: {
-          [Sequelize.Op.or]: [
-            { character1Id: character.id },
-            { character2Id: character.id }
-          ]
-        }
-      });
-      
-      console.log('DEBUG: Raw relationships found:', relationships.length);
-      
-      // Now try to include the character data
-      const fullRelationships = await Relationship.findAll({
-        where: {
-          [Sequelize.Op.or]: [
-            { character1Id: character.id },
-            { character2Id: character.id }
-          ]
-        },
-        include: [
-          { model: Character, as: 'character1' },
-          { model: Character, as: 'character2' }
+    // Get relationships
+    const relationships = await Relationship.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          { character1Id: character.id },
+          { character2Id: character.id }
         ]
+      },
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username'] }]
+        },
+        {
+          model: User,
+          as: 'requestedBy',
+          attributes: ['username']
+        }
+      ]
+    });
+    
+    console.log('DEBUG: Relationships found:', relationships ? relationships.length : 0);
+    
+    // Format relationships for display
+    let formattedRelationships = [];
+    if (relationships && relationships.length > 0) {
+      formattedRelationships = relationships.map(rel => {
+        const isCharacter1 = rel.character1Id === character.id;
+        const otherCharacter = isCharacter1 ? rel.character2 : rel.character1;
+        return {
+          id: rel.id,
+          otherCharacter: otherCharacter,
+          relationshipType: rel.relationshipType,
+          description: rel.description,
+          status: rel.status || 'Neutral',
+          isPending: rel.isPending || false,
+          isApproved: rel.isApproved || false,
+          canEdit: otherCharacter.userId === req.user.id || character.userId === req.user.id,
+          otherUserName: otherCharacter.User ? otherCharacter.User.username : 'Unknown'
+        };
       });
-      
-      console.log('DEBUG: Full relationships with character data:', 
-                 fullRelationships ? fullRelationships.length : 'null');
-      
-      // Continue with the rest of your existing code...
-      // ...
-    } catch (relError) {
-      console.error('DEBUG: Specific error in relationship query:', relError);
-      throw relError; // Rethrow to be caught by the outer catch block
     }
     
-    // Rest of your existing code...
+    console.log('DEBUG: Formatted relationships:', formattedRelationships.length);
+    
+    // Get user's other characters for relationship creation
+    const userCharacters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        id: {
+          [Sequelize.Op.ne]: character.id
+        },
+        isArchived: false
+      }
+    });
+    
+    console.log('DEBUG: User characters found:', userCharacters ? userCharacters.length : 0);
+    
+    // Get public characters from other users
+    const otherUsersCharacters = await Character.findAll({
+      where: {
+        userId: {
+          [Sequelize.Op.ne]: req.user.id
+        },
+        isPrivate: false,
+        isArchived: false
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        }
+      ],
+      limit: 50
+    });
+    
+    console.log('DEBUG: Other users characters found:', otherUsersCharacters ? otherUsersCharacters.length : 0);
+    console.log('DEBUG: Rendering template...');
+    
+    // Render the template with fallbacks for all arrays
+    res.render('characters/relationships', {
+      title: `${character.name}'s Relationships`,
+      character,
+      relationships: formattedRelationships || [],
+      userCharacters: userCharacters || [],
+      otherUsersCharacters: otherUsersCharacters || []
+    });
+    
+    console.log('DEBUG: Template rendered successfully');
     
   } catch (error) {
     console.error('ERROR in getCharacterRelationships:', error);
