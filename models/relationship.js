@@ -37,6 +37,22 @@ module.exports = (sequelize, DataTypes) => {
     isPublic: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
+    },
+    isPending: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    isApproved: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    requestedById: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
     }
   }, {
     timestamps: true,

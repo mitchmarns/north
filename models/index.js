@@ -37,6 +37,7 @@ Character.belongsToMany(Character, {
 
 Relationship.belongsTo(Character, { foreignKey: 'character1Id', as: 'character1' });
 Relationship.belongsTo(Character, { foreignKey: 'character2Id', as: 'character2' });
+Relationship.belongsTo(User, { foreignKey: 'requestedById', as: 'requestedBy' });
 
 User.hasMany(Thread, { foreignKey: 'creatorId', as: 'createdThreads' });
 Thread.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });

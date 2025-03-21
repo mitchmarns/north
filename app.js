@@ -45,6 +45,48 @@ app.use(passport.session());
 // Connect Flash
 app.use(flash());
 
+// Middleware to check for pending relationship requests
+app.use(async (req, res, next) => {
+  if (req.user) {
+    try {
+      // Get all characters owned by the user
+      const userCharacters = await Character.findAll({
+        where: {
+          userId: req.user.id
+        }
+      });
+      
+      // Get IDs of all user's characters
+      const characterIds = userCharacters.map(char => char.id);
+      
+      // Count pending relationships involving user's characters
+      const pendingCount = await Relationship.count({
+        where: {
+          [Sequelize.Op.or]: [
+            {
+              character1Id: { [Sequelize.Op.in]: characterIds },
+              isPending: true,
+              requestedById: { [Sequelize.Op.ne]: req.user.id }
+            },
+            {
+              character2Id: { [Sequelize.Op.in]: characterIds },
+              isPending: true,
+              requestedById: { [Sequelize.Op.ne]: req.user.id }
+            }
+          ]
+        }
+      });
+      
+      // Add pendingRequests count to res.locals
+      res.locals.pendingRequests = pendingCount;
+    } catch (error) {
+      console.error('Error checking for pending requests:', error);
+      res.locals.pendingRequests = 0;
+    }
+  }
+  next();
+});
+
 // Global Variables
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');

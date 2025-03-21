@@ -1,11 +1,15 @@
 <div class="d-flex justify-between align-center mb-4">
   <h1><%= character.name %>'s Relationships</h1>
   <div>
+    <a href="/characters/relationship-requests" class="btn btn-outline mr-2">
+      <i class="fas fa-bell"></i> Pending Requests
+    </a>
     <a href="/characters/<%= character.id %>" class="btn btn-outline">
       <i class="fas fa-arrow-left"></i> Back to Character
     </a>
   </div>
 </div>
+
 <div class="row">
   <!-- Left Column: Existing Relationships -->
   <div class="col" style="flex: 0 0 60%;">
@@ -17,7 +21,7 @@
         <% if (typeof relationships !== 'undefined' && relationships.length > 0) { %>
           <div class="relationship-list">
             <% relationships.forEach(rel => { %>
-              <div class="relationship-item">
+              <div class="relationship-item <%= rel.isPending ? 'pending' : '' %>">
                 <div class="relationship-header">
                   <div class="d-flex align-center">
                     <% if (rel.otherCharacter.avatarUrl) { %>
@@ -29,47 +33,74 @@
                         <%= rel.otherCharacter.name.charAt(0).toUpperCase() %>
                       </div>
                     <% } %>
-Copy                <div style="flex: 1;">
-                  <h4 class="mb-0">
-                    <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
-                  </h4>
-                  <div class="d-flex align-center">
-                    <span class="relationship-type"><%= rel.relationshipType %></span>
-                    <% if (rel.status) { %>
-                      <span class="relationship-status <%= rel.status.toLowerCase() %>">
-                        <%= rel.status %>
-                      </span>
-                    <% } %>
+                    
+                    <div style="flex: 1;">
+                      <h4 class="mb-0">
+                        <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
+                        <small style="font-weight: normal; font-size: var(--text-sm);">
+                          by <%= rel.otherUserName %>
+                        </small>
+                      </h4>
+                      <div class="d-flex align-center">
+                        <span class="relationship-type"><%= rel.relationshipType %></span>
+                        <% if (rel.status) { %>
+                          <span class="relationship-status <%= rel.status.toLowerCase() %>">
+                            <%= rel.status %>
+                          </span>
+                        <% } %>
+                        <% if (rel.isPending) { %>
+                          <span class="relationship-status pending">
+                            Pending Approval
+                          </span>
+                        <% } %>
+                      </div>
+                    </div>
+                    
+                    <div class="relationship-actions">
+                      <% if (!rel.isPending || rel.canEdit) { %>
+                        <button class="btn btn-sm" onclick="editRelationship('<%= rel.id %>', '<%= rel.relationshipType %>', `<%= rel.description || '' %>`, '<%= rel.status %>')">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                      <% } %>
+                      
+                      <% if (rel.isPending && !rel.isApproved && rel.otherCharacter.userId === user.id) { %>
+                        <!-- Approve/Decline buttons for incoming requests -->
+                        <form action="/characters/relationships/<%= rel.id %>/approve" method="POST" style="display: inline;">
+                          <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i>
+                          </button>
+                        </form>
+                        <form action="/characters/relationships/<%= rel.id %>/decline" method="POST" style="display: inline;">
+                          <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </form>
+                      <% } else { %>
+                        <form action="/characters/relationships/<%= rel.id %>?_method=DELETE" method="POST" style="display: inline;">
+                          <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
                   </div>
                 </div>
                 
-                <div class="relationship-actions">
-                  <button class="btn btn-sm" onclick="editRelationship('<%= rel.id %>', '<%= rel.relationshipType %>', `<%= rel.description || '' %>`, '<%= rel.status %>')">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <form action="/characters/relationships/<%= rel.id %>?_method=DELETE" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-sm btn-danger delete-confirm">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </form>
-                </div>
+                <% if (rel.description) { %>
+                  <div class="relationship-description">
+                    <%= rel.description %>
+                  </div>
+                <% } %>
               </div>
-            </div>
-            
-            <% if (rel.description) { %>
-              <div class="relationship-description">
-                <%= rel.description %>
-              </div>
-            <% } %>
+            <% }); %>
           </div>
-        <% }); %>
+        <% } else { %>
+          <p class="text-center">No relationships have been defined yet.</p>
+        <% } %>
       </div>
-    <% } else { %>
-      <p class="text-center">No relationships have been defined yet.</p>
-    <% } %>
+    </div>
   </div>
-</div>
-  </div>
+  
   <!-- Right Column: Add New Relationship -->
   <div class="col" style="flex: 0 0 40%;">
     <div class="card mb-4">
@@ -77,117 +108,117 @@ Copy                <div style="flex: 1;">
         <h3 class="mb-0">Add New Relationship</h3>
       </div>
       <div class="card-body">
-        <% if (typeof otherCharacters !== 'undefined' && otherCharacters.length > 0) { %>
-          <form action="/characters/<%= character.id %>/relationships" method="POST">
-            <div class="form-group">
-              <label for="character2Id">Select Character</label>
-              <select id="character2Id" name="character2Id" class="form-control" required>
-                <option value="">-- Select a character --</option>
-                <% otherCharacters.forEach(char => { %>
-                  <option value="<%= char.id %>"><%= char.name %></option>
-                <% }); %>
-              </select>
-            </div>
-Copy        <div class="form-group">
-          <label for="relationshipType">Relationship Type</label>
-          <input type="text" id="relationshipType" name="relationshipType" class="form-control" placeholder="e.g., Friend, Enemy, Sibling, etc." required>
-        </div>
-        
-        <div class="form-group">
-          <label for="status">Status</label>
-          <select id="status" name="status" class="form-control">
-            <option value="Neutral">Neutral</option>
-            <option value="Positive">Positive</option>
-            <option value="Negative">Negative</option>
-            <option value="Complicated">Complicated</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="description">Description (Optional)</label>
-          <textarea id="description" name="description" class="form-control" rows="4" placeholder="Describe the relationship between these characters"></textarea>
-        </div>
-        
-        <div class="form-group">
-          <button type="submit" class="btn btn-block">Add Relationship</button>
-        </div>
-      </form>
-    <% } else { %>
-      <p class="text-center">You need to create more characters before you can add relationships.</p>
-      <div class="text-center mt-3">
-        <a href="/characters/create" class="btn">Create a New Character</a>
+        <form action="/characters/<%= character.id %>/relationships" method="POST">
+          <!-- Character selection tabs -->
+          <div class="character-select-tabs mb-3">
+            <a href="#myCharacters" class="character-tab-link active" onclick="toggleCharacterTab('myCharacters', event)">My Characters</a>
+            <a href="#otherCharacters" class="character-tab-link" onclick="toggleCharacterTab('otherCharacters', event)">Other Players' Characters</a>
+          </div>
+          
+          <!-- My Characters Tab -->
+          <div id="myCharacters" class="character-tab-content">
+            <% if (typeof userCharacters !== 'undefined' && userCharacters.length > 0) { %>
+              <div class="form-group">
+                <label for="character2Id_own">Select Character</label>
+                <select id="character2Id_own" name="character2Id" class="form-control" required>
+                  <option value="">-- Select a character --</option>
+                  <% userCharacters.forEach(char => { %>
+                    <option value="<%= char.id %>"><%= char.name %></option>
+                  <% }); %>
+                </select>
+              </div>
+            <% } else { %>
+              <p class="text-center">You need to create more characters before you can add relationships.</p>
+              <div class="text-center mt-3">
+                <a href="/characters/create" class="btn">Create a New Character</a>
+              </div>
+            <% } %>
+          </div>
+          
+          <!-- Other Characters Tab -->
+          <div id="otherCharacters" class="character-tab-content" style="display: none;">
+            <% if (typeof otherUsersCharacters !== 'undefined' && otherUsersCharacters.length > 0) { %>
+              <div class="form-group">
+                <label for="character2Id_other">Select Character</label>
+                <select id="character2Id_other" class="form-control">
+                  <option value="">-- Select a character --</option>
+                  <% otherUsersCharacters.forEach(char => { %>
+                    <option value="<%= char.id %>"><%= char.name %> (by <%= char.User.username %>)</option>
+                  <% }); %>
+                </select>
+                <small style="color: rgba(255, 255, 255, 0.5);">Note: Relationships with other players' characters require their approval</small>
+              </div>
+            <% } else { %>
+              <p class="text-center">No other characters are available for relationships.</p>
+            <% } %>
+          </div>
+          
+          <div class="form-group">
+            <label for="relationshipType">Relationship Type</label>
+            <input type="text" id="relationshipType" name="relationshipType" class="form-control" placeholder="e.g., Friend, Enemy, Sibling, etc." required>
+          </div>
+          
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-control">
+              <option value="Neutral">Neutral</option>
+              <option value="Positive">Positive</option>
+              <option value="Negative">Negative</option>
+              <option value="Complicated">Complicated</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description (Optional)</label>
+            <textarea id="description" name="description" class="form-control" rows="4" placeholder="Describe the relationship between these characters"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <button type="submit" class="btn btn-block">Add Relationship</button>
+          </div>
+        </form>
       </div>
-    <% } %>
+    </div>
+
+    <!-- Edit Relationship Modal -->
+    <div id="editRelationshipModal" class="card" style="display: none;">
+      <div class="card-header">
+        <h3 class="mb-0">Edit Relationship</h3>
+      </div>
+      <div class="card-body">
+        <form id="editRelationshipForm" method="POST">
+          <input type="hidden" name="_method" value="PUT">
+          
+          <div class="form-group">
+            <label for="edit_relationshipType">Relationship Type</label>
+            <input type="text" id="edit_relationshipType" name="relationshipType" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="edit_status">Status</label>
+            <select id="edit_status" name="status" class="form-control">
+              <option value="Neutral">Neutral</option>
+              <option value="Positive">Positive</option>
+              <option value="Negative">Negative</option>
+              <option value="Complicated">Complicated</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="edit_description">Description (Optional)</label>
+            <textarea id="edit_description" name="description" class="form-control" rows="4"></textarea>
+          </div>
+          
+          <div class="form-group d-flex gap-2">
+            <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+            <button type="submit" class="btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Edit Relationship Modal -->
-<div id="editRelationshipModal" class="card" style="display: none;">
-  <div class="card-header">
-    <h3 class="mb-0">Edit Relationship</h3>
-  </div>
-  <div class="card-body">
-    <form id="editRelationshipForm" method="POST">
-      <input type="hidden" name="_method" value="PUT">
-      
-      <div class="form-group">
-        <label for="edit_relationshipType">Relationship Type</label>
-        <input type="text" id="edit_relationshipType" name="relationshipType" class="form-control" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="edit_status">Status</label>
-        <select id="edit_status" name="status" class="form-control">
-          <option value="Neutral">Neutral</option>
-          <option value="Positive">Positive</option>
-          <option value="Negative">Negative</option>
-          <option value="Complicated">Complicated</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="edit_description">Description (Optional)</label>
-        <textarea id="edit_description" name="description" class="form-control" rows="4"></textarea>
-      </div>
-      
-      <div class="form-group d-flex gap-2">
-        <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
-        <button type="submit" class="btn">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-  </div>
-</div>
-<script>
-  function editRelationship(id, type, description, status) {
-    // Show the edit form and hide the add form
-    document.getElementById('editRelationshipModal').style.display = 'block';
-    
-    // Set up the form action
-    document.getElementById('editRelationshipForm').action = `/characters/relationships/${id}?_method=PUT`;
-    
-    // Populate the form fields
-    document.getElementById('edit_relationshipType').value = type;
-    document.getElementById('edit_description').value = description;
-    
-    // Select the correct status option
-    const statusSelect = document.getElementById('edit_status');
-    for (let i = 0; i < statusSelect.options.length; i++) {
-      if (statusSelect.options[i].value === status) {
-        statusSelect.selectedIndex = i;
-        break;
-      }
-    }
-    
-    // Scroll to the edit form
-    document.getElementById('editRelationshipModal').scrollIntoView({ behavior: 'smooth' });
-  }
-  
-  function cancelEdit() {
-    document.getElementById('editRelationshipModal').style.display = 'none';
-  }
-</script>
 <style>
   .relationship-list {
     display: flex;
@@ -204,6 +235,10 @@ Copy        <div class="form-group">
   
   .relationship-item:hover {
     background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .relationship-item.pending {
+    border-left: 3px solid var(--warning);
   }
   
   .relationship-header {
@@ -243,6 +278,11 @@ Copy        <div class="form-group">
     color: var(--warning);
   }
   
+  .relationship-status.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
   .relationship-description {
     padding-left: 65px;
     font-size: var(--text-sm);
@@ -253,4 +293,84 @@ Copy        <div class="form-group">
     display: flex;
     gap: 5px;
   }
+  
+  .character-select-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+  }
+  
+  .character-tab-link {
+    padding: 8px 15px;
+    color: var(--lighttext);
+    font-weight: var(--medium);
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-tab-link:hover {
+    color: var(--header);
+  }
+  
+  .character-tab-link.active {
+    color: var(--header);
+    border-bottom-color: var(--header);
+  }
 </style>
+
+<script>
+  function editRelationship(id, type, description, status) {
+    // Show the edit form and hide the add form
+    document.getElementById('editRelationshipModal').style.display = 'block';
+    
+    // Set up the form action
+    document.getElementById('editRelationshipForm').action = `/characters/relationships/${id}?_method=PUT`;
+    
+    // Populate the form fields
+    document.getElementById('edit_relationshipType').value = type;
+    document.getElementById('edit_description').value = description;
+    
+    // Select the correct status option
+    const statusSelect = document.getElementById('edit_status');
+    for (let i = 0; i < statusSelect.options.length; i++) {
+      if (statusSelect.options[i].value === status) {
+        statusSelect.selectedIndex = i;
+        break;
+      }
+    }
+    
+    // Scroll to the edit form
+    document.getElementById('editRelationshipModal').scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  function cancelEdit() {
+    document.getElementById('editRelationshipModal').style.display = 'none';
+  }
+  
+  function toggleCharacterTab(tabId, event) {
+    if (event) event.preventDefault();
+    
+    // Hide all tab content
+    document.querySelectorAll('.character-tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    // Remove active class from all tab links
+    document.querySelectorAll('.character-tab-link').forEach(link => {
+      link.classList.remove('active');
+    });
+    
+    // Show the selected tab content and mark tab as active
+    document.getElementById(tabId).style.display = 'block';
+    event.target.classList.add('active');
+    
+    // Update the select field in the form based on which tab is active
+    if (tabId === 'myCharacters') {
+      document.getElementById('character2Id_own').setAttribute('name', 'character2Id');
+      document.getElementById('character2Id_other').removeAttribute('name');
+    } else {
+      document.getElementById('character2Id_own').removeAttribute('name');
+      document.getElementById('character2Id_other').setAttribute('name', 'character2Id');
+    }
+  }
+</script>

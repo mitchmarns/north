@@ -13,11 +13,24 @@
       <% if(user) { %>
         <li class="nav-item dropdown">
           <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown">
-            <%= user.username %> <i class="fas fa-caret-down"></i>
+            <%= user.username %>
+            <% if (typeof pendingRequests !== 'undefined' && pendingRequests > 0) { %>
+              <span class="notification-badge"><%= pendingRequests %></span>
+            <% } %>
+            <i class="fas fa-caret-down"></i>
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item" href="/dashboard">Dashboard</a>
             <a class="dropdown-item" href="/characters/my-characters">My Characters</a>
+            
+            <!-- New item for relationship requests -->
+            <a class="dropdown-item" href="/characters/relationship-requests">
+              Relationship Requests
+              <% if (typeof pendingRequests !== 'undefined' && pendingRequests > 0) { %>
+                <span class="notification-badge-small"><%= pendingRequests %></span>
+              <% } %>
+            </a>
+            
             <a class="dropdown-item" href="/writing/my-threads">My Threads</a>
             <a class="dropdown-item" href="/auth/profile">Profile</a>
             <hr>
@@ -35,6 +48,36 @@
     </ul>
   </nav>
 </header>
+
+<style>
+  .notification-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background-color: var(--danger);
+    color: white;
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    padding: 0 4px;
+    margin-left: 5px;
+  }
+  
+  .notification-badge-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    background-color: var(--danger);
+    color: white;
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    padding: 0 3px;
+    margin-left: 5px;
+  }
+</style>
 
 <script>
   // Dropdown toggle

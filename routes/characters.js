@@ -76,6 +76,13 @@ router.put(
   characterController.updateCharacter
 );
 
+// Add a route to view pending relationship requests
+router.get(
+  '/relationship-requests',
+  isAuthenticated,
+  characterController.getRelationshipRequests
+);
+
 // Delete character
 router.delete('/delete/:id', isAuthenticated, characterController.deleteCharacter);
 
@@ -99,6 +106,20 @@ router.post(
       .trim()
   ],
   characterController.addRelationship
+);
+
+// Approve relationship request
+router.post(
+  '/relationships/:relationshipId/approve',
+  isAuthenticated,
+  characterController.approveRelationship
+);
+
+// Decline relationship request
+router.post(
+  '/relationships/:relationshipId/decline',
+  isAuthenticated,
+  characterController.declineRelationship
 );
 
 // Update relationship
