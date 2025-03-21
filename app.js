@@ -49,6 +49,8 @@ app.use(flash());
 app.use(async (req, res, next) => {
   if (req.user) {
     try {
+      const { Character, Relationship, Sequelize } = require('./models');
+      
       // Get all characters owned by the user
       const userCharacters = await Character.findAll({
         where: {
@@ -80,7 +82,8 @@ app.use(async (req, res, next) => {
       // Add pendingRequests count to res.locals
       res.locals.pendingRequests = pendingCount;
     } catch (error) {
-      console.error('Error checking for pending requests:', error);
+      console.error('Error checking for pending requests:', error.message);
+      console.error(error.stack);
       res.locals.pendingRequests = 0;
     }
   }

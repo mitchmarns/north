@@ -307,18 +307,24 @@ exports.deleteCharacter = async (req, res) => {
 // Get character relationships
 exports.getCharacterRelationships = async (req, res) => {
   try {
+    console.log('Getting relationships for character ID:', req.params.id);
+    
     const character = await Character.findByPk(req.params.id);
     
     if (!character) {
+      console.log('Character not found');
       req.flash('error_msg', 'Character not found');
       return res.redirect('/characters');
     }
     
     // Check if user owns the character
     if (character.userId !== req.user.id) {
+      console.log('User not authorized - character belongs to:', character.userId);
       req.flash('error_msg', 'Not authorized');
       return res.redirect('/characters');
     }
+    
+    console.log('Fetching relationships...');
     
     // Get relationships
     const relationships = await Relationship.findAll({
@@ -342,6 +348,8 @@ exports.getCharacterRelationships = async (req, res) => {
       ]
     });
     
+    console.log('Found relationships:', relationships.length);
+    
     // Format relationships for display
     const formattedRelationships = relationships.map(rel => {
       const isCharacter1 = rel.character1Id === character.id;
@@ -352,8 +360,8 @@ exports.getCharacterRelationships = async (req, res) => {
         relationshipType: rel.relationshipType,
         description: rel.description,
         status: rel.status,
-        isPending: rel.isPending,
-        isApproved: rel.isApproved,
+        isPending: rel.isPending || false,
+        isApproved: rel.isApproved || false,
         canEdit: otherCharacter.userId === req.user.id || character.userId === req.user.id,
         otherUserName: otherCharacter.User ? otherCharacter.User.username : 'Unknown'
       };
@@ -385,7 +393,7 @@ exports.getCharacterRelationships = async (req, res) => {
           attributes: ['username']
         }
       ],
-      limit: 50  // Limit to avoid loading too many characters
+      limit: 50
     });
     
     res.render('characters/relationships', {
@@ -396,7 +404,8 @@ exports.getCharacterRelationships = async (req, res) => {
       otherUsersCharacters
     });
   } catch (error) {
-    console.error('Error fetching relationships:', error);
+    console.error('Error fetching relationships:', error.message);
+    console.error(error.stack);
     req.flash('error_msg', 'An error occurred while fetching relationships');
     res.redirect(`/characters/${req.params.id}`);
   }
