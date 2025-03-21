@@ -134,4 +134,19 @@ async function startServer() {
   }
 }
 
+(async () => {
+  try {
+    await sequelize.query(`
+      ALTER TABLE relationships 
+      ADD COLUMN isPending BOOLEAN DEFAULT false NOT NULL,
+      ADD COLUMN isApproved BOOLEAN DEFAULT false NOT NULL,
+      ADD COLUMN requestedById INT,
+      ADD CONSTRAINT fk_relationship_user FOREIGN KEY (requestedById) REFERENCES users(id)
+    `);
+    console.log('Migration completed successfully');
+  } catch (error) {
+    console.error('Migration error:', error);
+  }
+})();
+
 startServer();
