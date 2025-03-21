@@ -25,7 +25,7 @@ exports.getInbox = async (req, res) => {
       where: { senderId: characterId, isDeleted: false },
       attributes: [
         'receiverId',
-        [Sequelize.fn('MAX', Sequelize.col('createdAt')), 'lastMessageAt']
+        [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
       ],
       group: ['receiverId'],
       include: [
@@ -48,7 +48,7 @@ exports.getInbox = async (req, res) => {
       where: { receiverId: characterId, isDeleted: false },
       attributes: [
         'senderId',
-        [Sequelize.fn('MAX', Sequelize.col('createdAt')), 'lastMessageAt']
+        [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
       ],
       group: ['senderId'],
       include: [
