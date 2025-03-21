@@ -90,6 +90,43 @@ app.use(async (req, res, next) => {
   next();
 });
 
+app.use(async (req, res, next) => {
+  if (req.user) {
+    try {
+      const { Character, Message, Sequelize } = require('./models');
+      
+      // Get all characters owned by the user
+      const userCharacters = await Character.findAll({
+        where: {
+          userId: req.user.id
+        }
+      });
+      
+      // Get IDs of all user's characters
+      const characterIds = userCharacters.map(char => char.id);
+      
+      // Count unread messages for all user's characters
+      const unreadCount = await Message.count({
+        where: {
+          receiverId: { [Sequelize.Op.in]: characterIds },
+          isRead: false,
+          isDeleted: false
+        }
+      });
+      
+      // Add unreadMessages count to res.locals
+      res.locals.unreadMessages = unreadCount;
+    } catch (error) {
+      console.error('Error checking for unread messages:', error.message);
+      console.error(error.stack);
+      res.locals.unreadMessages = 0;
+    }
+  } else {
+    res.locals.unreadMessages = 0;
+  }
+  next();
+});
+
 // Global Variables
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
