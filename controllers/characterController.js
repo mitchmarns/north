@@ -549,6 +549,21 @@ exports.addRelationship = async (req, res) => {
     const { character2Id, relationshipType, description, status } = req.body;
     const character1Id = parseInt(req.params.id);
     
+    // Debug log - this helps you see exactly what's being received
+    console.log('Creating relationship with params:', { 
+      character1Id, 
+      character2Id, 
+      relationshipType, 
+      description, 
+      status 
+    });
+    
+    // Validate the character2Id is present
+    if (!character2Id) {
+      req.flash('error_msg', 'Please select a character for the relationship');
+      return res.redirect(`/characters/${req.params.id}/relationships`);
+    }
+    
     // Verify characters exist
     const character1 = await Character.findByPk(character1Id);
     const character2 = await Character.findByPk(character2Id);
@@ -588,8 +603,14 @@ exports.addRelationship = async (req, res) => {
     // Determine if this is a self-relationship or cross-user relationship
     const isSelfRelationship = character1.userId === character2.userId;
     
+    // Debug log
+    console.log('Creating relationship with isPending:', !isSelfRelationship);
+    console.log('Is self relationship?', isSelfRelationship);
+    console.log('Character1 userId:', character1.userId);
+    console.log('Character2 userId:', character2.userId);
+    
     // Create relationship with appropriate status
-    await Relationship.create({
+    const newRelationship = await Relationship.create({
       character1Id,
       character2Id,
       relationshipType,
@@ -600,6 +621,8 @@ exports.addRelationship = async (req, res) => {
       requestedById: req.user.id
     });
     
+    console.log('Relationship created:', newRelationship);
+    
     if (isSelfRelationship) {
       req.flash('success_msg', 'Relationship added successfully');
     } else {
@@ -609,7 +632,7 @@ exports.addRelationship = async (req, res) => {
     res.redirect(`/characters/${req.params.id}/relationships`);
   } catch (error) {
     console.error('Error adding relationship:', error);
-    req.flash('error_msg', 'An error occurred while adding relationship');
+    req.flash('error_msg', `An error occurred while adding relationship: ${error.message}`);
     res.redirect(`/characters/${req.params.id}/relationships`);
   }
 };

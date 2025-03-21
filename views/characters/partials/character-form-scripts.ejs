@@ -86,6 +86,55 @@
   console.log('Team fields display:', teamFields.style.display);
   console.log('Player fields display:', playerFields ? playerFields.style.display : 'N/A');
 }
+
+function toggleCharacterTab(tabId, event) {
+  if (event) event.preventDefault();
+  
+  // Hide all tab content
+  document.querySelectorAll('.character-tab-content').forEach(content => {
+    content.style.display = 'none';
+  });
+  
+  // Remove active class from all tab links
+  document.querySelectorAll('.character-tab-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  
+  // Show the selected tab content and mark tab as active
+  document.getElementById(tabId).style.display = 'block';
+  event.target.classList.add('active');
+  
+  // This is the important fix - we need to enable only one character2Id field at a time
+  if (tabId === 'myCharacters') {
+    // Enable the dropdown for user's own characters, disable the other
+    document.getElementById('character2Id_own').setAttribute('name', 'character2Id');
+    document.getElementById('character2Id_own').disabled = false;
+    
+    if (document.getElementById('character2Id_other')) {
+      document.getElementById('character2Id_other').removeAttribute('name');
+      document.getElementById('character2Id_other').disabled = true;
+    }
+  } else {
+    // Enable the dropdown for other players' characters, disable the user's own
+    if (document.getElementById('character2Id_other')) {
+      document.getElementById('character2Id_other').setAttribute('name', 'character2Id');
+      document.getElementById('character2Id_other').disabled = false;
+    }
+    
+    document.getElementById('character2Id_own').removeAttribute('name');
+    document.getElementById('character2Id_own').disabled = true;
+  }
+}
+
+// Make sure this function runs on page load to set the initial state correctly
+document.addEventListener('DOMContentLoaded', function() {
+  // Set initial tab state - by default "myCharacters" should be active
+  const activeTab = document.querySelector('.character-tab-link.active');
+  if (activeTab) {
+    const tabId = activeTab.getAttribute('href').substring(1); // Remove the # from the href
+    toggleCharacterTab(tabId, { preventDefault: () => {}, target: activeTab });
+  }
+});
 </script>
 
 <style>
