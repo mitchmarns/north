@@ -80,6 +80,23 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    role: {
+      type: DataTypes.ENUM('Player', 'Staff', 'Civilian'),
+      allowNull: false,
+      defaultValue: 'Civilian'
+    },
+    teamId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'teams',
+        key: 'id'
+      }
+    },
+    position: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
     isPrivate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false

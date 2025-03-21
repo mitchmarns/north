@@ -32,6 +32,33 @@
             <span><%= character.gender %></span>
           <% } %>
         </div>
+
+        <% if (character.role !== 'Civilian') { %>
+          <div class="card mb-3">
+            <div class="card-header">
+              <h3 class="mb-0"><%= character.role === 'Player' ? 'Player Info' : 'Staff Info' %></h3>
+            </div>
+            <div class="card-body">
+              <% if (character.Team) { %>
+                <div class="d-flex align-center mb-2">
+                  <% if (character.Team.logo) { %>
+                    <img src="<%= character.Team.logo %>" alt="<%= character.Team.name %>" style="width: 50px; height: 50px; margin-right: 15px;">
+                  <% } %>
+                  <div>
+                    <h4><%= character.Team.name %></h4>
+                    <p><%= character.Team.city %></p>
+                  </div>
+                </div>
+                <% if (character.role === 'Player' && character.position) { %>
+                  <p><strong>Position:</strong> <%= character.position %></p>
+                <% } %>
+                <a href="/teams/<%= character.Team.id %>" class="btn btn-sm">View Team</a>
+              <% } else { %>
+                <p>Not currently associated with any team.</p>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
         
         <div style="font-size: var(--text-sm); color: rgba(255, 255, 255, 0.7);">
           by <a href="#"><%= character.User.username %></a>

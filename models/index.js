@@ -51,6 +51,9 @@ Post.belongsTo(Character, { foreignKey: 'characterId' });
 User.hasMany(Post, { foreignKey: 'userId', as: 'posts' });
 Post.belongsTo(User, { foreignKey: 'userId' });
 
+Team.hasMany(Character, { foreignKey: 'teamId', as: 'members' });
+Character.belongsTo(Team, { foreignKey: 'teamId' });
+
 // Export models and Sequelize instance
 module.exports = {
   sequelize,

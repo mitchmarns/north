@@ -174,7 +174,8 @@ exports.createCharacter = async (req, res) => {
     const {
       name, nickname, age, gender, shortBio, fullBio,
       appearance, personality, background, skills,
-      likes, dislikes, fears, goals, faceclaim, avatarUrl, isPrivate
+      likes, dislikes, fears, goals, faceclaim, avatarUrl, 
+      isPrivate, role, teamId, position
     } = req.body;
 
     // Create character
@@ -196,6 +197,9 @@ exports.createCharacter = async (req, res) => {
       dislikes: dislikes || null,
       fears: fears || null,
       goals: goals || null,
+      role: role || 'Civilian',
+      teamId: (role === 'Player' || role === 'Staff') ? teamId || null : null,
+      position: role === 'Player' ? position || null : null,
       isPrivate: isPrivate === 'on'
     });
 

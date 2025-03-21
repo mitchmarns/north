@@ -68,6 +68,54 @@ Copy      <div class="form-group">
           </div>
         </div>
       </div>
+
+      <div class="form-group">
+        <label for="role">Character Role</label>
+        <select id="role" name="role" class="form-control" onchange="toggleTeamFields()">
+          <option value="Civilian" <%= character.role === 'Civilian' ? 'selected' : '' %>>Civilian</option>
+          <option value="Player" <%= character.role === 'Player' ? 'selected' : '' %>>Player</option>
+          <option value="Staff" <%= character.role === 'Staff' ? 'selected' : '' %>>Staff</option>
+        </select>
+      </div>
+      
+      <div id="teamFields" style="display: none;">
+        <div class="form-group">
+          <label for="teamId">Team</label>
+          <select id="teamId" name="teamId" class="form-control">
+            <option value="">-- Select a team --</option>
+            <% teams.forEach(team => { %>
+              <option value="<%= team.id %>" <%= character.teamId == team.id ? 'selected' : '' %>><%= team.name %></option>
+            <% }); %>
+          </select>
+        </div>
+        
+        <div id="playerFields" style="display: none;">
+          <div class="form-group">
+            <label for="position">Position</label>
+            <input 
+              type="text" 
+              id="position" 
+              name="position" 
+              class="form-control" 
+              value="<%= typeof character !== 'undefined' ? character.position || '' : '' %>" 
+              placeholder="e.g., Center, Left Wing, Goalie, etc."
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="jerseyNumber">Jersey Number</label>
+            <input 
+              type="number" 
+              id="jerseyNumber" 
+              name="jerseyNumber" 
+              class="form-control" 
+              min="1"
+              max="99"
+              value="<%= typeof character !== 'undefined' ? character.jerseyNumber || '' : '' %>" 
+              placeholder="1-99"
+            />
+          </div>
+      </div>
       
       <div class="form-group">
         <label for="shortBio">Short Bio</label>
