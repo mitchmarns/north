@@ -51,6 +51,9 @@ exports.getUserCharacters = async (req, res) => {
 // Get single character
 exports.getCharacter = async (req, res) => {
   try {
+    // Log the character ID we're trying to fetch
+    console.log(`Fetching character with ID: ${req.params.id}`);
+    
     const character = await Character.findByPk(req.params.id, {
       include: [
         {
@@ -71,44 +74,56 @@ exports.getCharacter = async (req, res) => {
       return res.redirect('/characters');
     }
 
-    // Get character relationships
-    const relationships = await Relationship.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          { character1Id: character.id },
-          { character2Id: character.id }
-        ]
-      },
-      include: [
-        {
-          model: Character,
-          as: 'character1'
+    // Try/catch for just the relationships query
+    try {
+      // Get character relationships
+      const relationships = await Relationship.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            { character1Id: character.id },
+            { character2Id: character.id }
+          ]
         },
-        {
-          model: Character,
-          as: 'character2'
-        }
-      ]
-    });
+        include: [
+          {
+            model: Character,
+            as: 'character1'
+          },
+          {
+            model: Character,
+            as: 'character2'
+          }
+        ]
+      });
 
-    // Format relationships for display
-    const formattedRelationships = relationships.map(rel => {
-      const isCharacter1 = rel.character1Id === character.id;
-      return {
-        id: rel.id,
-        otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
-        relationshipType: rel.relationshipType,
-        description: rel.description,
-        status: rel.status
-      };
-    });
+      // Format relationships for display
+      const formattedRelationships = relationships.map(rel => {
+        const isCharacter1 = rel.character1Id === character.id;
+        return {
+          id: rel.id,
+          otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
+          relationshipType: rel.relationshipType,
+          description: rel.description,
+          status: rel.status
+        };
+      });
 
-    res.render('characters/view', {
-      title: character.name,
-      character,
-      relationships: formattedRelationships,
-      isOwner: req.user && req.user.id === character.userId
-    });
+      res.render('characters/view', {
+        title: character.name,
+        character,
+        relationships: formattedRelationships,
+        isOwner: req.user && req.user.id === character.userId
+      });
+    } catch (relationshipError) {
+      console.error('Error fetching relationships:', relationshipError);
+      // Fall back to showing the character without relationships
+      res.render('characters/view', {
+        title: character.name,
+        character,
+        relationships: [],
+        isOwner: req.user && req.user.id === character.userId
+      });
+    }
   } catch (error) {
     console.error('Error fetching character:', error);
     req.flash('error_msg', 'An error occurred while fetching the character');
