@@ -97,6 +97,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    jerseyNumber: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 1,
+        max: 99
+      }
+    },
     isPrivate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false

@@ -8,11 +8,17 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true
+      unique: true,
+      validate: {
+        notEmpty: true
+      }
     },
     shortName: {
       type: DataTypes.STRING(10),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     logo: {
       type: DataTypes.STRING,
@@ -26,9 +32,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(7),
       allowNull: true
     },
+    tertiaryColor: {
+      type: DataTypes.STRING(7),
+      allowNull: true
+    },
     city: {
       type: DataTypes.STRING(100),
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     description: {
       type: DataTypes.TEXT,

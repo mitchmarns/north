@@ -23,6 +23,7 @@ const Character = require('./character')(sequelize, Sequelize.DataTypes);
 const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
 const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
+const Team = require('./team')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
@@ -62,5 +63,6 @@ module.exports = {
   Character,
   Relationship,
   Thread,
-  Post
+  Post,
+  Team
 };

@@ -134,4 +134,56 @@ async function startServer() {
   }
 }
 
-startServer();
+async function updateDatabaseSchema() {
+  try {
+    console.log('Starting database schema update...');
+    
+    // Check if the Team model exists
+    const Team = require('./models').Team;
+    
+    // First, try to add the enum type and new columns to the characters table
+    try {
+      console.log('Adding new fields to characters table...');
+      await sequelize.query(`
+        ALTER TABLE characters 
+        ADD COLUMN role ENUM('Player', 'Staff', 'Civilian') NOT NULL DEFAULT 'Civilian',
+        ADD COLUMN teamId INT,
+        ADD COLUMN position VARCHAR(50),
+        ADD COLUMN jerseyNumber INT
+      `);
+      console.log('Successfully added new fields to characters table');
+    } catch (error) {
+      console.log('Note: Character table modification error (might already exist):', error.message);
+    }
+    
+    // Force sync just the Team model
+    console.log('Creating/updating teams table...');
+    await Team.sync({ force: true });
+    console.log('Teams table created/updated successfully');
+    
+    // Add foreign key relationship if it doesn't exist
+    try {
+      console.log('Adding foreign key constraint...');
+      await sequelize.query(`
+        ALTER TABLE characters 
+        ADD CONSTRAINT characters_team_fk
+        FOREIGN KEY (teamId) 
+        REFERENCES teams(id)
+        ON DELETE SET NULL
+      `);
+      console.log('Foreign key constraint added successfully');
+    } catch (error) {
+      console.log('Note: Foreign key constraint error (might already exist):', error.message);
+    }
+    
+    console.log('Database schema update completed successfully!');
+  } catch (error) {
+    console.error('Error updating database schema:', error);
+  }
+}
+
+// Call this function before startServer()
+// REMOVE THIS LINE AFTER FIRST RUN
+updateDatabaseSchema().then(() => startServer());
+
+// startServer();
