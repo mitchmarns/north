@@ -212,6 +212,30 @@ exports.createCharacter = async (req, res) => {
   }
 };
 
+// Get character creation form
+exports.getCreateCharacterForm = async (req, res) => {
+  try {
+    // Get teams for the dropdown
+    const { Team } = require('../models');
+    const teams = await Team.findAll({
+      where: {
+        isActive: true
+      },
+      order: [['name', 'ASC']]
+    });
+
+    res.render('characters/create', {
+      title: 'Create a New Character',
+      teams: teams || [],
+      character: { role: 'Civilian' } // Default values
+    });
+  } catch (error) {
+    console.error('Error loading create character form:', error);
+    req.flash('error_msg', 'An error occurred while loading the form');
+    res.redirect('/characters/my-characters');
+  }
+};
+
 // Update character
 exports.updateCharacter = async (req, res) => {
   const errors = validationResult(req);

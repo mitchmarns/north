@@ -11,11 +11,7 @@ router.get('/', characterController.getAllCharacters);
 router.get('/my-characters', isAuthenticated, characterController.getUserCharacters);
 
 // Create character form
-router.get('/create', isAuthenticated, (req, res) => {
-  res.render('characters/create', {
-    title: 'Create a New Character'
-  });
-});
+router.get('/create', isAuthenticated, characterController.getCreateCharacterForm);
 
 // Create character
 router.post(
