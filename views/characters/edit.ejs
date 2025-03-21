@@ -78,18 +78,20 @@ Copy      <div class="form-group">
         </select>
       </div>
       
-      <div id="teamFields" style="display: none;">
+      <div id="teamFields" style="display: <%= character.role === 'Player' || character.role === 'Staff' ? 'block' : 'none' %>;">
         <div class="form-group">
           <label for="teamId">Team</label>
           <select id="teamId" name="teamId" class="form-control">
             <option value="">-- Select a team --</option>
-            <% teams.forEach(team => { %>
-              <option value="<%= team.id %>" <%= character.teamId == team.id ? 'selected' : '' %>><%= team.name %></option>
-            <% }); %>
+            <% if (typeof teams !== 'undefined' && teams.length > 0) { %>
+              <% teams.forEach(team => { %>
+                <option value="<%= team.id %>" <%= character.teamId == team.id ? 'selected' : '' %>><%= team.name %></option>
+              <% }); %>
+            <% } %>
           </select>
         </div>
         
-        <div id="playerFields" style="display: none;">
+        <div id="playerFields" style="display: <%= character.role === 'Player' ? 'block' : 'none' %>;">
           <div class="form-group">
             <label for="position">Position</label>
             <input 
@@ -97,7 +99,7 @@ Copy      <div class="form-group">
               id="position" 
               name="position" 
               class="form-control" 
-              value="<%= typeof character !== 'undefined' ? character.position || '' : '' %>" 
+              value="<%= character.position || '' %>" 
               placeholder="e.g., Center, Left Wing, Goalie, etc."
             />
           </div>
@@ -111,10 +113,11 @@ Copy      <div class="form-group">
               class="form-control" 
               min="1"
               max="99"
-              value="<%= typeof character !== 'undefined' ? character.jerseyNumber || '' : '' %>" 
+              value="<%= character.jerseyNumber || '' %>" 
               placeholder="1-99"
             />
           </div>
+        </div>
       </div>
       
       <div class="form-group">
@@ -364,6 +367,23 @@ Copy      <div class="form-group">
       });
     });
   });
+
+  function toggleTeamFields() {
+  const role = document.getElementById('role').value;
+  const teamFields = document.getElementById('teamFields');
+  const playerFields = document.getElementById('playerFields');
+  
+  if (role === 'Player' || role === 'Staff') {
+    teamFields.style.display = 'block';
+    playerFields.style.display = role === 'Player' ? 'block' : 'none';
+  } else {
+    teamFields.style.display = 'none';
+    playerFields.style.display = 'none';
+  }
+}
+
+// Call on page load to set initial state
+document.addEventListener('DOMContentLoaded', toggleTeamFields);
 </script>
 <style>
   .character-tab-links {

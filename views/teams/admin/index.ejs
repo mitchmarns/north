@@ -1,0 +1,137 @@
+<!-- teams/admin/index.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Team Management</h1>
+  <a href="/teams/admin/teams/create" class="btn">
+    <i class="fas fa-plus"></i> Create New Team
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">All Teams</h3>
+  </div>
+  <div class="card-body">
+    <% if (typeof teams !== 'undefined' && teams.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Logo</th>
+              <th>Name</th>
+              <th>City</th>
+              <th>Players</th>
+              <th>Staff</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% teams.forEach(team => { %>
+              <tr>
+                <td>
+                  <% if (team.logo) { %>
+                    <img src="<%= team.logo %>" alt="<%= team.name %>" style="width: 40px; height: 40px; object-fit: contain;">
+                  <% } else { %>
+                    <div style="width: 40px; height: 40px; background-color: rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm);">
+                      <%= team.shortName %>
+                    </div>
+                  <% } %>
+                </td>
+                <td><%= team.name %></td>
+                <td><%= team.city %></td>
+                <td><%= team.playerCount || 0 %></td>
+                <td><%= team.staffCount || 0 %></td>
+                <td>
+                  <% if (team.isActive) { %>
+                    <span class="badge badge-success">Active</span>
+                  <% } else { %>
+                    <span class="badge badge-danger">Inactive</span>
+                  <% } %>
+                </td>
+                <td>
+                  <div class="btn-group">
+                    <a href="/teams/<%= team.id %>" class="btn btn-sm">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="/teams/admin/teams/edit/<%= team.id %>" class="btn btn-sm">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="/teams/admin/teams/<%= team.id %>?_method=DELETE" method="POST" style="display: inline;">
+                      <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-center">No teams have been created yet.</p>
+      <div class="text-center mt-3">
+        <a href="/teams/admin/teams/create" class="btn">Create the First Team</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+  .table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--lighttext);
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    font-weight: var(--semibold);
+  }
+  
+  .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: var(--text-xs);
+    font-weight: var(--semibold);
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: var(--radius-sm);
+  }
+  
+  .badge-success {
+    background-color: var(--success-bg);
+    color: var(--success);
+  }
+  
+  .badge-danger {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 5px;
+  }
+</style>

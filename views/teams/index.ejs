@@ -1,0 +1,108 @@
+<!-- teams/index.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Teams Directory</h1>
+  <% if(user && user.isAdmin) { %>
+    <a href="/teams/admin/teams/create" class="btn">
+      <i class="fas fa-plus"></i> Create Team
+    </a>
+  <% } %>
+</div>
+
+<div class="row">
+  <% if (typeof teams !== 'undefined' && teams.length > 0) { %>
+    <% teams.forEach(team => { %>
+      <div class="col" style="flex: 0 0 33.333333%; margin-bottom: 20px;">
+        <div class="team-card">
+          <% if (team.logo) { %>
+            <img src="<%= team.logo %>" alt="<%= team.name %>" class="team-logo">
+          <% } else { %>
+            <div class="team-logo-placeholder">
+              <span><%= team.shortName %></span>
+            </div>
+          <% } %>
+          
+          <div class="team-info">
+            <h4 class="team-name"><%= team.name %></h4>
+            <div class="team-location"><%= team.city %></div>
+            <% if (team.foundedYear) { %>
+              <div class="team-founded">Est. <%= team.foundedYear %></div>
+            <% } %>
+            <div class="mt-2">
+              <a href="/teams/<%= team.id %>" class="btn btn-sm">View Team</a>
+              <a href="/teams/<%= team.id %>/roster" class="btn btn-sm">View Roster</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  <% } else { %>
+    <div class="col">
+      <div class="card">
+        <div class="card-body text-center">
+          <p>No teams have been created yet.</p>
+          <% if(user && user.isAdmin) { %>
+            <a href="/teams/admin/teams/create" class="btn">Create the First Team</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<style>
+  .team-card {
+    display: flex;
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-fast);
+  }
+  
+  .team-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .team-logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .team-logo-placeholder {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    font-family: var(--decorfont);
+    font-size: 2rem;
+    color: var(--lighttext);
+  }
+  
+  .team-info {
+    padding: var(--spacing-md);
+    flex: 1;
+  }
+  
+  .team-name {
+    font-family: var(--accentfont);
+    font-size: var(--text-xl);
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .team-location {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 5px;
+  }
+  
+  .team-founded {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.6);
+  }
+</style>

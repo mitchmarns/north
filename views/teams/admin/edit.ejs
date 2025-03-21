@@ -1,0 +1,302 @@
+<!-- teams/admin/edit.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Team: <%= team.name %></h1>
+  <div>
+    <a href="/teams/<%= team.id %>" class="btn btn-outline mr-2">
+      <i class="fas fa-eye"></i> View Team
+    </a>
+    <a href="/teams/admin/teams" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to Teams
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/teams/admin/teams/edit/<%= team.id %>?_method=PUT" method="POST">
+      <div class="row">
+        <!-- Main Team Info -->
+        <div class="col" style="flex: 0 0 70%;">
+          <h3>Team Information</h3>
+          
+          <div class="form-group">
+            <label for="name">Team Name *</label>
+            <input 
+              type="text" 
+              id="name" 
+              name="name" 
+              class="form-control" 
+              value="<%= team.name %>"
+              required
+            />
+          </div>
+          
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="shortName">Short Name *</label>
+                <input 
+                  type="text" 
+                  id="shortName" 
+                  name="shortName" 
+                  class="form-control" 
+                  value="<%= team.shortName %>"
+                  maxlength="10"
+                  placeholder="2-3 letter abbreviation"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="form-group">
+                <label for="city">City *</label>
+                <input 
+                  type="text" 
+                  id="city" 
+                  name="city" 
+                  class="form-control" 
+                  value="<%= team.city %>"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="form-group">
+                <label for="foundedYear">Founded Year</label>
+                <input 
+                  type="number" 
+                  id="foundedYear" 
+                  name="foundedYear" 
+                  class="form-control" 
+                  value="<%= team.foundedYear || '' %>"
+                  min="1800"
+                  max="<%= new Date().getFullYear() %>"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea 
+              id="description" 
+              name="description" 
+              class="form-control" 
+              rows="5"
+              placeholder="Write about the team's history, achievements, etc."
+            ><%= team.description || '' %></textarea>
+          </div>
+          
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="primaryColor">Primary Color</label>
+                <div class="input-group">
+                  <input 
+                    type="color" 
+                    id="primaryColor" 
+                    name="primaryColor" 
+                    class="form-control color-input" 
+                    value="<%= team.primaryColor || '#ffffff' %>"
+                  />
+                  <input 
+                    type="text" 
+                    id="primaryColorText" 
+                    class="form-control" 
+                    value="<%= team.primaryColor || '#ffffff' %>"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="form-group">
+                <label for="secondaryColor">Secondary Color</label>
+                <div class="input-group">
+                  <input 
+                    type="color" 
+                    id="secondaryColor" 
+                    name="secondaryColor" 
+                    class="form-control color-input" 
+                    value="<%= team.secondaryColor || '#000000' %>"
+                  />
+                  <input 
+                    type="text" 
+                    id="secondaryColorText" 
+                    class="form-control" 
+                    value="<%= team.secondaryColor || '#000000' %>"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="form-group">
+                <label for="tertiaryColor">Tertiary Color</label>
+                <div class="input-group">
+                  <input 
+                    type="color" 
+                    id="tertiaryColor" 
+                    name="tertiaryColor" 
+                    class="form-control color-input" 
+                    value="<%= team.tertiaryColor || '#cccccc' %>"
+                  />
+                  <input 
+                    type="text" 
+                    id="tertiaryColorText" 
+                    class="form-control" 
+                    value="<%= team.tertiaryColor || '#cccccc' %>"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Logo and Status -->
+        <div class="col" style="flex: 0 0 30%;">
+          <h3>Team Logo</h3>
+          
+          <div class="form-group">
+            <div class="mb-2" id="logo-preview-container">
+              <div style="width: 100%; height: 200px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="logo-preview">
+                <% if (team.logo) { %>
+                  <img src="<%= team.logo %>" alt="Logo Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+                <% } else { %>
+                  <i class="fas fa-image" style="font-size: 3rem; color: #999;"></i>
+                <% } %>
+              </div>
+            </div>
+            
+            <label for="logo">Logo URL</label>
+            <input 
+              type="url" 
+              id="logo" 
+              name="logo" 
+              class="form-control" 
+              placeholder="https://example.com/logo.png"
+              value="<%= team.logo || '' %>"
+            />
+            <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or SVG)</small>
+          </div>
+          
+          <div class="form-group mt-4">
+            <div class="d-flex align-center">
+              <input type="checkbox" id="isActive" name="isActive" <%= team.isActive ? 'checked' : '' %>>
+              <label for="isActive" style="margin-left: 10px; margin-bottom: 0;">Active team</label>
+            </div>
+            <small style="color: rgba(255, 255, 255, 0.5);">Inactive teams won't appear in the main listings</small>
+          </div>
+          
+          <div class="team-stats mt-4">
+            <h4>Team Statistics</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li class="team-stat-item">
+                <span class="team-stat-label">Players</span>
+                <span class="team-stat-value"><%= playerCount || 0 %></span>
+              </li>
+              <li class="team-stat-item">
+                <span class="team-stat-label">Staff</span>
+                <span class="team-stat-value"><%= staffCount || 0 %></span>
+              </li>
+              <li class="team-stat-item">
+                <span class="team-stat-label">Created</span>
+                <span class="team-stat-value"><%= new Date(team.createdAt).toLocaleDateString() %></span>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="form-group text-right mt-4">
+            <a href="/teams/admin/teams" class="btn btn-outline mr-2">Cancel</a>
+            <button type="submit" class="btn">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Handle logo preview
+  document.getElementById('logo').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const previewContainer = document.getElementById('logo-preview');
+    
+    if (url) {
+      previewContainer.innerHTML = `
+        <img src="${url}" alt="Logo Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;" onerror="imageLoadError(this)">
+      `;
+    } else {
+      previewContainer.innerHTML = `<i class="fas fa-image" style="font-size: 3rem; color: #999;"></i>`;
+    }
+  });
+  
+  function imageLoadError(img) {
+    img.onerror = null;
+    img.parentNode.innerHTML = `
+      <div style="width: 100%; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <span>Invalid image URL</span>
+      </div>
+    `;
+  }
+  
+  // Handle color picker text updates
+  document.getElementById('primaryColor').addEventListener('input', function(e) {
+    document.getElementById('primaryColorText').value = e.target.value;
+  });
+  
+  document.getElementById('secondaryColor').addEventListener('input', function(e) {
+    document.getElementById('secondaryColorText').value = e.target.value;
+  });
+  
+  document.getElementById('tertiaryColor').addEventListener('input', function(e) {
+    document.getElementById('tertiaryColorText').value = e.target.value;
+  });
+</script>
+
+<style>
+  .input-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .color-input {
+    width: 60px;
+    height: 38px;
+    padding: 0;
+    margin-right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  
+  .color-input::-webkit-color-swatch {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  
+  .team-stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .team-stat-item:last-child {
+    border-bottom: none;
+  }
+  
+  .team-stat-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+</style>

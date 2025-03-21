@@ -1,0 +1,243 @@
+<!-- Fixed teams/view.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1><%= team.name %></h1>
+  <div>
+    <a href="/teams/<%= team.id %>/roster" class="btn btn-outline mr-2">
+      <i class="fas fa-users"></i> View Roster
+    </a>
+    <% if(typeof user !== 'undefined' && user && user.isAdmin) { %>
+      <a href="/teams/admin/teams/edit/<%= team.id %>" class="btn">
+        <i class="fas fa-edit"></i> Edit Team
+      </a>
+    <% } %>
+    <a href="/teams" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to Teams
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Team Info Sidebar -->
+  <div class="col" style="flex: 0 0 30%;">
+    <div class="card mb-3">
+      <div class="card-body text-center">
+        <% if (team.logo) { %>
+          <img src="<%= team.logo %>" alt="<%= team.name %>" style="max-width: 100%; height: auto; max-height: 200px; margin-bottom: 20px;">
+        <% } else { %>
+          <div style="width: 150px; height: 150px; margin: 0 auto 20px; background-color: rgba(0, 0, 0, 0.2); border-radius: var(--radius-md); 
+                      display: flex; align-items: center; justify-content: center; font-size: 3rem; font-family: var(--decorfont);">
+            <%= team.shortName %>
+          </div>
+        <% } %>
+        
+        <h2><%= team.name %></h2>
+        <div style="font-size: var(--text-lg); color: rgba(255, 255, 255, 0.8); margin-bottom: 10px;">
+          <%= team.city %>
+        </div>
+        
+        <% if (team.foundedYear) { %>
+          <div style="margin-bottom: 15px; color: rgba(255, 255, 255, 0.6);">
+            Established <%= team.foundedYear %>
+          </div>
+        <% } %>
+        
+        <% if (team.primaryColor || team.secondaryColor) { %>
+          <div class="team-colors">
+            <% if (team && typeof team.primaryColor === 'string' && team.primaryColor.trim() !== '') { %>
+              <div class="color-swatch" style="background-color: <%= team.primaryColor %>;" title="Primary Color"></div>
+            <% } %>
+            <% if (team && typeof team.secondaryColor === 'string' && team.secondaryColor.trim() !== '') { %>
+              <div class="color-swatch" style="background-color: <%= team.secondaryColor %>;" title="Secondary Color"></div>
+            <% } %>
+            <% if (team && typeof team.tertiaryColor === 'string' && team.tertiaryColor.trim() !== '') { %>
+              <div class="color-swatch" style="background-color: <%= team.tertiaryColor %>;" title="Tertiary Color"></div>
+            <% } %>
+          </div>
+        <% } %>
+        
+        <a href="/teams/<%= team.id %>/roster" class="btn btn-lg mt-3">
+          <i class="fas fa-users"></i> View Team Roster
+        </a>
+      </div>
+    </div>
+    
+    <!-- Team Stats -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0">Team Details</h3>
+      </div>
+      <div class="card-body">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="team-stat-item">
+            <span class="team-stat-label">Players</span>
+            <span class="team-stat-value"><%= typeof playerCount !== 'undefined' ? playerCount : 0 %></span>
+          </li>
+          <li class="team-stat-item">
+            <span class="team-stat-label">Staff</span>
+            <span class="team-stat-value"><%= typeof staffCount !== 'undefined' ? staffCount : 0 %></span>
+          </li>
+          <li class="team-stat-item">
+            <span class="team-stat-label">Status</span>
+            <span class="team-stat-value">
+              <% if (team.isActive) { %>
+                <span class="status-active">Active</span>
+              <% } else { %>
+                <span class="status-inactive">Inactive</span>
+              <% } %>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Team Main Content -->
+  <div class="col" style="flex: 0 0 70%;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0">About the Team</h3>
+      </div>
+      <div class="card-body">
+        <% if (team.description) { %>
+          <div class="team-description">
+            <%= team.description.replace(/\n/g, '<br>') %>
+          </div>
+        <% } else { %>
+          <p class="text-center">No team description available.</p>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Featured Players -->
+    <% if (typeof featuredPlayers !== 'undefined' && featuredPlayers.length > 0) { %>
+      <h3 class="mt-4 mb-3">Featured Players</h3>
+      <div class="row">
+        <% featuredPlayers.forEach(player => { %>
+          <div class="col" style="flex: 0 0 33.333333%;">
+            <div class="player-card">
+              <% if (player.avatarUrl) { %>
+                <img src="<%= player.avatarUrl %>" alt="<%= player.name %>" class="player-avatar">
+              <% } else { %>
+                <div class="player-avatar-placeholder">
+                  <%= player.name.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              
+              <div class="player-info">
+                <h4 class="player-name"><%= player.name %></h4>
+                <% if (player.position) { %>
+                  <div class="player-position"><%= player.position %></div>
+                <% } %>
+                <% if (player.jerseyNumber) { %>
+                  <div class="player-number">#<%= player.jerseyNumber %></div>
+                <% } %>
+                <a href="/characters/<%= player.id %>" class="btn btn-sm mt-2">View Profile</a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<style>
+  .team-colors {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+  }
+  
+  .color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .team-stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .team-stat-item:last-child {
+    border-bottom: none;
+  }
+  
+  .team-stat-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .team-description {
+    line-height: 1.7;
+    white-space: pre-line;
+  }
+  
+  .status-active {
+    color: var(--success);
+  }
+  
+  .status-inactive {
+    color: var(--danger);
+  }
+  
+  .player-card {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+  }
+  
+  .player-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .player-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 15px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .player-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: var(--bold);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .player-name {
+    font-size: var(--text-lg);
+    margin-bottom: 5px;
+  }
+  
+  .player-position {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-sm);
+  }
+  
+  .player-number {
+    font-family: var(--decorfont);
+    font-size: var(--text-xl);
+    color: var(--header);
+    margin-top: 5px;
+  }
+</style>

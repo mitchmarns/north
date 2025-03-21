@@ -1,0 +1,360 @@
+<!-- teams/roster.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <div>
+    <h1><%= team.name %> Roster</h1>
+    <div style="color: rgba(255, 255, 255, 0.7);">
+      <%= team.city %>
+    </div>
+  </div>
+  <div>
+    <a href="/teams/<%= team.id %>" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i> Back to Team
+    </a>
+  </div>
+</div>
+
+<!-- Team Header -->
+<div class="team-header mb-4">
+  <% if (team.logo) { %>
+    <img src="<%= team.logo %>" alt="<%= team.name %>" class="team-header-logo">
+  <% } else { %>
+    <div class="team-header-logo-placeholder">
+      <%= team.shortName %>
+    </div>
+  <% } %>
+  <div class="team-header-stats">
+    <div class="team-header-stat">
+      <span class="stat-value"><%= playerCount || 0 %></span>
+      <span class="stat-label">Players</span>
+    </div>
+    <div class="team-header-stat">
+      <span class="stat-value"><%= staffCount || 0 %></span>
+      <span class="stat-label">Staff</span>
+    </div>
+  </div>
+</div>
+
+<!-- Roster Tabs -->
+<div class="roster-tabs mb-4">
+  <a href="#players" class="roster-tab active" onclick="showRosterTab('players', event)">Players</a>
+  <a href="#staff" class="roster-tab" onclick="showRosterTab('staff', event)">Staff</a>
+</div>
+
+<!-- Players Tab -->
+<div id="players" class="roster-tab-content">
+  <% if (typeof players !== 'undefined' && players.length > 0) { %>
+    <div class="roster-filters mb-3">
+      <div class="form-group mb-0">
+        <input type="text" id="player-search" class="form-control" placeholder="Search players...">
+      </div>
+    </div>
+    
+    <div class="roster-grid">
+      <% players.forEach(player => { %>
+        <div class="roster-card" data-name="<%= player.name.toLowerCase() %>" data-position="<%= player.position ? player.position.toLowerCase() : '' %>">
+          <div class="roster-card-header">
+            <% if (player.jerseyNumber) { %>
+              <div class="roster-card-number">#<%= player.jerseyNumber %></div>
+            <% } %>
+            <% if (player.avatarUrl) { %>
+              <img src="<%= player.avatarUrl %>" alt="<%= player.name %>" class="roster-card-avatar">
+            <% } else { %>
+              <div class="roster-card-avatar-placeholder">
+                <%= player.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="roster-card-body">
+            <h4 class="roster-card-name"><%= player.name %></h4>
+            <% if (player.position) { %>
+              <div class="roster-card-position"><%= player.position %></div>
+            <% } %>
+            <% if (player.shortBio) { %>
+              <p class="roster-card-bio"><%= player.shortBio %></p>
+            <% } %>
+            <a href="/characters/<%= player.id %>" class="btn btn-sm mt-2">View Profile</a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body text-center">
+        <p>No players have been added to this team yet.</p>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Staff Tab -->
+<div id="staff" class="roster-tab-content" style="display: none;">
+  <% if (typeof staff !== 'undefined' && staff.length > 0) { %>
+    <div class="roster-filters mb-3">
+      <div class="form-group mb-0">
+        <input type="text" id="staff-search" class="form-control" placeholder="Search staff...">
+      </div>
+    </div>
+    
+    <div class="roster-grid">
+      <% staff.forEach(member => { %>
+        <div class="roster-card" data-name="<%= member.name.toLowerCase() %>" data-position="<%= member.position ? member.position.toLowerCase() : '' %>">
+          <% if (member.avatarUrl) { %>
+            <img src="<%= member.avatarUrl %>" alt="<%= member.name %>" class="roster-card-avatar">
+          <% } else { %>
+            <div class="roster-card-avatar-placeholder">
+              <%= member.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          
+          <div class="roster-card-body">
+            <h4 class="roster-card-name"><%= member.name %></h4>
+            <% if (member.position) { %>
+              <div class="roster-card-position"><%= member.position %></div>
+            <% } %>
+            <% if (member.shortBio) { %>
+              <p class="roster-card-bio"><%= member.shortBio %></p>
+            <% } %>
+            <a href="/characters/<%= member.id %>" class="btn btn-sm mt-2">View Profile</a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body text-center">
+        <p>No staff members have been added to this team yet.</p>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  function showRosterTab(tabId, event) {
+    if (event) event.preventDefault();
+    
+    // Hide all tabs
+    document.querySelectorAll('.roster-tab-content').forEach(tab => {
+      tab.style.display = 'none';
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.roster-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabId).style.display = 'block';
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+  }
+  
+  // Player search functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const playerSearch = document.getElementById('player-search');
+    if (playerSearch) {
+      playerSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        document.querySelectorAll('#players .roster-card').forEach(card => {
+          const name = card.dataset.name;
+          const position = card.dataset.position;
+          
+          if (name.includes(searchTerm) || position.includes(searchTerm)) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    }
+    
+    // Staff search functionality
+    const staffSearch = document.getElementById('staff-search');
+    if (staffSearch) {
+      staffSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        document.querySelectorAll('#staff .roster-card').forEach(card => {
+          const name = card.dataset.name;
+          const position = card.dataset.position;
+          
+          if (name.includes(searchTerm) || position.includes(searchTerm)) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    }
+  });
+</script>
+
+<style>
+  .team-header {
+    display: flex;
+    align-items: center;
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .team-header-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-right: 20px;
+  }
+  
+  .team-header-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    font-family: var(--decorfont);
+    font-size: 1.5rem;
+    color: var(--lighttext);
+    margin-right: 20px;
+  }
+  
+  .team-header-stats {
+    display: flex;
+    gap: 30px;
+  }
+  
+  .team-header-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .stat-value {
+    font-size: var(--text-3xl);
+    font-family: var(--decorfont);
+    color: var(--header);
+  }
+  
+  .stat-label {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .roster-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .roster-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--lighttext);
+    font-weight: var(--medium);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .roster-tab:hover {
+    color: var(--header);
+  }
+  
+  .roster-tab.active {
+    color: var(--header);
+    border-bottom-color: var(--header);
+  }
+  
+  .roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .roster-card {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+  }
+  
+  .roster-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .roster-card-header {
+    position: relative;
+    height: 150px;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .roster-card-number {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--header);
+    color: white;
+    font-family: var(--decorfont);
+    font-size: var(--text-lg);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .roster-card-avatar {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .roster-card-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: var(--bold);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .roster-card-body {
+    padding: var(--spacing-md);
+    text-align: center;
+  }
+  
+  .roster-card-name {
+    font-size: var(--text-lg);
+    margin-bottom: 5px;
+  }
+  
+  .roster-card-position {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-sm);
+    margin-bottom: 10px;
+  }
+  
+  .roster-card-bio {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
