@@ -285,7 +285,8 @@ exports.updateCharacter = async (req, res) => {
     const {
       name, nickname, age, gender, shortBio, fullBio,
       appearance, personality, background, skills,
-      likes, dislikes, fears, goals, faceclaim, avatarUrl, isPrivate, isArchived
+      likes, dislikes, fears, goals, faceclaim, avatarUrl, 
+      isPrivate, isArchived, role, teamId, position, jerseyNumber
     } = req.body;
 
     // Update character
@@ -306,6 +307,10 @@ exports.updateCharacter = async (req, res) => {
       dislikes: dislikes || null,
       fears: fears || null,
       goals: goals || null,
+      role: role || 'Civilian',
+      teamId: (role === 'Player' || role === 'Staff') ? teamId || null : null,
+      position: role === 'Player' ? position || null : null,
+      jerseyNumber: role === 'Player' && jerseyNumber ? parseInt(jerseyNumber) : null,
       isPrivate: isPrivate === 'on',
       isArchived: isArchived === 'on'
     });

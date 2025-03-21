@@ -26,6 +26,7 @@
   
   // Tabs functionality
   document.addEventListener('DOMContentLoaded', function() {
+    toggleTeamFields();
     const tabLinks = document.querySelectorAll('.character-tab-link');
     const tabContents = document.querySelectorAll('.character-tab-pane');
     
@@ -46,18 +47,45 @@
   });
 
   function toggleTeamFields() {
-    const role = document.getElementById('role').value;
-    const teamFields = document.getElementById('teamFields');
-    const playerFields = document.getElementById('playerFields');
+  const role = document.getElementById('role').value;
+  const teamFields = document.getElementById('teamFields');
+  const playerFields = document.getElementById('playerFields');
+  
+  if (role === 'Player' || role === 'Staff') {
+    teamFields.style.display = 'block';
     
-    if (role === 'Player' || role === 'Staff') {
-      teamFields.style.display = 'block';
-      playerFields.style.display = role === 'Player' ? 'block' : 'none';
+    if (role === 'Player') {
+      playerFields.style.display = 'block';
     } else {
-      teamFields.style.display = 'none';
       playerFields.style.display = 'none';
+      // Clear player-specific fields when not in Player role
+      if (document.getElementById('position')) {
+        document.getElementById('position').value = '';
+      }
+      if (document.getElementById('jerseyNumber')) {
+        document.getElementById('jerseyNumber').value = '';
+      }
+    }
+  } else {
+    teamFields.style.display = 'none';
+    playerFields.style.display = 'none';
+    
+    // Clear team and player fields when in Civilian role
+    if (document.getElementById('teamId')) {
+      document.getElementById('teamId').value = '';
+    }
+    if (document.getElementById('position')) {
+      document.getElementById('position').value = '';
+    }
+    if (document.getElementById('jerseyNumber')) {
+      document.getElementById('jerseyNumber').value = '';
     }
   }
+  
+  console.log('Role changed to:', role);
+  console.log('Team fields display:', teamFields.style.display);
+  console.log('Player fields display:', playerFields ? playerFields.style.display : 'N/A');
+}
 </script>
 
 <style>
@@ -92,6 +120,19 @@
     display: block;
   }
 
-  .show-player-fields { display: block; }
-  .hide-player-fields { display: none; }
+  .show-team-fields {
+  display: block;
+}
+
+.hide-team-fields {
+  display: none;
+}
+
+.show-player-fields {
+  display: block;
+}
+
+.hide-player-fields {
+  display: none;
+}
 </style>
