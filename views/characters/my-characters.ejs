@@ -1,49 +1,24 @@
+<!-- views/characters/my-characters.ejs -->
 <div class="d-flex justify-between align-center mb-4">
   <h1>My Characters</h1>
   <a href="/characters/create" class="btn">
     <i class="fas fa-plus"></i> Create New Character
   </a>
 </div>
+
 <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
   <div class="row">
     <% characters.forEach(character => { %>
       <div class="col" style="flex: 0 0 33.333333%; margin-bottom: 20px;">
-        <div class="character-card">
-          <% if (character.avatarUrl) { %>
-            <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
-          <% } else { %>
-            <div class="character-image" style="background-color: #555; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 2rem; color: #999;"><%= character.name.charAt(0).toUpperCase() %></span>
-            </div>
-          <% } %>
-Copy      <div class="character-info">
-        <h4 class="character-name"><%= character.name %></h4>
-        <% if (character.shortBio) { %>
-          <p class="character-bio"><%= character.shortBio %></p>
-        <% } %>
-        <div class="character-tags">
-          <% if (character.gender) { %>
-            <span class="character-tag"><%= character.gender %></span>
-          <% } %>
-          <% if (character.isPrivate) { %>
-            <span class="character-tag" style="background-color: rgba(220, 53, 69, 0.2); color: var(--danger);">Private</span>
-          <% } %>
-          <% if (character.isArchived) { %>
-            <span class="character-tag" style="background-color: rgba(255, 193, 7, 0.2); color: var(--warning);">Archived</span>
-          <% } %>
-        </div>
-        <div class="mt-2">
-          <a href="/characters/<%= character.id %>" class="btn btn-sm">View</a>
-          <a href="/characters/edit/<%= character.id %>" class="btn btn-sm">Edit</a>
-          <a href="/characters/<%= character.id %>/relationships" class="btn btn-sm">Relationships</a>
-          <form action="/characters/delete/<%= character.id %>?_method=DELETE" method="POST" style="display: inline;">
-            <button type="submit" class="btn btn-sm btn-danger delete-confirm">Delete</button>
-          </form>
-        </div>
+        <%- include('./partials/character-card', { 
+          character: character,
+          isOwner: true,
+          showUser: false,
+          showRelationships: true,
+          showDelete: true
+        }) %>
       </div>
-    </div>
-  </div>
-<% }); %>
+    <% }); %>
   </div>
 <% } else { %>
   <div class="card">

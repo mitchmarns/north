@@ -1,0 +1,49 @@
+<!-- views/characters/partials/avatar-settings.ejs -->
+<h3>Character Image</h3>
+
+<div class="form-group">
+  <div class="mb-2" id="avatar-preview-container">
+    <div style="width: 100%; height: 250px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="avatar-preview">
+      <% if (character.avatarUrl) { %>
+        <img src="<%= character.avatarUrl %>" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);">
+      <% } else { %>
+        <i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>
+      <% } %>
+    </div>
+  </div>
+  
+  <label for="avatarUrl">Avatar Image URL</label>
+  <input 
+    type="url" 
+    id="avatarUrl" 
+    name="avatarUrl" 
+    class="form-control" 
+    placeholder="https://example.com/image.jpg"
+    value="<%= character.avatarUrl || '' %>"
+  />
+  <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
+</div>
+
+<div class="form-group">
+  <label for="faceclaim">Faceclaim (Optional)</label>
+  <input 
+    type="text" 
+    id="faceclaim" 
+    name="faceclaim" 
+    class="form-control" 
+    value="<%= character.faceclaim || '' %>"
+    placeholder="Actor/Model name"
+  />
+</div>
+
+<div class="form-group mt-4">
+  <div class="d-flex align-center mb-2">
+    <input type="checkbox" id="isPrivate" name="isPrivate" <%= character.isPrivate ? 'checked' : '' %>>
+    <label for="isPrivate" style="margin-left: 10px; margin-bottom: 0;">Make this character private</label>
+  </div>
+  <div class="d-flex align-center">
+    <input type="checkbox" id="isArchived" name="isArchived" <%= character.isArchived ? 'checked' : '' %>>
+    <label for="isArchived" style="margin-left: 10px; margin-bottom: 0;">Archive this character</label>
+  </div>
+  <small style="color: rgba(255, 255, 255, 0.5);">Archived characters won't appear in the main listings</small>
+</div>

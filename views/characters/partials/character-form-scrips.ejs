@@ -1,0 +1,97 @@
+<!-- views/characters/partials/character-form-scripts.ejs -->
+<script>
+  // Handle image preview
+  document.getElementById('avatarUrl').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const previewContainer = document.getElementById('avatar-preview');
+    
+    if (url) {
+      previewContainer.innerHTML = `
+        <img src="${url}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+      `;
+    } else {
+      previewContainer.innerHTML = `<i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>`;
+    }
+  });
+  
+  function imageLoadError(img) {
+    img.onerror = null;
+    img.parentNode.innerHTML = `
+      <div style="width: 100%; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+        <span>Invalid image URL</span>
+      </div>
+    `;
+  }
+  
+  // Tabs functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabLinks = document.querySelectorAll('.character-tab-link');
+    const tabContents = document.querySelectorAll('.character-tab-pane');
+    
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs
+        tabLinks.forEach(link => link.classList.remove('active'));
+        tabContents.forEach(tab => tab.classList.remove('active'));
+        
+        // Add active class to current tab
+        this.classList.add('active');
+        const targetId = this.getAttribute('href');
+        document.querySelector(targetId).classList.add('active');
+      });
+    });
+  });
+
+  function toggleTeamFields() {
+    const role = document.getElementById('role').value;
+    const teamFields = document.getElementById('teamFields');
+    const playerFields = document.getElementById('playerFields');
+    
+    if (role === 'Player' || role === 'Staff') {
+      teamFields.style.display = 'block';
+      playerFields.style.display = role === 'Player' ? 'block' : 'none';
+    } else {
+      teamFields.style.display = 'none';
+      playerFields.style.display = 'none';
+    }
+  }
+</script>
+
+<style>
+  .character-tab-links {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .character-tab-link {
+    padding: 10px 20px;
+    color: var(--lighttext);
+    font-weight: var(--medium);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-tab-link:hover {
+    color: var(--header);
+  }
+  
+  .character-tab-link.active {
+    color: var(--header);
+    border-bottom-color: var(--header);
+  }
+  
+  .character-tab-pane {
+    display: none;
+  }
+  
+  .character-tab-pane.active {
+    display: block;
+  }
+
+  .show-player-fields { display: block; }
+  .hide-player-fields { display: none; }
+</style>

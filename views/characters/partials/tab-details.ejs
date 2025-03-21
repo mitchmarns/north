@@ -1,0 +1,21 @@
+<!-- views/characters/partials/tab-details.ejs -->
+<div class="form-group">
+  <label for="skills">Skills & Abilities</label>
+  <textarea 
+    id="skills" 
+    name="skills" 
+    class="form-control" 
+    rows="6"
+  ><%= character.skills || '' %></textarea>
+</div>
+
+<div class="form-group">
+  <label for="fullBio">Full Biography</label>
+  <textarea 
+    id="fullBio" 
+    name="fullBio" 
+    class="form-control" 
+    rows="12"
+  ><%= character.fullBio || '' %></textarea>
+  <small style="color: rgba(255, 255, 255, 0.5);">Use this for any additional information about your character</small>
+</div>

@@ -1,0 +1,62 @@
+<!-- views/characters/partials/tab-personality.ejs -->
+<div class="form-group">
+  <label for="personality">Personality</label>
+  <textarea 
+    id="personality" 
+    name="personality" 
+    class="form-control" 
+    rows="8"
+  ><%= character.personality || '' %></textarea>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="form-group">
+      <label for="likes">Likes</label>
+      <textarea 
+        id="likes" 
+        name="likes" 
+        class="form-control" 
+        rows="4"
+      ><%= character.likes || '' %></textarea>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="form-group">
+      <label for="dislikes">Dislikes</label>
+      <textarea 
+        id="dislikes" 
+        name="dislikes" 
+        class="form-control" 
+        rows="4"
+      ><%= character.dislikes || '' %></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="form-group">
+      <label for="fears">Fears</label>
+      <textarea 
+        id="fears" 
+        name="fears" 
+        class="form-control" 
+        rows="4"
+      ><%= character.fears || '' %></textarea>
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="form-group">
+      <label for="goals">Goals</label>
+      <textarea 
+        id="goals" 
+        name="goals" 
+        class="form-control" 
+        rows="4"
+      ><%= character.goals || '' %></textarea>
+    </div>
+  </div>
+</div>

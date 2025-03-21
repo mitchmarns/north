@@ -1,0 +1,118 @@
+<!-- views/characters/partials/basic-info.ejs -->
+<h3>Basic Information</h3>
+
+<div class="form-group">
+  <label for="name">Character Name *</label>
+  <input 
+    type="text" 
+    id="name" 
+    name="name" 
+    class="form-control" 
+    value="<%= character.name %>"
+    required
+  />
+</div>
+
+<div class="row">
+  <div class="col">
+    <div class="form-group">
+      <label for="nickname">Nickname</label>
+      <input 
+        type="text" 
+        id="nickname" 
+        name="nickname" 
+        class="form-control" 
+        value="<%= character.nickname || '' %>"
+      />
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="form-group">
+      <label for="age">Age</label>
+      <input 
+        type="text" 
+        id="age" 
+        name="age" 
+        class="form-control" 
+        value="<%= character.age || '' %>"
+      />
+    </div>
+  </div>
+  
+  <div class="col">
+    <div class="form-group">
+      <label for="gender">Gender</label>
+      <input 
+        type="text" 
+        id="gender" 
+        name="gender" 
+        class="form-control" 
+        value="<%= character.gender || '' %>"
+      />
+    </div>
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="role">Character Role</label>
+  <select id="role" name="role" class="form-control" onchange="toggleTeamFields()">
+    <option value="Civilian" <%= character.role === 'Civilian' ? 'selected' : '' %>>Civilian</option>
+    <option value="Player" <%= character.role === 'Player' ? 'selected' : '' %>>Player</option>
+    <option value="Staff" <%= character.role === 'Staff' ? 'selected' : '' %>>Staff</option>
+  </select>
+</div>
+
+<div id="teamFields" class="<%= (character.role === 'Player' || character.role === 'Staff') ? 'show-team-fields' : 'hide-team-fields' %>">
+  <div class="form-group">
+    <label for="teamId">Team</label>
+    <select id="teamId" name="teamId" class="form-control">
+      <option value="">-- Select a team --</option>
+      <% if (typeof teams !== 'undefined' && teams.length > 0) { %>
+        <% teams.forEach(team => { %>
+          <option value="<%= team.id %>" <%= character.teamId == team.id ? 'selected' : '' %>><%= team.name %></option>
+        <% }); %>
+      <% } %>
+    </select>
+  </div>
+</div>
+
+<div id="playerFields" class="<%= character.role === 'Player' ? 'show-player-fields' : 'hide-player-fields' %>">
+  <div class="form-group">
+    <label for="position">Position</label>
+    <input 
+      type="text" 
+      id="position" 
+      name="position" 
+      class="form-control" 
+      value="<%= character.position || '' %>" 
+      placeholder="e.g., Center, Left Wing, Goalie, etc."
+    />
+  </div>
+  
+  <div class="form-group">
+    <label for="jerseyNumber">Jersey Number</label>
+    <input 
+      type="number" 
+      id="jerseyNumber" 
+      name="jerseyNumber" 
+      class="form-control" 
+      min="1"
+      max="99"
+      value="<%= character.jerseyNumber || '' %>" 
+      placeholder="1-99"
+    />
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="shortBio">Short Bio</label>
+  <textarea 
+    id="shortBio" 
+    name="shortBio" 
+    class="form-control" 
+    placeholder="A brief summary of your character (max 255 characters)"
+    maxlength="255" 
+    rows="3"
+  ><%= character.shortBio || '' %></textarea>
+</div>

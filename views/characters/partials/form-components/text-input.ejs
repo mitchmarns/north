@@ -1,0 +1,79 @@
+<!-- views/partials/form-components/text-input.ejs -->
+<div class="form-group">
+  <label for="<%= id %>"><%= label %><%= required ? ' *' : '' %></label>
+  <input 
+    type="<%= type || 'text' %>" 
+    id="<%= id %>" 
+    name="<%= name || id %>" 
+    class="form-control <%= className || '' %>" 
+    value="<%= value || '' %>"
+    placeholder="<%= placeholder || '' %>"
+    <%= required ? 'required' : '' %>
+    <%= attributes || '' %>
+  />
+  <% if (typeof helpText !== 'undefined' && helpText) { %>
+    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+  <% } %>
+</div>
+
+<!-- views/partials/form-components/textarea.ejs -->
+<div class="form-group">
+  <label for="<%= id %>"><%= label %><%= required ? ' *' : '' %></label>
+  <textarea 
+    id="<%= id %>" 
+    name="<%= name || id %>" 
+    class="form-control <%= className || '' %>" 
+    rows="<%= rows || 3 %>"
+    placeholder="<%= placeholder || '' %>"
+    <%= required ? 'required' : '' %>
+    <%= attributes || '' %>
+  ><%= value || '' %></textarea>
+  <% if (typeof helpText !== 'undefined' && helpText) { %>
+    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+  <% } %>
+</div>
+
+<!-- views/partials/form-components/select.ejs -->
+<div class="form-group">
+  <label for="<%= id %>"><%= label %><%= required ? ' *' : '' %></label>
+  <select 
+    id="<%= id %>" 
+    name="<%= name || id %>" 
+    class="form-control <%= className || '' %>"
+    <%= required ? 'required' : '' %>
+    <%= attributes || '' %>
+  >
+    <% if (typeof placeholder !== 'undefined' && placeholder) { %>
+      <option value=""><%= placeholder %></option>
+    <% } %>
+    
+    <% options.forEach(option => { %>
+      <option 
+        value="<%= option.value %>"
+        <%= option.value == selectedValue ? 'selected' : '' %>
+      >
+        <%= option.label %>
+      </option>
+    <% }); %>
+  </select>
+  <% if (typeof helpText !== 'undefined' && helpText) { %>
+    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+  <% } %>
+</div>
+
+<!-- views/partials/form-components/checkbox.ejs -->
+<div class="form-group">
+  <div class="d-flex align-center">
+    <input 
+      type="checkbox" 
+      id="<%= id %>" 
+      name="<%= name || id %>" 
+      <%= checked ? 'checked' : '' %>
+      <%= attributes || '' %>
+    >
+    <label for="<%= id %>" style="margin-left: 10px; margin-bottom: 0;"><%= label %></label>
+  </div>
+  <% if (typeof helpText !== 'undefined' && helpText) { %>
+    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+  <% } %>
+</div>
