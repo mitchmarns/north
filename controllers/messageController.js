@@ -1,6 +1,7 @@
 // controllers/messageController.js
 const { Message, Character, User, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
+const discordNotifier = require('../utils/discordNotifier');
 
 // Get all character's conversations (inbox)
 exports.getInbox = async (req, res) => {
@@ -268,7 +269,8 @@ exports.sendMessage = async (req, res) => {
       where: {
         id: characterId,
         userId: req.user.id
-      }
+      },
+      include: [{ model: User, attributes: ['username'] }]  // Include user for Discord notification
     });
     
     if (!character) {
@@ -277,7 +279,9 @@ exports.sendMessage = async (req, res) => {
     }
     
     // Verify receiver exists
-    const receiver = await Character.findByPk(receiverId);
+    const receiver = await Character.findByPk(receiverId, {
+      include: [{ model: User, attributes: ['username'] }]  // Include user for Discord notification
+    });
     
     if (!receiver) {
       req.flash('error_msg', 'Recipient character not found');
@@ -292,40 +296,35 @@ exports.sendMessage = async (req, res) => {
       isRead: false
     });
     
-    // Redirect back to the conversation
-    res.redirect(`/messages/${characterId}/${receiverId}`);
-
-    const senderChar = await Character.findOne({
-      where: { id: characterId },
-      include: [{ model: User, attributes: ['username'] }]
-    });
+    // Try to send Discord notification
+    try {
+      discordNotifier.sendNotification(
+        `New message sent!`,
+        {
+          embeds: [{
+            title: `${character.name} sent a message to ${receiver.name}`,
+            description: content.length > 100 ? content.substring(0, 100) + '...' : content,
+            color: 0x5a8095, // Your site's header color
+            fields: [
+              { name: 'From', value: `${character.name} (${character.User.username})`, inline: true },
+              { name: 'To', value: `${receiver.name} (${receiver.User.username})`, inline: true },
+            ],
+            timestamp: new Date()
+          }]
+        }
+      );
+    } catch (notificationError) {
+      console.error('Error sending Discord notification:', notificationError);
+      // Continue execution - don't let notification failure affect the main flow
+    }
     
-    const receiverChar = await Character.findOne({
-      where: { id: receiverId },
-      include: [{ model: User, attributes: ['username'] }]
-    });
-
-    // Send Discord notification
-    discordNotifier.sendNotification(
-      `New message sent!`,
-      {
-        embeds: [{
-          title: `${senderChar.name} sent a message to ${receiverChar.name}`,
-          description: content.length > 100 ? content.substring(0, 100) + '...' : content,
-          color: 0x5a8095, // Your site's header color
-          fields: [
-            { name: 'From', value: `${senderChar.name} (${senderChar.User.username})`, inline: true },
-            { name: 'To', value: `${receiverChar.name} (${receiverChar.User.username})`, inline: true },
-          ],
-          timestamp: new Date()
-        }]
-      }
-    );
-
+    // Redirect back to the conversation - only do this once at the end
+    return res.redirect(`/messages/${characterId}/${receiverId}`);
+    
   } catch (error) {
     console.error('Error sending message:', error);
     req.flash('error_msg', 'An error occurred while sending the message');
-    res.redirect(req.headers.referer || `/messages/${req.body.characterId}`);
+    return res.redirect(req.headers.referer || `/messages/${req.body.characterId}`);
   }
 };
 
