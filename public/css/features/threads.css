@@ -1,0 +1,117 @@
+/* Thread List */
+.thread-list {
+  list-style: none;
+}
+
+.thread-item {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.thread-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.thread-link {
+  display: flex;
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--lighttext);
+}
+
+.thread-content {
+  flex: 1;
+}
+
+.thread-title {
+  font-weight: var(--medium);
+  margin-bottom: 5px;
+  color: var(--header);
+}
+
+.thread-meta {
+  display: flex;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.thread-meta span {
+  margin-right: var(--spacing-sm);
+}
+
+.thread-activity {
+  text-align: right;
+  font-size: var(--text-xs);
+}
+
+.thread-last-post {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Post Styles */
+.post {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  margin-right: var(--spacing-sm);
+}
+
+.post-info {
+  flex: 1;
+}
+
+.post-character {
+  font-weight: var(--semibold);
+  color: var(--header);
+}
+
+.post-author {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.post-date {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.post-content {
+  padding: var(--spacing-md);
+  line-height: 1.7;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.post-wordcount {
+  display: flex;
+  align-items: center;
+}
+
+.post-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}

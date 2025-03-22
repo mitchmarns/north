@@ -1,0 +1,52 @@
+/* Forms */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--medium);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--lighttext);
+  font-family: var(--mainfont);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-fast);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--header);
+  box-shadow: 0 0 0 3px rgba(90, 128, 149, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+textarea.form-control {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.input-group {
+  display: flex;
+}
+
+.input-group .form-control {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group-append {
+  display: flex;
+}
+
+.input-group-append .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

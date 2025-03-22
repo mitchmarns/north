@@ -1,0 +1,124 @@
+/* Header & Navigation */
+.site-header {
+  background-color: var(--navbar-bg);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-dropdown);
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  padding: 0 var(--spacing-md);
+}
+
+.navbar-brand {
+  font-family: var(--decorfont);
+  font-size: var(--text-xl);
+  color: var(--darktext);
+  display: flex;
+  align-items: center;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+}
+
+.nav-item {
+  margin-left: var(--spacing-md);
+}
+
+.nav-link {
+  position: relative;
+  color: var(--darktext);
+  font-weight: var(--medium);
+  transition: all 0.3s ease;
+}
+
+.nav-link:before {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--header);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link:hover {
+  color: var(--header);
+}
+
+.nav-link:hover:before {
+  width: 80%;
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--card-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-sm);
+  min-width: 180px;
+  display: none;
+  z-index: var(--z-dropdown);
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--lighttext);
+  border-radius: var(--radius-sm);
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Footer */
+.site-footer {
+  background-color: var(--navbar-bg);
+  color: var(--darktext);
+  padding: var(--spacing-md) 0;
+  margin-top: var(--spacing-lg);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-nav {
+  display: flex;
+  list-style: none;
+}
+
+.footer-nav li {
+  margin-left: var(--spacing-md);
+}
+
+.footer-nav a {
+  color: var(--darktext);
+  font-size: var(--text-sm);
+}
+
+.footer-nav a:hover {
+  color: var(--header);
+}

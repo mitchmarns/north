@@ -1,0 +1,119 @@
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, var(--gradient1), var(--gradient2), var(--gradient3));
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) 0;
+}
+
+.hero-title {
+  font-size: calc(var(--text-4xl) * 1.2);
+  color: white;
+  margin-bottom: var(--spacing-md);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hero-subtitle {
+  font-size: var(--text-xl);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: var(--spacing-lg);
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+}
+
+/* Section Headers */
+.section-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-header h2 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--spacing-xs);
+}
+
+.section-header p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-lg);
+}
+
+/* Feature Cards */
+.features-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.feature-cards {
+  gap: var(--spacing-md);
+}
+
+.feature-card {
+  height: 100%;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  overflow: hidden;
+  border-top: 4px solid var(--header);
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  text-align: center;
+  padding: var(--spacing-md) 0 0 0;
+  color: var(--header);
+}
+
+/* Character Showcase */
+.discover-section {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.character-showcase {
+  gap: var(--spacing-md);
+}
+
+.character-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.character-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-medium);
+  filter: var(--graypicture);
+}
+
+.character-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #555;
+  font-size: 3rem;
+  color: #999;
+}
+
+.character-card:hover .character-image {
+  transform: scale(1.05);
+}

@@ -1,0 +1,59 @@
+/* Character Cards */
+.character-card {
+  display: flex;
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast);
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+}
+
+.character-image {
+  width: 120px;
+  height: 180px;
+  object-fit: cover;
+  filter: var(--graypicture);
+  transition: all 0.4s ease;
+}
+
+.character-card:hover .character-image {
+  filter: none;
+  transform: scale(1.05);
+}
+
+.character-info {
+  padding: var(--spacing-md);
+  flex: 1;
+}
+
+.character-name {
+  font-family: var(--accentfont);
+  font-size: var(--text-xl);
+  margin-bottom: var(--spacing-xs);
+}
+
+.character-bio {
+  font-size: var(--text-sm);
+  margin-bottom: var(--spacing-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.character-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.character-tag {
+  background-color: rgba(90, 128, 149, 0.2);
+  color: var(--lighttext);
+  font-size: var(--text-xs);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  margin-right: 5px;
+  margin-bottom: 5px;
+}

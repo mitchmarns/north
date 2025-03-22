@@ -6,8 +6,8 @@ const { isAuthenticated } = require('../middleware/auth');
 // Home page
 router.get('/', async (req, res) => {
   try {
-    // Get 6 most recent public characters
-    const recentCharacters = await Character.findAll({
+    // Get random public characters (limited to 6)
+    const randomCharacters = await Character.findAll({
       where: {
         isPrivate: false,
         isArchived: false
@@ -18,19 +18,19 @@ router.get('/', async (req, res) => {
           attributes: ['username']
         }
       ],
-      order: [['createdAt', 'DESC']],
+      order: Sequelize.literal('RAND()'), // MySQL's RAND() function for random ordering
       limit: 6
     });
 
     res.render('index', {
       title: 'Welcome',
-      recentCharacters
+      randomCharacters
     });
   } catch (error) {
     console.error('Error fetching home page data:', error);
     res.render('index', {
       title: 'Welcome',
-      recentCharacters: []
+      randomCharacters: []
     });
   }
 });

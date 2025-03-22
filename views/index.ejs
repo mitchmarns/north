@@ -1,68 +1,85 @@
-<div class="row">
-  <div class="col">
-    <div class="text-center mb-4">
-      <h1>Welcome to 1x1 Roleplay Hub</h1>
-      <p class="lead">Develop characters, create stories, and write together with friends.</p>
-      
-      <% if (!user) { %>
-        <div class="mt-4">
-          <a href="/auth/register" class="btn btn-lg">Get Started</a>
-          <a href="/auth/login" class="btn btn-lg btn-outline ml-2">Login</a>
+<div class="hero-section">
+  <div class="hero-content">
+    <h1 class="hero-title">northern attitude</h1>
+    <p class="hero-subtitle">forgive my norther attitude - i was raised on little light</p>
+    
+    <% if (!user) { %>
+      <div class="hero-buttons">
+        <a href="/auth/register" class="btn btn-lg btn-primary">Get Started</a>
+        <a href="/auth/login" class="btn btn-lg btn-outline">Login</a>
+      </div>
+    <% } else { %>
+      <div class="hero-buttons">
+        <a href="/dashboard" class="btn btn-lg btn-primary">Go to Dashboard</a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<div class="features-section">
+  <div class="section-header">
+    <h2>quick links</h2>
+  </div>
+  
+  <div class="row feature-cards">
+    <div class="col">
+      <div class="card feature-card">
+        <div class="feature-icon">
+          <i class="ph-user-circle-plus-duotone"></i>
         </div>
-      <% } else { %>
-        <div class="mt-4">
-          <a href="/dashboard" class="btn btn-lg">Go to Dashboard</a>
+        <div class="card-body">
+          <h3>Create Characters</h3>
+          <a href="/characters" class="btn">Explore Characters</a>
         </div>
-      <% } %>
+      </div>
+    </div>
+    
+    <div class="col">
+      <div class="card feature-card">
+        <div class="feature-icon">
+          <i class="ph-pen-nib-duotone"></i>
+        </div>
+        <div class="card-body">
+          <h3>Threads</h3>
+          <a href="/writing/threads" class="btn">Browse Threads</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col">
+      <div class="card feature-card">
+        <div class="feature-icon">
+          <i class="ph-users-three-duotone"></i>
+        </div>
+        <div class="card-body">
+          <h3>Track Relationships</h3>
+          <p>This is a placeholder for a relationship map</p>
+          <a href="/characters" class="btn">See Characters</a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="row mt-4">
-  <div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h3>Create Characters</h3>
-        <p>Build detailed character profiles with personality traits, backgrounds, and relationships.</p>
-        <a href="/characters" class="btn">Explore Characters</a>
-      </div>
-    </div>
+<% if (typeof randomCharacters !== 'undefined' && randomCharacters.length > 0) { %>
+<div class="discover-section">
+  <div class="section-header">
+    <h2>Discover Characters</h2>
   </div>
   
-  <div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h3>Write Together</h3>
-        <p>Start writing threads with friends and develop stories collaboratively.</p>
-        <a href="/writing/threads" class="btn">Browse Threads</a>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col">
-    <div class="card">
-      <div class="card-body">
-        <h3>Track Relationships</h3>
-        <p>Map the connections between characters and visualize their dynamics.</p>
-        <a href="/characters" class="btn">See Characters</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<% if (typeof recentCharacters !== 'undefined' && recentCharacters.length > 0) { %>
-<div class="mt-5">
-  <h2>Recently Created Characters</h2>
-  
-  <div class="row mt-3">
-    <% recentCharacters.forEach(character => { %>
+  <div class="row character-showcase">
+    <% randomCharacters.forEach(character => { %>
       <div class="col" style="flex: 0 0 33.333333%;">
         <div class="character-card">
           <% if (character.avatarUrl) { %>
-            <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
+            <div class="character-image-container">
+              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
+            </div>
           <% } else { %>
-            <div class="character-image" style="background-color: #555; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 2rem; color: #999;"><%= character.name.charAt(0).toUpperCase() %></span>
+            <div class="character-image-container">
+              <div class="character-image character-placeholder">
+                <span><%= character.name.charAt(0).toUpperCase() %></span>
+              </div>
             </div>
           <% } %>
           
@@ -86,6 +103,10 @@
         </div>
       </div>
     <% }); %>
+  </div>
+  
+  <div class="text-center mt-4">
+    <a href="/characters" class="btn btn-lg btn-outline">Explore All Characters</a>
   </div>
 </div>
 <% } %>

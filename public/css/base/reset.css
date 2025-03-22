@@ -1,0 +1,58 @@
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--mainfont);
+  font-size: var(--text-base);
+  font-weight: var(--regular);
+  line-height: var(--leading-normal);
+  color: var(--lighttext);
+  background-color: var(--bg);
+  background-image: var(--gradient-bg);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--accentfont);
+  color: var(--header);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--semibold);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+h5 {
+  font-size: var(--text-lg);
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+}
+
+a {
+  color: var(--header);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--header-hover);
+}
