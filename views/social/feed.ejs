@@ -21,16 +21,20 @@
       <form id="post-form" action="/social/post" method="POST">
         <div class="form-group">
           <label for="post-as">Post as:</label>
-          <select id="post-as" name="characterId" class="form-control">
-            <option value="">Yourself (<%= user.username %>)</option>
+          <select id="post-as" name="characterId" class="form-control" required>
+            <option value="" disabled selected>Select a character</option>
             <% if (characters && characters.length > 0) { %>
-              <optgroup label="Your Characters">
-                <% characters.forEach(char => { %>
-                  <option value="<%= char.id %>"><%= char.name %></option>
-                <% }); %>
-              </optgroup>
+              <% characters.forEach(char => { %>
+                <option value="<%= char.id %>"><%= char.name %></option>
+              <% }); %>
             <% } %>
           </select>
+          <% if (!characters || characters.length === 0) { %>
+            <div class="empty-characters-notice mt-2">
+              <p>You need to create a character first!</p>
+              <a href="/characters/create" class="btn btn-sm mt-1">Create Character</a>
+            </div>
+          <% } %>
         </div>
         
         <div class="form-group">
