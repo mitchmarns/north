@@ -62,15 +62,14 @@
 </div>
 
 <% if (typeof randomCharacters !== 'undefined' && randomCharacters.length > 0) { %>
-<div class="discover-section">
-  <div class="section-header">
-    <h2>Discover Characters</h2>
-  </div>
-  
-  <div class="character-showcase">
-    <!-- First row of three characters -->
-    <% randomCharacters.slice(0, 3).forEach(character => { %>
-      <div class="col">
+  <div class="discover-section">
+    <div class="section-header">
+      <h2>Discover Characters</h2>
+    </div>
+    
+    <!-- First row of characters -->
+    <div class="character-showcase">
+      <% randomCharacters.slice(0, 3).forEach(character => { %>
         <div class="character-card">
           <% if (character.avatarUrl) { %>
             <div class="character-image-container">
@@ -102,14 +101,12 @@
             </div>
           </div>
         </div>
-      </div>
-    <% }); %>
-  </div>
-  
-  <div class="character-showcase">
-    <!-- Second row of three characters -->
-    <% randomCharacters.slice(3, 6).forEach(character => { %>
-      <div class="col">
+      <% }); %>
+    </div>
+    
+    <!-- Second row of characters -->
+    <div class="character-showcase">
+      <% randomCharacters.slice(3, 6).forEach(character => { %>
         <div class="character-card">
           <% if (character.avatarUrl) { %>
             <div class="character-image-container">
@@ -141,12 +138,11 @@
             </div>
           </div>
         </div>
-      </div>
-    <% }); %>
+      <% }); %>
+    </div>
+    
+    <div class="text-center mt-4">
+      <a href="/characters" class="btn btn-lg btn-outline">Explore All Characters</a>
+    </div>
   </div>
-  
-  <div class="text-center mt-4">
-    <a href="/characters" class="btn btn-lg btn-outline">Explore All Characters</a>
-  </div>
-</div>
-<% } %>
+  <% } %>
