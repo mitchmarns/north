@@ -26,7 +26,7 @@
 
 .hero-title {
   font-family: var(--decorfont);
-  font-size: calc(var(--text-4xl) * 1.2);
+  font-size: calc(var(--text-5xl) * 1.2);
   color: var(--lighttext);
   text-transform: uppercase;
   margin-bottom: var(--spacing-md);
