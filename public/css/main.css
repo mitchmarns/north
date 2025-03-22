@@ -118,12 +118,30 @@ a:hover {
 }
 
 .nav-link {
+  position: relative;
   color: var(--darktext);
   font-weight: var(--medium);
+  transition: all 0.3s ease;
+}
+
+.nav-link:before {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: var(--header);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
 .nav-link:hover {
   color: var(--header);
+}
+
+.nav-link:hover:before {
+  width: 80%;
 }
 
 .dropdown {
@@ -165,6 +183,13 @@ a:hover {
   box-shadow: var(--shadow-md);
   margin-bottom: var(--spacing-md);
   overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }
 
 .card-header {
@@ -207,6 +232,7 @@ label {
 .form-control:focus {
   outline: none;
   border-color: var(--header);
+  box-shadow: 0 0 0 3px rgba(90, 128, 149, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 textarea.form-control {
@@ -236,7 +262,7 @@ textarea.form-control {
 /* Buttons */
 .btn {
   display: inline-block;
-  padding: 8px 16px;
+  padding: 10px 18px;
   background-color: var(--header);
   color: white;
   border: none;
@@ -246,12 +272,33 @@ textarea.form-control {
   font-weight: var(--medium);
   text-align: center;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.btn:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: var(--header-hover);
+  transition: all 0.3s ease;
+  z-index: -1;
 }
 
 .btn:hover {
-  background-color: var(--header-hover);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   color: white;
+  transform: translateY(-2px);
+}
+
+.btn:hover:before {
+  width: 100%;
 }
 
 .btn-sm {
@@ -345,6 +392,12 @@ textarea.form-control {
   height: 180px;
   object-fit: cover;
   filter: var(--graypicture);
+  transition: all 0.4s ease;
+}
+
+.character-card:hover .character-image {
+  filter: none;
+  transform: scale(1.05);
 }
 
 .character-info {
