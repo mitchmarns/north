@@ -3,10 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const messageController = require('../controllers/messageController');
+const { Message, Character, User, Sequelize } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
-
-// Character inbox (all conversations)
-router.get('/:characterId', isAuthenticated, messageController.getInbox);
 
 // New route for messages index/hub
 router.get('/', isAuthenticated, async (req, res) => {
@@ -80,6 +78,9 @@ router.get('/', isAuthenticated, async (req, res) => {
     res.redirect('/dashboard');
   }
 });
+
+// Character inbox (all conversations)
+router.get('/:characterId', isAuthenticated, messageController.getInbox);
 
 // New message form
 router.get('/:characterId/new', isAuthenticated, messageController.newMessageForm);
