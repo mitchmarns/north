@@ -1,0 +1,562 @@
+<!-- views/social/feed.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Activity Feed</h1>
+  <% if(user) { %>
+    <button id="create-post-btn" class="btn">
+      <i class="ph-plus-duotone"></i> Create Post
+    </button>
+  <% } %>
+</div>
+
+<!-- Create Post Modal -->
+<div id="create-post-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create Post</h3>
+      <span class="close-modal" id="close-post-modal">
+        <i class="ph-x-duotone"></i>
+      </span>
+    </div>
+    <div class="modal-body">
+      <form id="post-form" action="/social/post" method="POST">
+        <div class="form-group">
+          <label for="post-as">Post as:</label>
+          <select id="post-as" name="characterId" class="form-control">
+            <option value="">Yourself (<%= user.username %>)</option>
+            <% if (characters && characters.length > 0) { %>
+              <optgroup label="Your Characters">
+                <% characters.forEach(char => { %>
+                  <option value="<%= char.id %>"><%= char.name %></option>
+                <% }); %>
+              </optgroup>
+            <% } %>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="post-content">What's on your mind?</label>
+          <textarea id="post-content" name="content" class="form-control" rows="4" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="post-image">Image URL (optional)</label>
+          <input type="url" id="post-image" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+          <div id="image-preview" class="mt-2" style="display: none;">
+            <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Privacy:</label>
+          <div class="d-flex align-center">
+            <input type="radio" id="public-post" name="privacy" value="public" checked>
+            <label for="public-post" style="margin-left: 10px; margin-bottom: 0;">Public</label>
+          </div>
+          <div class="d-flex align-center mt-1">
+            <input type="radio" id="private-post" name="privacy" value="private">
+            <label for="private-post" style="margin-left: 10px; margin-bottom: 0;">Friends Only</label>
+          </div>
+        </div>
+        
+        <div class="form-group text-right">
+          <button type="submit" class="btn">Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Filter/Sort Controls -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex align-center justify-between">
+      <div class="feed-filter">
+        <select id="feed-filter" class="form-control">
+          <option value="all">All Posts</option>
+          <option value="following">Following</option>
+          <option value="mine">My Posts</option>
+        </select>
+      </div>
+      
+      <div class="feed-sort">
+        <select id="feed-sort" class="form-control">
+          <option value="recent">Most Recent</option>
+          <option value="popular">Most Popular</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Social Feed -->
+<div class="social-feed">
+  <% if (posts && posts.length > 0) { %>
+    <% posts.forEach(post => { %>
+      <div class="social-post">
+        <div class="social-post-header">
+          <div class="post-author">
+            <% if (post.character) { %>
+              <!-- Posted as character -->
+              <% if (post.character.avatarUrl) { %>
+                <img src="<%= post.character.avatarUrl %>" alt="<%= post.character.name %>" class="post-avatar">
+              <% } else { %>
+                <div class="post-avatar-placeholder">
+                  <%= post.character.name.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              
+              <div class="post-author-info">
+                <div class="post-author-name">
+                  <a href="/characters/<%= post.character.id %>"><%= post.character.name %></a>
+                </div>
+                <div class="post-meta">
+                  <span>Character by <%= post.user.username %></span>
+                  <span>•</span>
+                  <span><%= formatTimeAgo(post.createdAt) %></span>
+                  <% if (post.isEdited) { %>
+                    <span>• Edited</span>
+                  <% } %>
+                </div>
+              </div>
+            <% } else { %>
+              <!-- Posted as user -->
+              <div class="post-avatar-placeholder user-avatar">
+                <%= post.user.username.charAt(0).toUpperCase() %>
+              </div>
+              
+              <div class="post-author-info">
+                <div class="post-author-name">
+                  <%= post.user.username %>
+                </div>
+                <div class="post-meta">
+                  <span><%= formatTimeAgo(post.createdAt) %></span>
+                  <% if (post.isEdited) { %>
+                    <span>• Edited</span>
+                  <% } %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+          
+          <!-- Post actions menu -->
+          <% if (user && (user.id === post.userId)) { %>
+            <div class="post-actions">
+              <button class="post-actions-btn">
+                <i class="ph-dots-three-vertical-duotone"></i>
+              </button>
+              <div class="post-actions-menu">
+                <a href="/social/post/<%= post.id %>/edit" class="post-action-item">
+                  <i class="ph-pencil-duotone"></i> Edit
+                </a>
+                <form action="/social/post/<%= post.id %>?_method=DELETE" method="POST">
+                  <button type="submit" class="post-action-item text-danger delete-confirm">
+                    <i class="ph-trash-duotone"></i> Delete
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="social-post-content">
+          <%= post.content.replace(/\n/g, '<br>') %>
+          
+          <% if (post.imageUrl) { %>
+            <div class="post-image">
+              <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.style.display='none'">
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="social-post-footer">
+          <div class="post-reactions">
+            <button class="reaction-btn <%= post.hasLiked ? 'active' : '' %>" data-post-id="<%= post.id %>" data-reaction="like">
+              <i class="ph-heart-duotone"></i>
+              <span class="reaction-count"><%= post.likeCount || 0 %></span>
+            </button>
+            
+            <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="comment">
+              <i class="ph-chat-text-duotone"></i>
+              <span class="reaction-count"><%= post.commentCount || 0 %></span>
+            </button>
+            
+            <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="share">
+              <i class="ph-share-duotone"></i>
+            </button>
+          </div>
+          
+          <div class="post-visibility">
+            <% if (post.privacy === 'private') { %>
+              <i class="ph-users-duotone" title="Friends Only"></i>
+            <% } else { %>
+              <i class="ph-globe-duotone" title="Public"></i>
+            <% } %>
+          </div>
+        </div>
+        
+        <!-- Comments section (collapsed by default) -->
+        <div class="post-comments" style="display: none;">
+          <% if (post.comments && post.comments.length > 0) { %>
+            <div class="comments-list">
+              <% post.comments.forEach(comment => { %>
+                <div class="comment">
+                  <div class="comment-author">
+                    <% if (comment.character) { %>
+                      <% if (comment.character.avatarUrl) { %>
+                        <img src="<%= comment.character.avatarUrl %>" alt="<%= comment.character.name %>" class="comment-avatar">
+                      <% } else { %>
+                        <div class="comment-avatar-placeholder">
+                          <%= comment.character.name.charAt(0).toUpperCase() %>
+                        </div>
+                      <% } %>
+                    <% } else { %>
+                      <div class="comment-avatar-placeholder user-avatar">
+                        <%= comment.user.username.charAt(0).toUpperCase() %>
+                      </div>
+                    <% } %>
+                    
+                    <div class="comment-info">
+                      <div class="comment-name">
+                        <% if (comment.character) { %>
+                          <a href="/characters/<%= comment.character.id %>"><%= comment.character.name %></a>
+                        <% } else { %>
+                          <%= comment.user.username %>
+                        <% } %>
+                      </div>
+                      <div class="comment-content">
+                        <%= comment.content %>
+                      </div>
+                      <div class="comment-meta">
+                        <span><%= formatTimeAgo(comment.createdAt) %></span>
+                        
+                        <% if (user && user.id === comment.userId) { %>
+                          <span>•</span>
+                          <a href="#" class="delete-comment" data-comment-id="<%= comment.id %>">Delete</a>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+          
+          <% if (user) { %>
+            <form class="comment-form" action="/social/post/<%= post.id %>/comment" method="POST">
+              <div class="d-flex">
+                <select name="commentAsId" class="form-control comment-as">
+                  <option value="">As <%= user.username %></option>
+                  <% if (characters && characters.length > 0) { %>
+                    <% characters.forEach(char => { %>
+                      <option value="<%= char.id %>">As <%= char.name %></option>
+                    <% }); %>
+                  <% } %>
+                </select>
+                
+                <input type="text" name="content" class="form-control" placeholder="Write a comment..." required>
+                
+                <button type="submit" class="btn btn-sm">
+                  <i class="ph-paper-plane-right-duotone"></i>
+                </button>
+              </div>
+            </form>
+          <% } else { %>
+            <div class="comment-login-prompt">
+              <a href="/auth/login">Login</a> to comment
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+    
+    <div class="load-more-container text-center mt-4">
+      <button id="load-more-btn" class="btn btn-outline">Load More</button>
+    </div>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body text-center p-5">
+        <div style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.5);">
+          <i class="ph-newspaper-duotone" style="font-size: 3rem;"></i>
+        </div>
+        <h3>No Posts Yet</h3>
+        <p>Be the first to share something with the community!</p>
+        <% if (user) { %>
+          <button id="empty-create-post-btn" class="btn mt-3">Create a Post</button>
+        <% } else { %>
+          <a href="/auth/login" class="btn mt-3">Login to Post</a>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create post modal functionality
+    const createPostBtn = document.getElementById('create-post-btn');
+    const emptyCreatePostBtn = document.getElementById('empty-create-post-btn');
+    const createPostModal = document.getElementById('create-post-modal');
+    const closePostModal = document.getElementById('close-post-modal');
+    
+    if (createPostBtn) {
+      createPostBtn.addEventListener('click', function() {
+        createPostModal.style.display = 'flex';
+      });
+    }
+    
+    if (emptyCreatePostBtn) {
+      emptyCreatePostBtn.addEventListener('click', function() {
+        createPostModal.style.display = 'flex';
+      });
+    }
+    
+    if (closePostModal) {
+      closePostModal.addEventListener('click', function() {
+        createPostModal.style.display = 'none';
+      });
+      
+      // Close when clicking outside the modal
+      window.addEventListener('click', function(event) {
+        if (event.target === createPostModal) {
+          createPostModal.style.display = 'none';
+        }
+      });
+    }
+    
+    // Image preview functionality
+    const imageUrlInput = document.getElementById('post-image');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (imageUrlInput) {
+      imageUrlInput.addEventListener('input', function() {
+        const imageUrl = this.value.trim();
+        
+        if (imageUrl) {
+          previewImage.src = imageUrl;
+          imagePreview.style.display = 'block';
+          
+          // Handle image load errors
+          previewImage.onerror = function() {
+            imagePreview.style.display = 'none';
+          };
+        } else {
+          imagePreview.style.display = 'none';
+        }
+      });
+    }
+    
+    // Toggle comment sections
+    const commentButtons = document.querySelectorAll('.reaction-btn[data-reaction="comment"]');
+    
+    commentButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const postId = this.getAttribute('data-post-id');
+        const commentsSection = this.closest('.social-post').querySelector('.post-comments');
+        
+        if (commentsSection.style.display === 'none') {
+          commentsSection.style.display = 'block';
+        } else {
+          commentsSection.style.display = 'none';
+        }
+      });
+    });
+    
+    // Handle post reactions
+    const reactionButtons = document.querySelectorAll('.reaction-btn[data-reaction="like"]');
+    
+    reactionButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const postId = this.getAttribute('data-post-id');
+        const countElement = this.querySelector('.reaction-count');
+        const isActive = this.classList.contains('active');
+        
+        // Make AJAX request to like/unlike
+        fetch(`/social/post/${postId}/like`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: isActive ? 'unlike' : 'like' })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update UI
+            countElement.textContent = data.count;
+            
+            if (isActive) {
+              this.classList.remove('active');
+            } else {
+              this.classList.add('active');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      });
+    });
+    
+    // Handle share functionality
+    const shareButtons = document.querySelectorAll('.reaction-btn[data-reaction="share"]');
+    
+    shareButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const postId = this.getAttribute('data-post-id');
+        
+        // Create a temporary input to copy the URL
+        const tempInput = document.createElement('input');
+        tempInput.value = `${window.location.origin}/social/post/${postId}`;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Show a notification
+        alert('Post URL copied to clipboard!');
+      });
+    });
+    
+    // Post actions menu toggle
+    const actionButtons = document.querySelectorAll('.post-actions-btn');
+    
+    actionButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = this.nextElementSibling;
+        
+        // Close all other open menus
+        document.querySelectorAll('.post-actions-menu.show').forEach(openMenu => {
+          if (openMenu !== menu) {
+            openMenu.classList.remove('show');
+          }
+        });
+        
+        // Toggle this menu
+        menu.classList.toggle('show');
+      });
+    });
+    
+    // Close action menus when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.post-actions')) {
+        document.querySelectorAll('.post-actions-menu.show').forEach(menu => {
+          menu.classList.remove('show');
+        });
+      }
+    });
+    
+    // Filter and sort functionality
+    const feedFilter = document.getElementById('feed-filter');
+    const feedSort = document.getElementById('feed-sort');
+    
+    if (feedFilter && feedSort) {
+      feedFilter.addEventListener('change', updateFeed);
+      feedSort.addEventListener('change', updateFeed);
+    }
+    
+    function updateFeed() {
+      const filter = feedFilter.value;
+      const sort = feedSort.value;
+      
+      // Reload with query parameters
+      window.location.href = `/social/feed?filter=${filter}&sort=${sort}`;
+    }
+    
+    // Delete comment functionality
+    const deleteCommentLinks = document.querySelectorAll('.delete-comment');
+    
+    deleteCommentLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Are you sure you want to delete this comment?')) {
+          const commentId = this.getAttribute('data-comment-id');
+          
+          fetch(`/social/comment/${commentId}`, {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Remove the comment from DOM
+              this.closest('.comment').remove();
+              
+              // Update comment count
+              const post = this.closest('.social-post');
+              const commentCountEl = post.querySelector('.reaction-btn[data-reaction="comment"] .reaction-count');
+              const currentCount = parseInt(commentCountEl.textContent);
+              commentCountEl.textContent = currentCount - 1;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+      });
+    });
+    
+    // Load more functionality
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    
+    if (loadMoreBtn) {
+      let page = 1;
+      
+      loadMoreBtn.addEventListener('click', function() {
+        page++;
+        const filter = feedFilter ? feedFilter.value : 'all';
+        const sort = feedSort ? feedSort.value : 'recent';
+        
+        // Show loading state
+        loadMoreBtn.innerHTML = 'Loading... <i class="ph-spinner-gap-duotone ph-spin"></i>';
+        loadMoreBtn.disabled = true;
+        
+        fetch(`/social/feed/load-more?page=${page}&filter=${filter}&sort=${sort}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.posts && data.posts.length > 0) {
+            // Append new posts to the feed
+            const feedContainer = document.querySelector('.social-feed');
+            data.posts.forEach(post => {
+              // This would need a template rendering function to create post HTML
+              // Simplified version for demonstration
+              const postElement = document.createElement('div');
+              postElement.className = 'social-post';
+              postElement.innerHTML = `Post ID: ${post.id}`;
+              feedContainer.insertBefore(postElement, loadMoreBtn.parentNode);
+            });
+            
+            // Reset button state
+            loadMoreBtn.innerHTML = 'Load More';
+            loadMoreBtn.disabled = false;
+            
+            // Hide button if no more posts
+            if (data.posts.length < 10) { // Assuming 10 posts per page
+              loadMoreBtn.style.display = 'none';
+            }
+          } else {
+            // No more posts
+            loadMoreBtn.innerHTML = 'No More Posts';
+            loadMoreBtn.disabled = true;
+            
+            // Hide button after a delay
+            setTimeout(() => {
+              loadMoreBtn.parentNode.style.display = 'none';
+            }, 2000);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          loadMoreBtn.innerHTML = 'Error Loading More';
+          
+          // Reset after a delay
+          setTimeout(() => {
+            loadMoreBtn.innerHTML = 'Try Again';
+            loadMoreBtn.disabled = false;
+          }, 2000);
+        });
+      });
+    }
+  });
+</script>

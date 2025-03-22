@@ -1,0 +1,95 @@
+<!-- views/social/edit.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Post</h1>
+  <div>
+    <a href="/social/post/<%= post.id %>" class="btn btn-outline mr-2">
+      <i class="ph-eye-duotone"></i> View Post
+    </a>
+    <a href="/social/feed" class="btn btn-outline">
+      <i class="ph-arrow-left-duotone"></i> Back to Feed
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/social/post/<%= post.id %>?_method=PUT" method="POST">
+      <div class="form-group">
+        <label for="post-as">Post as:</label>
+        <select id="post-as" name="characterId" class="form-control">
+          <option value="" <%= !post.characterId ? 'selected' : '' %>>Yourself (<%= user.username %>)</option>
+          <% if (characters && characters.length > 0) { %>
+            <optgroup label="Your Characters">
+              <% characters.forEach(char => { %>
+                <option value="<%= char.id %>" <%= post.characterId == char.id ? 'selected' : '' %>><%= char.name %></option>
+              <% }); %>
+            </optgroup>
+          <% } %>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="post-content">Content</label>
+        <textarea id="post-content" name="content" class="form-control" rows="6" required><%= post.content %></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="post-image">Image URL (optional)</label>
+        <input type="url" id="post-image" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg" value="<%= post.imageUrl || '' %>">
+        <% if (post.imageUrl) { %>
+          <div id="image-preview" class="mt-2">
+            <img id="preview-image" src="<%= post.imageUrl %>" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+          </div>
+        <% } else { %>
+          <div id="image-preview" class="mt-2" style="display: none;">
+            <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+          </div>
+        <% } %>
+      </div>
+      
+      <div class="form-group">
+        <label>Privacy:</label>
+        <div class="d-flex align-center">
+          <input type="radio" id="public-post" name="privacy" value="public" <%= post.privacy === 'public' ? 'checked' : '' %>>
+          <label for="public-post" style="margin-left: 10px; margin-bottom: 0;">Public</label>
+        </div>
+        <div class="d-flex align-center mt-1">
+          <input type="radio" id="private-post" name="privacy" value="private" <%= post.privacy === 'private' ? 'checked' : '' %>>
+          <label for="private-post" style="margin-left: 10px; margin-bottom: 0;">Friends Only</label>
+        </div>
+      </div>
+      
+      <div class="form-group text-right">
+        <a href="/social/post/<%= post.id %>" class="btn btn-outline mr-2">Cancel</a>
+        <button type="submit" class="btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Image preview functionality
+    const imageUrlInput = document.getElementById('post-image');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (imageUrlInput) {
+      imageUrlInput.addEventListener('input', function() {
+        const imageUrl = this.value.trim();
+        
+        if (imageUrl) {
+          previewImage.src = imageUrl;
+          imagePreview.style.display = 'block';
+          
+          // Handle image load errors
+          previewImage.onerror = function() {
+            imagePreview.style.display = 'none';
+          };
+        } else {
+          imagePreview.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>

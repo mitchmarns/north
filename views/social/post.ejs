@@ -1,0 +1,339 @@
+<!-- views/social/post.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>View Post</h1>
+  <a href="/social/feed" class="btn btn-outline">
+    <i class="ph-arrow-left-duotone"></i> Back to Feed
+  </a>
+</div>
+
+<!-- Single Post View -->
+<div class="social-feed">
+  <div class="social-post">
+    <div class="social-post-header">
+      <div class="post-author">
+        <% if (post.Character) { %>
+          <!-- Posted as character -->
+          <% if (post.Character.avatarUrl) { %>
+            <img src="<%= post.Character.avatarUrl %>" alt="<%= post.Character.name %>" class="post-avatar">
+          <% } else { %>
+            <div class="post-avatar-placeholder">
+              <%= post.Character.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+          
+          <div class="post-author-info">
+            <div class="post-author-name">
+              <a href="/characters/<%= post.Character.id %>"><%= post.Character.name %></a>
+            </div>
+            <div class="post-meta">
+              <span>Character by <%= post.User.username %></span>
+              <span>•</span>
+              <span><%= formatTimeAgo(post.createdAt) %></span>
+              <% if (post.isEdited) { %>
+                <span>• Edited</span>
+              <% } %>
+            </div>
+          </div>
+        <% } else { %>
+          <!-- Posted as user -->
+          <div class="post-avatar-placeholder user-avatar">
+            <%= post.User.username.charAt(0).toUpperCase() %>
+          </div>
+          
+          <div class="post-author-info">
+            <div class="post-author-name">
+              <%= post.User.username %>
+            </div>
+            <div class="post-meta">
+              <span><%= formatTimeAgo(post.createdAt) %></span>
+              <% if (post.isEdited) { %>
+                <span>• Edited</span>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+      
+      <!-- Post actions menu -->
+      <% if (user && (user.id === post.userId)) { %>
+        <div class="post-actions">
+          <button class="post-actions-btn">
+            <i class="ph-dots-three-vertical-duotone"></i>
+          </button>
+          <div class="post-actions-menu">
+            <a href="/social/post/<%= post.id %>/edit" class="post-action-item">
+              <i class="ph-pencil-duotone"></i> Edit
+            </a>
+            <form action="/social/post/<%= post.id %>?_method=DELETE" method="POST">
+              <button type="submit" class="post-action-item text-danger delete-confirm">
+                <i class="ph-trash-duotone"></i> Delete
+              </button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="social-post-content">
+      <%= post.content.replace(/\n/g, '<br>') %>
+      
+      <% if (post.imageUrl) { %>
+        <div class="post-image">
+          <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.style.display='none'">
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="social-post-footer">
+      <div class="post-reactions">
+        <button class="reaction-btn <%= post.hasLiked ? 'active' : '' %>" data-post-id="<%= post.id %>" data-reaction="like">
+          <i class="ph-heart-duotone"></i>
+          <span class="reaction-count"><%= post.likeCount || 0 %></span>
+        </button>
+        
+        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="comment">
+          <i class="ph-chat-text-duotone"></i>
+          <span class="reaction-count"><%= post.commentCount || 0 %></span>
+        </button>
+        
+        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="share">
+          <i class="ph-share-duotone"></i>
+        </button>
+      </div>
+      
+      <div class="post-visibility">
+        <% if (post.privacy === 'private') { %>
+          <i class="ph-users-duotone" title="Friends Only"></i>
+        <% } else { %>
+          <i class="ph-globe-duotone" title="Public"></i>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Comments section (always visible on single post view) -->
+    <div class="post-comments">
+      <h3 class="comments-heading">Comments (<%= post.comments.length %>)</h3>
+      
+      <% if (post.comments && post.comments.length > 0) { %>
+        <div class="comments-list">
+          <% post.comments.forEach(comment => { %>
+            <div class="comment">
+              <div class="comment-author">
+                <% if (comment.Character) { %>
+                  <% if (comment.Character.avatarUrl) { %>
+                    <img src="<%= comment.Character.avatarUrl %>" alt="<%= comment.Character.name %>" class="comment-avatar">
+                  <% } else { %>
+                    <div class="comment-avatar-placeholder">
+                      <%= comment.Character.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                <% } else { %>
+                  <div class="comment-avatar-placeholder user-avatar">
+                    <%= comment.User.username.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+                
+                <div class="comment-info">
+                  <div class="comment-name">
+                    <% if (comment.Character) { %>
+                      <a href="/characters/<%= comment.Character.id %>"><%= comment.Character.name %></a>
+                    <% } else { %>
+                      <%= comment.User.username %>
+                    <% } %>
+                  </div>
+                  <div class="comment-content">
+                    <%= comment.content %>
+                  </div>
+                  <div class="comment-meta">
+                    <span><%= formatTimeAgo(comment.createdAt) %></span>
+                    
+                    <% if (user && user.id === comment.userId) { %>
+                      <span>•</span>
+                      <a href="#" class="delete-comment" data-comment-id="<%= comment.id %>">Delete</a>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="no-comments">
+          <p>No comments yet. Be the first to comment!</p>
+        </div>
+      <% } %>
+      
+      <% if (user) { %>
+        <form class="comment-form" action="/social/post/<%= post.id %>/comment" method="POST">
+          <div class="d-flex">
+            <select name="commentAsId" class="form-control comment-as">
+              <option value="">As <%= user.username %></option>
+              <% if (characters && characters.length > 0) { %>
+                <% characters.forEach(char => { %>
+                  <option value="<%= char.id %>">As <%= char.name %></option>
+                <% }); %>
+              <% } %>
+            </select>
+            
+            <input type="text" name="content" class="form-control" placeholder="Write a comment..." required>
+            
+            <button type="submit" class="btn btn-sm">
+              <i class="ph-paper-plane-right-duotone"></i>
+            </button>
+          </div>
+        </form>
+      <% } else { %>
+        <div class="comment-login-prompt">
+          <a href="/auth/login">Login</a> to comment
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Post actions menu toggle
+    const actionButton = document.querySelector('.post-actions-btn');
+    if (actionButton) {
+      actionButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = this.nextElementSibling;
+        menu.classList.toggle('show');
+      });
+      
+      // Close action menu when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.post-actions')) {
+          document.querySelectorAll('.post-actions-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+          });
+        }
+      });
+    }
+    
+    // Handle likes
+    const likeButton = document.querySelector('.reaction-btn[data-reaction="like"]');
+    if (likeButton) {
+      likeButton.addEventListener('click', function() {
+        const postId = this.getAttribute('data-post-id');
+        const countElement = this.querySelector('.reaction-count');
+        const isActive = this.classList.contains('active');
+        
+        // Make AJAX request to like/unlike
+        fetch(`/social/post/${postId}/like`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: isActive ? 'unlike' : 'like' })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Update UI
+            countElement.textContent = data.count;
+            
+            if (isActive) {
+              this.classList.remove('active');
+            } else {
+              this.classList.add('active');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      });
+    }
+    
+    // Handle share functionality
+    const shareButton = document.querySelector('.reaction-btn[data-reaction="share"]');
+    if (shareButton) {
+      shareButton.addEventListener('click', function() {
+        const postId = this.getAttribute('data-post-id');
+        
+        // Create a temporary input to copy the URL
+        const tempInput = document.createElement('input');
+        tempInput.value = `${window.location.origin}/social/post/${postId}`;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Show a notification
+        alert('Post URL copied to clipboard!');
+      });
+    }
+    
+    // Delete comment functionality
+    const deleteCommentLinks = document.querySelectorAll('.delete-comment');
+    deleteCommentLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Are you sure you want to delete this comment?')) {
+          const commentId = this.getAttribute('data-comment-id');
+          
+          fetch(`/social/comment/${commentId}`, {
+            method: 'DELETE'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Remove the comment from DOM
+              this.closest('.comment').remove();
+              
+              // Update comment count
+              const commentsHeading = document.querySelector('.comments-heading');
+              const commentCountEl = document.querySelector('.reaction-btn[data-reaction="comment"] .reaction-count');
+              
+              // Get current counts
+              let currentCount = parseInt(commentCountEl.textContent);
+              let headingText = commentsHeading.textContent;
+              let countMatch = headingText.match(/\((\d+)\)/);
+              let headingCount = countMatch ? parseInt(countMatch[1]) : 0;
+              
+              // Update counts
+              currentCount--;
+              headingCount--;
+              
+              commentCountEl.textContent = currentCount;
+              commentsHeading.textContent = `Comments (${headingCount})`;
+              
+              // If no more comments, show the "no comments" message
+              if (headingCount === 0) {
+                const commentsList = document.querySelector('.comments-list');
+                commentsList.innerHTML = `
+                  <div class="no-comments">
+                    <p>No comments yet. Be the first to comment!</p>
+                  </div>
+                `;
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .comments-heading {
+    margin-bottom: 15px;
+    font-size: var(--text-lg);
+    font-weight: var(--semibold);
+  }
+  
+  .no-comments {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+    margin-bottom: 15px;
+  }
+</style>

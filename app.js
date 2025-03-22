@@ -145,6 +145,7 @@ app.use('/writing', require('./routes/writing'));
 app.use('/teams', require('./routes/teams'));
 app.use('/messages', require('./routes/messages'));
 app.use('/help', require('./routes/help'));
+app.use('/social', require('./routes/social'));
 
 // Utility function to format text content with styling tags 
 const formatTextContent = (text) => {
@@ -181,6 +182,44 @@ const formatTextContent = (text) => {
 // Add this to your Express.js app locals
 app.locals.formatTextContent = formatTextContent;
 
+// Helper function for time ago formatting
+app.locals.formatTimeAgo = (date) => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - new Date(date)) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+};
+
 // Error handling
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });
@@ -212,5 +251,88 @@ async function startServer() {
     discordNotifier.initialize(process.env.DISCORD_WEBHOOK_URL);
   }
 }
+
+async function createSocialMediaTables() {
+  try {
+    console.log('Starting migration for social media tables...');
+    
+    // Run raw SQL queries using sequelize.query
+    await sequelize.query(`
+      -- Create social_posts table
+      CREATE TABLE IF NOT EXISTS \`social_posts\` (
+        \`id\` INT NOT NULL AUTO_INCREMENT,
+        \`userId\` INT NOT NULL,
+        \`characterId\` INT NULL,
+        \`content\` TEXT NOT NULL,
+        \`imageUrl\` VARCHAR(255) NULL,
+        \`privacy\` ENUM('public', 'private') NOT NULL DEFAULT 'public',
+        \`likeCount\` INT NOT NULL DEFAULT 0,
+        \`commentCount\` INT NOT NULL DEFAULT 0,
+        \`isEdited\` TINYINT(1) NOT NULL DEFAULT 0,
+        \`createdAt\` DATETIME NOT NULL,
+        \`updatedAt\` DATETIME NOT NULL,
+        PRIMARY KEY (\`id\`),
+        INDEX \`idx_userId\` (\`userId\`),
+        INDEX \`idx_characterId\` (\`characterId\`),
+        INDEX \`idx_privacy\` (\`privacy\`),
+        INDEX \`idx_createdAt\` (\`createdAt\`),
+        CONSTRAINT \`fk_social_posts_users\` FOREIGN KEY (\`userId\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE,
+        CONSTRAINT \`fk_social_posts_characters\` FOREIGN KEY (\`characterId\`) REFERENCES \`characters\` (\`id\`) ON DELETE SET NULL
+      );
+    `);
+    
+    console.log('Created social_posts table');
+    
+    // Create comments table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`comments\` (
+        \`id\` INT NOT NULL AUTO_INCREMENT,
+        \`postId\` INT NOT NULL,
+        \`userId\` INT NOT NULL,
+        \`characterId\` INT NULL,
+        \`content\` TEXT NOT NULL,
+        \`createdAt\` DATETIME NOT NULL,
+        \`updatedAt\` DATETIME NOT NULL,
+        PRIMARY KEY (\`id\`),
+        INDEX \`idx_postId\` (\`postId\`),
+        INDEX \`idx_userId\` (\`userId\`),
+        INDEX \`idx_characterId\` (\`characterId\`),
+        CONSTRAINT \`fk_comments_social_posts\` FOREIGN KEY (\`postId\`) REFERENCES \`social_posts\` (\`id\`) ON DELETE CASCADE,
+        CONSTRAINT \`fk_comments_users\` FOREIGN KEY (\`userId\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE,
+        CONSTRAINT \`fk_comments_characters\` FOREIGN KEY (\`characterId\`) REFERENCES \`characters\` (\`id\`) ON DELETE SET NULL
+      );
+    `);
+    
+    console.log('Created comments table');
+    
+    // Create likes table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`likes\` (
+        \`id\` INT NOT NULL AUTO_INCREMENT,
+        \`postId\` INT NOT NULL,
+        \`userId\` INT NOT NULL,
+        \`createdAt\` DATETIME NOT NULL,
+        \`updatedAt\` DATETIME NOT NULL,
+        PRIMARY KEY (\`id\`),
+        UNIQUE INDEX \`idx_post_user\` (\`postId\`, \`userId\`),
+        CONSTRAINT \`fk_likes_social_posts\` FOREIGN KEY (\`postId\`) REFERENCES \`social_posts\` (\`id\`) ON DELETE CASCADE,
+        CONSTRAINT \`fk_likes_users\` FOREIGN KEY (\`userId\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE
+      );
+    `);
+    
+    console.log('Created likes table');
+    console.log('Social media tables migration completed successfully!');
+    
+  } catch (error) {
+    console.error('Error creating social media tables:', error);
+  }
+}
+
+// Add this right before your startServer() function call
+startServer().then(() => {
+  createSocialMediaTables().then(() => {
+    console.log('Migration check complete, remove the createSocialMediaTables function from app.js');
+  });
+});
 
 startServer();
