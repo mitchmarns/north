@@ -25,6 +25,9 @@ const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
 const Team = require('./team')(sequelize, Sequelize.DataTypes);
 const Message = require('./messages')(sequelize, Sequelize.DataTypes);
+const SocialPost = require('./socialPost')(sequelize, Sequelize.DataTypes);
+const Comment = require('./comment')(sequelize, Sequelize.DataTypes);
+const Like = require('./like')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
@@ -62,6 +65,27 @@ Message.belongsTo(Character, { foreignKey: 'senderId', as: 'sender' });
 Character.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(Character, { foreignKey: 'receiverId', as: 'receiver' });
 
+User.hasMany(SocialPost, { foreignKey: 'userId' });
+SocialPost.belongsTo(User, { foreignKey: 'userId' });
+
+Character.hasMany(SocialPost, { foreignKey: 'characterId' });
+SocialPost.belongsTo(Character, { foreignKey: 'characterId' });
+
+SocialPost.hasMany(Comment, { foreignKey: 'postId', as: 'comments' });
+Comment.belongsTo(SocialPost, { foreignKey: 'postId' });
+
+User.hasMany(Comment, { foreignKey: 'userId' });
+Comment.belongsTo(User, { foreignKey: 'userId' });
+
+Character.hasMany(Comment, { foreignKey: 'characterId' });
+Comment.belongsTo(Character, { foreignKey: 'characterId' });
+
+User.hasMany(Like, { foreignKey: 'userId' });
+Like.belongsTo(User, { foreignKey: 'userId' });
+
+SocialPost.hasMany(Like, { foreignKey: 'postId' });
+Like.belongsTo(SocialPost, { foreignKey: 'postId' });
+
 
 // Export models and Sequelize instance
 module.exports = {
@@ -73,5 +97,8 @@ module.exports = {
   Thread,
   Post,
   Team,
-  Message
+  Message,
+  SocialPost,
+  Comment,
+  Like
 };
