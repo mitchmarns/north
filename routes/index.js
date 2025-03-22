@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Character, User, Thread, Post } = require('../models');
+const { Character, User, Thread, Post, Sequelize } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
 
 // Home page
