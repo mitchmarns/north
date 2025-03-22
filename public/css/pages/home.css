@@ -89,6 +89,14 @@
 
 .character-showcase {
   gap: var(--spacing-md);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.character-showcase .col {
+  flex: 0 0 33.333%;
+  margin-bottom: var(--spacing-md);
+  padding: 0 15px;
 }
 
 .character-image-container {
