@@ -4,7 +4,7 @@
                 rgba(72, 114, 153, 0.8), /* Semi-transparent gradient1 */
                 rgba(86, 130, 124, 0.8), /* Semi-transparent gradient2 */
                 rgba(106, 122, 137, 0.8)), /* Semi-transparent gradient3 */
-                url('/public/images/NYC_Skyline_Silhouette.png'); /* Your background image path */
+                url('/images/NYC_Skyline_Silhouette.png'); /* Your background image path */
   background-size: cover;
   background-position: center;
   border-radius: var(--radius-lg);
