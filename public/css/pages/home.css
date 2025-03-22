@@ -95,7 +95,7 @@
 
 .character-showcase .col {
   flex: 0 0 33.333%;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
   padding: 0 15px;
 }
 
