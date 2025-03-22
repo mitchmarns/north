@@ -7,6 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const methodOverride = require('method-override');
 const { sequelize, Character, Relationship, Message, Sequelize } = require('./models');
+const discordNotifier = require('./utils/discordNotifier');
 
 // Initialize Express
 const app = express();
@@ -223,6 +224,10 @@ async function startServer() {
     });
   } catch (error) {
     console.error('Unable to connect to the database:', error);
+  }
+
+  if (process.env.DISCORD_WEBHOOK_URL) {
+    discordNotifier.initialize(process.env.DISCORD_WEBHOOK_URL);
   }
 }
 

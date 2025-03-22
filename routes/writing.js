@@ -132,6 +132,28 @@ router.post(
       
       req.flash('success_msg', 'Thread created successfully');
       res.redirect(`/writing/thread/${thread.id}`);
+
+            // After thread is created
+      const discordNotifier = require('../utils/discordNotifier');
+      
+      // Send Discord notification
+      discordNotifier.sendNotification(
+        `New thread created!`,
+        {
+          embeds: [{
+            title: thread.title,
+            description: thread.description || 'No description provided',
+            color: 0x5a8095, // Your site's header color
+            fields: [
+              { name: 'Creator', value: req.user.username, inline: true },
+              { name: 'Privacy', value: thread.isPrivate ? 'Private' : 'Public', inline: true }
+            ],
+            url: `https://your-site.com/writing/thread/${thread.id}`,
+            timestamp: new Date()
+          }]
+        }
+      );
+      
     } catch (error) {
       console.error('Error creating thread:', error);
       req.flash('error_msg', 'An error occurred while creating the thread');

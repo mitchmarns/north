@@ -294,6 +294,24 @@ exports.sendMessage = async (req, res) => {
     
     // Redirect back to the conversation
     res.redirect(`/messages/${characterId}/${receiverId}`);
+
+    // Send Discord notification
+    discordNotifier.sendNotification(
+      `New message sent!`,
+      {
+        embeds: [{
+          title: `${senderChar.name} sent a message to ${receiverChar.name}`,
+          description: content.length > 100 ? content.substring(0, 100) + '...' : content,
+          color: 0x5a8095, // Your site's header color
+          fields: [
+            { name: 'From', value: `${senderChar.name} (${senderChar.User.username})`, inline: true },
+            { name: 'To', value: `${receiverChar.name} (${receiverChar.User.username})`, inline: true },
+          ],
+          timestamp: new Date()
+        }]
+      }
+    );
+    
   } catch (error) {
     console.error('Error sending message:', error);
     req.flash('error_msg', 'An error occurred while sending the message');

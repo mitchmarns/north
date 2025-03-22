@@ -630,6 +630,32 @@ exports.addRelationship = async (req, res) => {
     }
     
     res.redirect(`/characters/${req.params.id}/relationships`);
+
+    // If it's a cross-user relationship that needs approval
+    if (!isSelfRelationship) {
+      const otherCharacter = await Character.findByPk(character2Id, {
+        include: [{ model: User, attributes: ['username'] }]
+      });
+      
+      // Send Discord notification
+      discordNotifier.sendNotification(
+        `New relationship request!`,
+        {
+          embeds: [{
+            title: `Relationship Request: ${character1.name} → ${otherCharacter.name}`,
+            description: `${character1.name} wants to be ${relationshipType} with ${otherCharacter.name}`,
+            color: 0xffc107, // Warning color
+            fields: [
+              { name: 'Requester', value: `${req.user.username}`, inline: true },
+              { name: 'Target', value: `${otherCharacter.User.username}`, inline: true },
+              { name: 'Status', value: status || 'Neutral', inline: true }
+            ],
+            timestamp: new Date()
+          }]
+        }
+      );
+    }
+    
   } catch (error) {
     console.error('Error adding relationship:', error);
     req.flash('error_msg', `An error occurred while adding relationship: ${error.message}`);
