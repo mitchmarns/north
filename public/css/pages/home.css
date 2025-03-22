@@ -87,6 +87,34 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.discover-section .character-card {
+  margin-bottom: 20px;
+  height: 100%;
+}
+
+.discover-section .character-image-container {
+  height: 180px; 
+}
+
+.discover-section .character-info {
+  padding: 10px; 
+}
+
+.discover-section .character-bio {
+  max-height: 3.6em; 
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+}
+
+.discover-section .character-showcase .col {
+  flex: 0 0 33.333%;
+  max-width: 33.333%;
+  padding: 0 10px; 
+}
+
 .character-showcase {
   gap: var(--spacing-sm);
   display: flex;
