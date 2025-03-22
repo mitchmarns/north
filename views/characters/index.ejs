@@ -7,18 +7,20 @@
   <% } %>
 </div>
 
-<div class="row">
-  <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+<% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+  <div class="row">
     <% characters.forEach(character => { %>
       <div class="col" style="flex: 0 0 33.333333%; margin-bottom: 20px;">
         <div class="character-card">
-          <% if (character.avatarUrl) { %>
-            <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
-          <% } else { %>
-            <div class="character-image" style="background-color: #555; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 2rem; color: #999;"><%= character.name.charAt(0).toUpperCase() %></span>
-            </div>
-          <% } %>
+          <div class="character-image-container">
+            <% if (character.avatarUrl) { %>
+              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
+            <% } else { %>
+              <div class="character-avatar-placeholder">
+                <%= character.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+          </div>
           
           <div class="character-info">
             <h4 class="character-name"><%= character.name %></h4>
@@ -40,7 +42,8 @@
         </div>
       </div>
     <% }); %>
-  <% } else { %>
+  </div>
+<% } else { %>
     <div class="col">
       <div class="card">
         <div class="card-body text-center">
