@@ -104,6 +104,7 @@
 .character-image-container {
   position: relative;
   height: 180px;
+  width: 180px;
   overflow: hidden;
 }
 
