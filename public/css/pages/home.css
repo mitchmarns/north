@@ -90,7 +90,6 @@
 .discover-section .character-card {
   margin-bottom: 20px;
   height: 100%;
-  max-width: 33.333%;
 }
 
 .discover-section .character-image-container {
@@ -111,8 +110,8 @@
 }
 
 .discover-section .character-showcase .col {
-  flex: 0 0 33.333%;
-  max-width: 33.333%;
+  display:flex;
+  flex-flow: row wrap;
   padding: 0 10px; 
 }
 
