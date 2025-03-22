@@ -25,14 +25,16 @@
 }
 
 .hero-title {
+  font-family: var(--decorfont);
   font-size: calc(var(--text-4xl) * 1.2);
-  color: white;
+  color: var(--lighttext);
+  text-transform: uppercase;
   margin-bottom: var(--spacing-md);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .hero-subtitle {
-  font-size: var(--text-xl);
+  font-size: var(--text-base);
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: var(--spacing-lg);
 }
