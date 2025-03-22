@@ -143,6 +143,42 @@ app.use('/characters', require('./routes/characters'));
 app.use('/writing', require('./routes/writing'));
 app.use('/teams', require('./routes/teams'));
 app.use('/messages', require('./routes/messages'));
+app.use('/help', require('./routes/help'));
+
+// Utility function to format text content with styling tags 
+const formatTextContent = (text) => {
+  if (!text) return '';
+  // Process headings
+  text = text.replace(/\[h1\](.*?)\[\/h1\]/g, '<h1>$1</h1>');
+  text = text.replace(/\[h2\](.*?)\[\/h2\]/g, '<h2>$1</h2>');
+  text = text.replace(/\[h3\](.*?)\[\/h3\]/g, '<h3>$1</h3>');
+  // Process text formatting
+  text = text.replace(/\[b\](.*?)\[\/b\]/g, '<span class="bold">$1</span>');
+  text = text.replace(/\[i\](.*?)\[\/i\]/g, '<span class="italic">$1</span>');
+  text = text.replace(/\[u\](.*?)\[\/u\]/g, '<span class="underline">$1</span>');
+  text = text.replace(/\[s\](.*?)\[\/s\]/g, '<span class="strikethrough">$1</span>');
+  // Process alignment
+  text = text.replace(/\[center\](.*?)\[\/center\]/g, '<div class="text-center">$1</div>');
+  text = text.replace(/\[right\](.*?)\[\/right\]/g, '<div class="text-right">$1</div>');
+  text = text.replace(/\[left\](.*?)\[\/left\]/g, '<div class="text-left">$1</div>');
+  // Process colors
+  text = text.replace(/\[color-primary\](.*?)\[\/color-primary\]/g, '<span class="color-primary">$1</span>');
+  text = text.replace(/\[color-success\](.*?)\[\/color-success\]/g, '<span class="color-success">$1</span>');
+  text = text.replace(/\[color-danger\](.*?)\[\/color-danger\]/g, '<span class="color-danger">$1</span>');
+  text = text.replace(/\[color-warning\](.*?)\[\/color-warning\]/g, '<span class="color-warning">$1</span>');
+  // Process gradient text
+  text = text.replace(/\[gradient\](.*?)\[\/gradient\]/g, '<span class="gradient-text">$1</span>');
+  // Process quote
+  text = text.replace(/\[quote\](.*?)\[\/quote\]/g, '<div class="quote">$1</div>');
+  // Process divider
+  text = text.replace(/\[divider\]/g, '<div class="divider"></div>');
+  // Convert newlines to <br>
+  text = text.replace(/\n/g, '<br>');
+  return text;
+};
+
+// Add this to your Express.js app locals
+app.locals.formatTextContent = formatTextContent;
 
 // Error handling
 app.use((req, res) => {
@@ -159,6 +195,23 @@ async function startServer() {
     
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
+    
+    // Run the migration for styled text support
+    console.log('Running migration: add-styled-text-support');
+    try {
+      // Execute the migration
+      await sequelize.query('ALTER TABLE characters MODIFY fullBio LONGTEXT');
+      await sequelize.query('ALTER TABLE characters MODIFY appearance LONGTEXT');
+      await sequelize.query('ALTER TABLE characters MODIFY personality LONGTEXT');
+      await sequelize.query('ALTER TABLE characters MODIFY background LONGTEXT');
+      await sequelize.query('ALTER TABLE threads MODIFY description LONGTEXT');
+      await sequelize.query('ALTER TABLE threads MODIFY setting LONGTEXT');
+      await sequelize.query('ALTER TABLE posts MODIFY content LONGTEXT NOT NULL');
+      console.log('Migration completed successfully');
+    } catch (migrationError) {
+      console.error('Migration error:', migrationError);
+      console.log('Continuing despite migration error');
+    }
     
     // Sync models with database
     // Set force: true to drop and recreate tables (use carefully in production)

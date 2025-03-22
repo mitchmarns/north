@@ -1,0 +1,220 @@
+<!-- views/help/text-formatting.ejs -->
+<div class="card">
+  <div class="card-header">
+    <h1>Text Formatting Guide</h1>
+  </div>
+  <div class="card-body">
+    <p>Our site allows you to format your text in character biographies, posts, and threads. Here's how to use the text formatting tools:</p>
+    
+    <h2>Using the Formatting Toolbar</h2>
+    <p>Look for the formatting toolbar above text areas in character profiles, thread creation, and post forms. Click on the button for the style you want to apply to your selected text.</p>
+    
+    <div class="example-toolbar">
+      <%- include('../partials/text-styling-toolbar') %>
+    </div>
+    
+    <h2>Available Formatting Options</h2>
+    
+    <div class="formatting-guide">
+      <h3>Text Structure</h3>
+      <ul class="formatting-list">
+        <li>
+          <span class="format-tag">[h1]Your Heading[/h1]</span>
+          <div class="format-sample">
+            <h1>Your Heading</h1>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[h2]Smaller Heading[/h2]</span>
+          <div class="format-sample">
+            <h2>Smaller Heading</h2>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[h3]Even Smaller Heading[/h3]</span>
+          <div class="format-sample">
+            <h3>Even Smaller Heading</h3>
+          </div>
+        </li>
+      </ul>
+      
+      <h3>Text Styling</h3>
+      <ul class="formatting-list">
+        <li>
+          <span class="format-tag">[b]Bold Text[/b]</span>
+          <div class="format-sample">
+            <span class="bold">Bold Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[i]Italic Text[/i]</span>
+          <div class="format-sample">
+            <span class="italic">Italic Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[u]Underlined Text[/u]</span>
+          <div class="format-sample">
+            <span class="underline">Underlined Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[s]Strikethrough Text[/s]</span>
+          <div class="format-sample">
+            <span class="strikethrough">Strikethrough Text</span>
+          </div>
+        </li>
+      </ul>
+      
+      <h3>Text Alignment</h3>
+      <ul class="formatting-list">
+        <li>
+          <span class="format-tag">[center]Centered Text[/center]</span>
+          <div class="format-sample">
+            <div class="text-center">Centered Text</div>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[right]Right-aligned Text[/right]</span>
+          <div class="format-sample">
+            <div class="text-right">Right-aligned Text</div>
+          </div>
+        </li>
+      </ul>
+      
+      <h3>Text Colors</h3>
+      <ul class="formatting-list">
+        <li>
+          <span class="format-tag">[color-primary]Primary Color Text[/color-primary]</span>
+          <div class="format-sample">
+            <span class="color-primary">Primary Color Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[color-success]Success Color Text[/color-success]</span>
+          <div class="format-sample">
+            <span class="color-success">Success Color Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[color-danger]Danger Color Text[/color-danger]</span>
+          <div class="format-sample">
+            <span class="color-danger">Danger Color Text</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[color-warning]Warning Color Text[/color-warning]</span>
+          <div class="format-sample">
+            <span class="color-warning">Warning Color Text</span>
+          </div>
+        </li>
+      </ul>
+      
+      <h3>Special Effects</h3>
+      <ul class="formatting-list">
+        <li>
+          <span class="format-tag">[gradient]Gradient Text Effect[/gradient]</span>
+          <div class="format-sample">
+            <span class="gradient-text">Gradient Text Effect</span>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[quote]This is a quote or important text[/quote]</span>
+          <div class="format-sample">
+            <div class="quote">This is a quote or important text</div>
+          </div>
+        </li>
+        <li>
+          <span class="format-tag">[divider]</span>
+          <div class="format-sample">
+            <div class="divider"></div>
+            <p>Creates a dividing line as shown above</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+    
+    <h2>Combining Formats</h2>
+    <p>You can combine different formatting tags to create more complex styling:</p>
+    <div class="example-combined">
+      <div class="code-example">
+        [center][h2][gradient]Character Biography[/gradient][/h2][/center]
+        [divider]
+        [b]Name:[/b] John Doe
+        [b]Age:[/b] 28
+        
+        [h3][color-primary]Background[/color-primary][/h3]
+        [quote]"The past shapes us, but does not define us."[/quote]
+      </div>
+      
+      <div class="result-example formatted-text">
+        <div class="text-center"><h2><span class="gradient-text">Character Biography</span></h2></div>
+        <div class="divider"></div>
+        <span class="bold">Name:</span> John Doe<br>
+        <span class="bold">Age:</span> 28<br><br>
+        
+        <h3><span class="color-primary">Background</span></h3>
+        <div class="quote">"The past shapes us, but does not define us."</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .example-toolbar {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+  }
+  
+  .formatting-guide {
+    margin-top: 20px;
+  }
+  
+  .formatting-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+  }
+  
+  .formatting-list li {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .formatting-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .format-tag {
+    display: inline-block;
+    font-family: monospace;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+  }
+  
+  .format-sample {
+    margin-left: 20px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+  }
+  
+  .code-example {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+  }
+  
+  .result-example {
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+  }

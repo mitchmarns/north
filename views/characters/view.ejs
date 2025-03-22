@@ -326,8 +326,8 @@
           <% if (character.fullBio) { %>
             <div class="mb-4">
               <h3>Full Biography</h3>
-              <div class="character-text">
-                <%= character.fullBio.replace(/\n/g, '<br>') %>
+              <div class="character-text formatted-text">
+                <%- formatTextContent(character.fullBio) %>
               </div>
             </div>
           <% } %>
