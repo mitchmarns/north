@@ -1,6 +1,12 @@
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, var(--gradient1), var(--gradient2), var(--gradient3));
+  background: linear-gradient(135deg, 
+                rgba(72, 114, 153, 0.8), /* Semi-transparent gradient1 */
+                rgba(86, 130, 124, 0.8), /* Semi-transparent gradient2 */
+                rgba(106, 122, 137, 0.8)), /* Semi-transparent gradient3 */
+                url('/public/images/NYC_Skyline_Silhouette.png'); /* Your background image path */
+  background-size: cover;
+  background-position: center;
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg) var(--spacing-md);
   margin-bottom: var(--spacing-lg);
