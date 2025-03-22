@@ -8,3 +8,5 @@ router.get('/text-formatting', (req, res) => {
     title: 'Text Formatting Guide'
   });
 });
+
+module.exports = router;
