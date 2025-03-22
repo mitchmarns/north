@@ -1,0 +1,227 @@
+<!-- views/messages/index.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Messages</h1>
+  <div>
+    <% if (characters.length > 0) { %>
+      <a href="/messages/<%= activeCharacter.id %>/new" class="btn">
+        <i class="ph-plus-duotone"></i> New Message
+      </a>
+    <% } else { %>
+      <a href="/characters/create" class="btn btn-outline">
+        <i class="ph-user-plus-duotone"></i> Create Character First
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<% if (characters.length === 0) { %>
+  <div class="card">
+    <div class="card-body text-center p-5">
+      <div style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.5);">
+        <i class="ph-user-circle-plus-duotone" style="font-size: 3rem;"></i>
+      </div>
+      <h3>No Characters Available</h3>
+      <p>You need to create at least one character before you can send or receive messages.</p>
+      <a href="/characters/create" class="btn mt-3">Create Your First Character</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="row">
+    <!-- Character Selector -->
+    <div class="col" style="flex: 0 0 25%;">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="mb-0">Your Characters</h3>
+        </div>
+        <div class="card-body p-0">
+          <div class="character-selector">
+            <% allConversations.forEach(item => { %>
+              <a href="#char-<%= item.character.id %>" 
+                 class="character-selector-item <%= activeCharacter.id === item.character.id ? 'active' : '' %>"
+                 onclick="switchCharacter(event, 'char-<%= item.character.id %>')">
+                <div class="character-selector-avatar">
+                  <% if (item.character.avatarUrl) { %>
+                    <img src="<%= item.character.avatarUrl %>" alt="<%= item.character.name %>">
+                  <% } else { %>
+                    <div class="avatar-placeholder">
+                      <%= item.character.name.charAt(0).toUpperCase() %>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="character-selector-info">
+                  <div class="character-selector-name"><%= item.character.name %></div>
+                  <% if (item.unreadCount > 0) { %>
+                    <span class="unread-count"><%= item.unreadCount %></span>
+                  <% } %>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Conversations -->
+    <div class="col" style="flex: 0 0 75%;">
+      <% allConversations.forEach(item => { %>
+        <div id="char-<%= item.character.id %>" class="character-conversations <%= activeCharacter.id === item.character.id ? 'active' : '' %>">
+          <div class="card">
+            <div class="card-header d-flex justify-between align-center">
+              <h3 class="mb-0"><%= item.character.name %>'s Messages</h3>
+              <a href="/messages/<%= item.character.id %>/new" class="btn btn-sm">
+                <i class="ph-plus-duotone"></i> New Message
+              </a>
+            </div>
+            <div class="card-body">
+              <% if (item.conversations.length > 0) { %>
+                <div class="conversation-list">
+                  <% item.conversations.forEach(conv => { %>
+                    <a href="/messages/<%= item.character.id %>/<%= conv.character.id %>" class="conversation-item">
+                      <div class="conversation-avatar">
+                        <% if (conv.character.avatarUrl) { %>
+                          <img src="<%= conv.character.avatarUrl %>" alt="<%= conv.character.name %>" class="avatar-image">
+                        <% } else { %>
+                          <div class="avatar-placeholder">
+                            <%= conv.character.name.charAt(0).toUpperCase() %>
+                          </div>
+                        <% } %>
+                        
+                        <% if (conv.unreadCount > 0) { %>
+                          <span class="unread-count"><%= conv.unreadCount %></span>
+                        <% } %>
+                      </div>
+                      
+                      <div class="conversation-content">
+                        <div class="conversation-header">
+                          <h4 class="conversation-name">
+                            <%= conv.character.name %>
+                          </h4>
+                          <div class="conversation-time">
+                            <%= new Date(conv.lastMessageAt).toLocaleDateString() %>
+                          </div>
+                        </div>
+                        
+                        <div class="conversation-meta">
+                          <span class="character-owner">
+                            By <%= conv.character.User ? conv.character.User.username : 'Unknown' %>
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+                  <% }); %>
+                </div>
+              <% } else { %>
+                <div class="text-center p-4">
+                  <div style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.5);">
+                    <i class="ph-chat-dots-duotone" style="font-size: 3rem;"></i>
+                  </div>
+                  <h3>No messages yet</h3>
+                  <p>Start a new conversation to begin messaging with other characters.</p>
+                  <a href="/messages/<%= item.character.id %>/new" class="btn mt-3">Start a New Conversation</a>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } %>
+
+<style>
+  /* Character Selector Styles */
+  .character-selector {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .character-selector-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--lighttext);
+    transition: background-color var(--transition-fast);
+  }
+  
+  .character-selector-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .character-selector-item.active {
+    background-color: rgba(90, 128, 149, 0.2);
+    border-left: 3px solid var(--header);
+  }
+  
+  .character-selector-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  
+  .character-selector-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  
+  .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .character-selector-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .character-selector-name {
+    font-weight: var(--medium);
+  }
+  
+  /* Character Conversations Styles */
+  .character-conversations {
+    display: none;
+  }
+  
+  .character-conversations.active {
+    display: block;
+  }
+  
+  /* Using existing conversation styles from messaging.css */
+</style>
+
+<script>
+  function switchCharacter(event, characterId) {
+    event.preventDefault();
+    
+    // Hide all conversation panels
+    document.querySelectorAll('.character-conversations').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    
+    // Remove active class from all selector items
+    document.querySelectorAll('.character-selector-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    
+    // Show selected character panel
+    document.getElementById(characterId).classList.add('active');
+    
+    // Set active class on selector item
+    event.currentTarget.classList.add('active');
+  }
+</script>

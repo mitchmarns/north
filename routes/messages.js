@@ -8,6 +8,79 @@ const { isAuthenticated } = require('../middleware/auth');
 // Character inbox (all conversations)
 router.get('/:characterId', isAuthenticated, messageController.getInbox);
 
+// New route for messages index/hub
+router.get('/', isAuthenticated, async (req, res) => {
+  try {
+    // Get all user's characters
+    const characters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      }
+    });
+    
+    if (characters.length === 0) {
+      return res.render('messages/index', {
+        title: 'Messages',
+        characters: [],
+        activeCharacter: null,
+        allConversations: [],
+        unreadCount: 0
+      });
+    }
+    
+    // Get character IDs
+    const characterIds = characters.map(char => char.id);
+    
+    // Get all conversations for all characters
+    const allConversations = [];
+    let totalUnread = 0;
+    
+    // Process each character's conversations
+    for (const character of characters) {
+      // Get unread count for this character
+      const unreadCount = await Message.count({
+        where: {
+          receiverId: character.id,
+          isRead: false,
+          isDeleted: false
+        }
+      });
+      
+      // Add to total unread
+      totalUnread += unreadCount;
+      
+      // Get conversation partners for this character
+      const conversations = await getConversationsForCharacter(character.id);
+      
+      // Add to all conversations
+      allConversations.push({
+        character,
+        conversations,
+        unreadCount
+      });
+    }
+    
+    // Sort characters by unread message count (highest first)
+    allConversations.sort((a, b) => b.unreadCount - a.unreadCount);
+    
+    // Select the character with unread messages as active, or first character if none have unread
+    const activeCharacter = allConversations.find(c => c.unreadCount > 0)?.character || characters[0];
+    
+    res.render('messages/index', {
+      title: 'Messages',
+      characters,
+      activeCharacter,
+      allConversations,
+      totalUnread
+    });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    req.flash('error_msg', 'An error occurred while loading messages');
+    res.redirect('/dashboard');
+  }
+});
+
 // New message form
 router.get('/:characterId/new', isAuthenticated, messageController.newMessageForm);
 

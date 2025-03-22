@@ -419,3 +419,42 @@
     width: 95%;
   }
 }
+
+/* Add to public/css/messaging.css */
+
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+  }
+  
+  .col {
+    flex: 0 0 100% !important;
+  }
+  
+  .character-selector {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px 0;
+  }
+  
+  .character-selector-item {
+    flex-direction: column;
+    text-align: center;
+    min-width: 80px;
+    border-bottom: none;
+    padding: 10px;
+  }
+  
+  .character-selector-avatar {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  .character-selector-name {
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70px;
+  }
+}
