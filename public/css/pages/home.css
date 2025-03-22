@@ -90,6 +90,7 @@
 .discover-section .character-card {
   margin-bottom: 20px;
   height: 100%;
+  max-width: 33.333%;
 }
 
 .discover-section .character-image-container {
