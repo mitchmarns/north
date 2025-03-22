@@ -197,24 +197,6 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    // Run the migration for styled text support
-    console.log('Running migration: add-styled-text-support');
-    try {
-      // Execute the migration
-      await sequelize.query('ALTER TABLE characters MODIFY fullBio LONGTEXT');
-      await sequelize.query('ALTER TABLE characters MODIFY appearance LONGTEXT');
-      await sequelize.query('ALTER TABLE characters MODIFY personality LONGTEXT');
-      await sequelize.query('ALTER TABLE characters MODIFY background LONGTEXT');
-      await sequelize.query('ALTER TABLE threads MODIFY description LONGTEXT');
-      await sequelize.query('ALTER TABLE threads MODIFY setting LONGTEXT');
-      await sequelize.query('ALTER TABLE posts MODIFY content LONGTEXT NOT NULL');
-      console.log('Migration completed successfully');
-    } catch (migrationError) {
-      console.error('Migration error:', migrationError);
-      console.log('Continuing despite migration error');
-    }
-    
-    // Sync models with database
     // Set force: true to drop and recreate tables (use carefully in production)
     await sequelize.sync({ force: false });
     console.log('Database synced');

@@ -295,6 +295,16 @@ exports.sendMessage = async (req, res) => {
     // Redirect back to the conversation
     res.redirect(`/messages/${characterId}/${receiverId}`);
 
+    const senderChar = await Character.findOne({
+      where: { id: characterId },
+      include: [{ model: User, attributes: ['username'] }]
+    });
+    
+    const receiverChar = await Character.findOne({
+      where: { id: receiverId },
+      include: [{ model: User, attributes: ['username'] }]
+    });
+
     // Send Discord notification
     discordNotifier.sendNotification(
       `New message sent!`,
@@ -311,7 +321,7 @@ exports.sendMessage = async (req, res) => {
         }]
       }
     );
-    
+
   } catch (error) {
     console.error('Error sending message:', error);
     req.flash('error_msg', 'An error occurred while sending the message');
