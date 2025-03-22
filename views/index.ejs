@@ -62,91 +62,91 @@
 </div>
 
 <% if (typeof randomCharacters !== 'undefined' && randomCharacters.length > 0) { %>
-  <div class="discover-section">
-    <div class="section-header">
-      <h2>Discover Characters</h2>
-    </div>
-    
-    <div class="row character-showcase">
-      <!-- First row: first 3 characters -->
-      <% randomCharacters.slice(0, 3).forEach(character => { %>
-        <div class="col" style="flex: 0 0 33.333333%;">
-          <div class="character-card">
-            <% if (character.avatarUrl) { %>
-              <div class="character-image-container">
-                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
-              </div>
-            <% } else { %>
-              <div class="character-image-container">
-                <div class="character-image character-placeholder">
-                  <span><%= character.name.charAt(0).toUpperCase() %></span>
-                </div>
-              </div>
-            <% } %>
-            
-            <div class="character-info">
-              <h4 class="character-name"><%= character.name %></h4>
-              <% if (character.shortBio) { %>
-                <p class="character-bio"><%= character.shortBio %></p>
-              <% } %>
-              <div class="character-tags">
-                <% if (character.gender) { %>
-                  <span class="character-tag"><%= character.gender %></span>
-                <% } %>
-                <% if (character.User) { %>
-                  <span class="character-tag">by <%= character.User.username %></span>
-                <% } %>
-              </div>
-              <div class="mt-2">
-                <a href="/characters/<%= character.id %>" class="btn btn-sm">View Profile</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    </div>
-    
-    <div class="row character-showcase">
-      <!-- Second row: next 3 characters -->
-      <% randomCharacters.slice(3, 6).forEach(character => { %>
-        <div class="col" style="flex: 0 0 33.333333%;">
-          <div class="character-card">
-            <% if (character.avatarUrl) { %>
-              <div class="character-image-container">
-                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
-              </div>
-            <% } else { %>
-              <div class="character-image-container">
-                <div class="character-image character-placeholder">
-                  <span><%= character.name.charAt(0).toUpperCase() %></span>
-                </div>
-              </div>
-            <% } %>
-            
-            <div class="character-info">
-              <h4 class="character-name"><%= character.name %></h4>
-              <% if (character.shortBio) { %>
-                <p class="character-bio"><%= character.shortBio %></p>
-              <% } %>
-              <div class="character-tags">
-                <% if (character.gender) { %>
-                  <span class="character-tag"><%= character.gender %></span>
-                <% } %>
-                <% if (character.User) { %>
-                  <span class="character-tag">by <%= character.User.username %></span>
-                <% } %>
-              </div>
-              <div class="mt-2">
-                <a href="/characters/<%= character.id %>" class="btn btn-sm">View Profile</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    </div>
-    
-    <div class="text-center mt-4">
-      <a href="/characters" class="btn btn-lg btn-outline">Explore All Characters</a>
-    </div>
+<div class="discover-section">
+  <div class="section-header">
+    <h2>Discover Characters</h2>
   </div>
-  <% } %>
+  
+  <div class="character-showcase">
+    <!-- First row of three characters -->
+    <% randomCharacters.slice(0, 3).forEach(character => { %>
+      <div class="col">
+        <div class="character-card">
+          <% if (character.avatarUrl) { %>
+            <div class="character-image-container">
+              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
+            </div>
+          <% } else { %>
+            <div class="character-image-container">
+              <div class="character-image character-placeholder">
+                <span><%= character.name.charAt(0).toUpperCase() %></span>
+              </div>
+            </div>
+          <% } %>
+          
+          <div class="character-info">
+            <h4 class="character-name"><%= character.name %></h4>
+            <% if (character.shortBio) { %>
+              <p class="character-bio"><%= character.shortBio %></p>
+            <% } %>
+            <div class="character-tags">
+              <% if (character.gender) { %>
+                <span class="character-tag"><%= character.gender %></span>
+              <% } %>
+              <% if (character.User) { %>
+                <span class="character-tag">by <%= character.User.username %></span>
+              <% } %>
+            </div>
+            <div class="mt-2">
+              <a href="/characters/<%= character.id %>" class="btn btn-sm">View Profile</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+  
+  <div class="character-showcase">
+    <!-- Second row of three characters -->
+    <% randomCharacters.slice(3, 6).forEach(character => { %>
+      <div class="col">
+        <div class="character-card">
+          <% if (character.avatarUrl) { %>
+            <div class="character-image-container">
+              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>" class="character-image">
+            </div>
+          <% } else { %>
+            <div class="character-image-container">
+              <div class="character-image character-placeholder">
+                <span><%= character.name.charAt(0).toUpperCase() %></span>
+              </div>
+            </div>
+          <% } %>
+          
+          <div class="character-info">
+            <h4 class="character-name"><%= character.name %></h4>
+            <% if (character.shortBio) { %>
+              <p class="character-bio"><%= character.shortBio %></p>
+            <% } %>
+            <div class="character-tags">
+              <% if (character.gender) { %>
+                <span class="character-tag"><%= character.gender %></span>
+              <% } %>
+              <% if (character.User) { %>
+                <span class="character-tag">by <%= character.User.username %></span>
+              <% } %>
+            </div>
+            <div class="mt-2">
+              <a href="/characters/<%= character.id %>" class="btn btn-sm">View Profile</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+  
+  <div class="text-center mt-4">
+    <a href="/characters" class="btn btn-lg btn-outline">Explore All Characters</a>
+  </div>
+</div>
+<% } %>
