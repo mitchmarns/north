@@ -13,7 +13,7 @@ exports.getGroupConversations = async (req, res) => {
     const characters = await Character.findAll({
       where: {
         userId: req.user.id,
-        isArchived: false  // Add this to filter out archived characters
+        isArchived: false
       },
       include: [{ model: User, attributes: ['username'] }],
       order: [['createdAt', 'ASC']]
@@ -78,8 +78,48 @@ exports.getGroupConversations = async (req, res) => {
     const otherCharacters = await Character.findAll({
       where: {
         userId: req.user.id,
-        id: { [Sequelize.Op.ne]: character.id }, // Not equal to current character
+        id: { [Op.ne]: character.id }, // Not equal to current character
         isArchived: false
+      }
+    });
+
+    // Get other users' characters that have relationships with this character
+    let otherUsersCharacters = [];
+    
+    // Find approved relationships with this character
+    const relationships = await Relationship.findAll({
+      where: {
+        [Op.or]: [
+          { character1Id: character.id },
+          { character2Id: character.id }
+        ],
+        isApproved: true // Only include approved relationships
+      },
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username'] }]
+        }
+      ]
+    });
+    
+    // Extract the related characters from other users
+    relationships.forEach(rel => {
+      const relatedChar = rel.character1Id === character.id ? rel.character2 : rel.character1;
+      // Only add if not owned by the same user
+      if (relatedChar.userId !== req.user.id) {
+        otherUsersCharacters.push({
+          id: relatedChar.id,
+          name: relatedChar.name,
+          avatarUrl: relatedChar.avatarUrl,
+          username: relatedChar.User ? relatedChar.User.username : 'Unknown'
+        });
       }
     });
 
@@ -90,6 +130,7 @@ exports.getGroupConversations = async (req, res) => {
       character,
       conversations,
       otherCharacters,
+      otherUsersCharacters,
       totalUnread: 0 // You can calculate this properly later
     });
 
@@ -159,8 +200,26 @@ exports.createGroupConversation = async (req, res) => {
         if (id == characterId) continue;
         
         // Verify the character exists
-        const invitedChar = await Character.findByPk(id);
+        const invitedChar = await Character.findByPk(id, {
+          include: [{ model: User, attributes: ['username'] }]
+        });
         if (!invitedChar) continue;
+
+        // Check if character belongs to another user
+    if (invitedChar.userId !== req.user.id) {
+      // Check for an approved relationship
+      const relationship = await Relationship.findOne({
+        where: {
+          [Op.or]: [
+            { character1Id: characterId, character2Id: id },
+            { character1Id: id, character2Id: characterId }
+          ],
+          isApproved: true
+        }
+      });
+      
+      if (!relationship) continue; // Skip if no approved relationship
+    }
         
         await GroupMember.create({
           groupId: group.id,
