@@ -125,7 +125,7 @@
                   <a href="/characters/<%= post.character.id %>"><%= post.character.name %></a>
                 </div>
                 <div class="post-meta">
-                  <span>Character by <%= post.user.username %></span>
+                  <span>Character by <%= post.user ? post.user.username : 'Unknown User' %></span>
                   <span>•</span>
                   <span><%= formatTimeAgo(post.createdAt) %></span>
                   <% if (post.isEdited) { %>
@@ -136,12 +136,12 @@
             <% } else { %>
               <!-- Posted as user -->
               <div class="post-avatar-placeholder user-avatar">
-                <%= post.user.username.charAt(0).toUpperCase() %>
+                <%= post.user ? post.user.username.charAt(0).toUpperCase() : 'U' %>
               </div>
               
               <div class="post-author-info">
                 <div class="post-author-name">
-                  <%= post.user.username %>
+                  <%= post.user ? post.user.username : 'Unknown User' %>
                 </div>
                 <div class="post-meta">
                   <span><%= formatTimeAgo(post.createdAt) %></span>
@@ -226,7 +226,7 @@
                       <% } %>
                     <% } else { %>
                       <div class="comment-avatar-placeholder user-avatar">
-                        <%= comment.user.username.charAt(0).toUpperCase() %>
+                        <%= comment.user ? comment.user.username.charAt(0).toUpperCase() : 'U' %>
                       </div>
                     <% } %>
                     
@@ -235,7 +235,7 @@
                         <% if (comment.character) { %>
                           <a href="/characters/<%= comment.character.id %>"><%= comment.character.name %></a>
                         <% } else { %>
-                          <%= comment.user.username %>
+                          <%= comment.user ? comment.user.username : 'Unknown User' %>
                         <% } %>
                       </div>
                       <div class="comment-content">
@@ -244,7 +244,7 @@
                       <div class="comment-meta">
                         <span><%= formatTimeAgo(comment.createdAt) %></span>
                         
-                        <% if (user && user.id === comment.userId) { %>
+                        <% if (user && comment.user && user.id === comment.userId) { %>
                           <span>•</span>
                           <a href="#" class="delete-comment" data-comment-id="<%= comment.id %>">Delete</a>
                         <% } %>
@@ -340,73 +340,74 @@
     
     // Image preview functionality
     const imageUrlInput = document.getElementById('post-image');
-const imagePreview = document.getElementById('image-preview');
-const previewImage = document.getElementById('preview-image');
-const clearImageBtn = document.getElementById('clear-image-btn');
+  const imagePreview = document.getElementById('image-preview');
+  const previewImage = document.getElementById('preview-image');
+  const clearImageBtn = document.getElementById('clear-image-btn');
 
-if (imageUrlInput) {
-  imageUrlInput.addEventListener('input', function() {
-    const imageUrl = this.value.trim();
-    
-    if (imageUrl) {
-      previewImage.src = imageUrl;
-      imagePreview.style.display = 'block';
+  if (imageUrlInput) {
+    imageUrlInput.addEventListener('input', function() {
+      const imageUrl = this.value.trim();
       
-      // Handle image load errors
-      previewImage.onerror = function() {
+      if (imageUrl) {
+        previewImage.src = imageUrl;
+        imagePreview.style.display = 'block';
+        
+        // Handle image load errors
+        previewImage.onerror = function() {
+          imagePreview.style.display = 'none';
+          // Add a visual indicator that the URL is invalid
+          imageUrlInput.classList.add('is-invalid');
+        };
+        
+        previewImage.onload = function() {
+          // Clear any error indicators if the image loads successfully
+          imageUrlInput.classList.remove('is-invalid');
+        };
+        
+        // Show clear button if available
+        if (clearImageBtn) {
+          clearImageBtn.style.display = 'block';
+        }
+      } else {
         imagePreview.style.display = 'none';
-        // Add a visual indicator that the URL is invalid
-        imageUrlInput.classList.add('is-invalid');
-      };
-      
-      previewImage.onload = function() {
-        // Clear any error indicators if the image loads successfully
         imageUrlInput.classList.remove('is-invalid');
-      };
-      
-      // Show clear button if available
-      if (clearImageBtn) {
-        clearImageBtn.style.display = 'block';
+        
+        // Hide clear button if available
+        if (clearImageBtn) {
+          clearImageBtn.style.display = 'none';
+        }
       }
-    } else {
-      imagePreview.style.display = 'none';
-      imageUrlInput.classList.remove('is-invalid');
-      
-      // Hide clear button if available
-      if (clearImageBtn) {
-        clearImageBtn.style.display = 'none';
-      }
-    }
-  });
-}
+    });
+  }
 
-// Add clear button functionality if it exists
-if (clearImageBtn) {
-  clearImageBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    if (imageUrlInput) {
-      imageUrlInput.value = '';
-      imagePreview.style.display = 'none';
-      clearImageBtn.style.display = 'none';
-      imageUrlInput.classList.remove('is-invalid');
-    }
-  });
-}
-
-// Validate image URL before form submission
-const postForm = document.getElementById('post-form');
-if (postForm) {
-  postForm.addEventListener('submit', function(e) {
-    const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
-    
-    // If there's an image URL but it's invalid, prevent form submission
-    if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
+  // Add clear button functionality if it exists
+  if (clearImageBtn) {
+    clearImageBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      alert('Please enter a valid image URL or leave the field empty');
-    }
-  });
-}
+      
+      if (imageUrlInput) {
+        imageUrlInput.value = '';
+        imagePreview.style.display = 'none';
+        clearImageBtn.style.display = 'none';
+        imageUrlInput.classList.remove('is-invalid');
+      }
+    });
+  }
+
+  // Validate image URL before form submission
+  const postForm = document.getElementById('post-form');
+  if (postForm) {
+    postForm.addEventListener('submit', function(e) {
+      const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
+      
+      // If there's an image URL but it's invalid, prevent form submission
+      if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
+        e.preventDefault();
+        alert('Please enter a valid image URL or leave the field empty');
+      }
+    });
+  }
+
     // Toggle comment sections
     const commentButtons = document.querySelectorAll('.reaction-btn[data-reaction="comment"]');
     

@@ -77,7 +77,7 @@ exports.getFeed = async (req, res) => {
     }
     
     // Get posts with user, character and comments
-    const posts = await SocialPost.findAll({
+    const rawPosts = await SocialPost.findAll({
       where: whereClause,
       include: [
         {
@@ -111,6 +111,45 @@ exports.getFeed = async (req, res) => {
       offset: offset
     });
     
+    // Format the posts to ensure user and character data is properly accessible
+    const posts = rawPosts.map(post => {
+      const formattedPost = post.toJSON();
+      
+      // Ensure user object is always present with required fields
+      if (!formattedPost.User) {
+        formattedPost.user = {
+          id: formattedPost.userId,
+          username: 'Unknown User'
+        };
+      } else {
+        formattedPost.user = formattedPost.User;
+      }
+      
+      // Ensure character data is correctly assigned if it exists
+      if (formattedPost.Character) {
+        formattedPost.character = formattedPost.Character;
+      }
+      
+      // Format comments to ensure user and character data
+      if (formattedPost.comments && formattedPost.comments.length > 0) {
+        formattedPost.comments = formattedPost.comments.map(comment => {
+          if (comment.User) {
+            comment.user = comment.User;
+          } else {
+            comment.user = { id: comment.userId, username: 'Unknown User' };
+          }
+          
+          if (comment.Character) {
+            comment.character = comment.Character;
+          }
+          
+          return comment;
+        });
+      }
+      
+      return formattedPost;
+    });
+    
     // If user is logged in, check if they liked each post
     if (req.user) {
       // Get all likes from the user for these posts
@@ -130,7 +169,7 @@ exports.getFeed = async (req, res) => {
       
       // Add hasLiked property to each post
       posts.forEach(post => {
-        post.dataValues.hasLiked = likedMap[post.id] || false;
+        post.hasLiked = likedMap[post.id] || false;
       });
       
       // Get user's characters for posting/commenting
@@ -206,7 +245,7 @@ exports.loadMore = async (req, res) => {
     }
     
     // Get posts with user, character and comments
-    const posts = await SocialPost.findAll({
+    const rawPosts = await SocialPost.findAll({
       where: whereClause,
       include: [
         {
@@ -221,6 +260,28 @@ exports.loadMore = async (req, res) => {
       order: order,
       limit: limit,
       offset: offset
+    });
+    
+    // Format the posts to ensure user and character data is properly accessible
+    const posts = rawPosts.map(post => {
+      const formattedPost = post.toJSON();
+      
+      // Ensure user object is always present with required fields
+      if (!formattedPost.User) {
+        formattedPost.user = {
+          id: formattedPost.userId,
+          username: 'Unknown User'
+        };
+      } else {
+        formattedPost.user = formattedPost.User;
+      }
+      
+      // Ensure character data is correctly assigned if it exists
+      if (formattedPost.Character) {
+        formattedPost.character = formattedPost.Character;
+      }
+      
+      return formattedPost;
     });
     
     // If user is logged in, check if they liked each post
@@ -242,7 +303,7 @@ exports.loadMore = async (req, res) => {
       
       // Add hasLiked property to each post
       posts.forEach(post => {
-        post.dataValues.hasLiked = likedMap[post.id] || false;
+        post.hasLiked = likedMap[post.id] || false;
       });
     }
     
@@ -310,7 +371,7 @@ exports.createPost = async (req, res) => {
 // View single post
 exports.getPost = async (req, res) => {
   try {
-    const post = await SocialPost.findByPk(req.params.id, {
+    const rawPost = await SocialPost.findByPk(req.params.id, {
       include: [
         {
           model: User,
@@ -338,9 +399,44 @@ exports.getPost = async (req, res) => {
       ]
     });
     
-    if (!post) {
+    if (!rawPost) {
       req.flash('error_msg', 'Post not found');
       return res.redirect('/social/feed');
+    }
+    
+    // Format the post data to ensure it's properly structured
+    const post = rawPost.toJSON();
+    
+    // Ensure user object is always present with required fields
+    if (!post.User) {
+      post.user = {
+        id: post.userId,
+        username: 'Unknown User'
+      };
+    } else {
+      post.user = post.User;
+    }
+    
+    // Ensure character data is correctly assigned if it exists
+    if (post.Character) {
+      post.character = post.Character;
+    }
+    
+    // Format comments to ensure user and character data
+    if (post.comments && post.comments.length > 0) {
+      post.comments = post.comments.map(comment => {
+        if (comment.User) {
+          comment.user = comment.User;
+        } else {
+          comment.user = { id: comment.userId, username: 'Unknown User' };
+        }
+        
+        if (comment.Character) {
+          comment.character = comment.Character;
+        }
+        
+        return comment;
+      });
     }
     
     // Check if post is private and user is not the creator
@@ -373,7 +469,7 @@ exports.getPost = async (req, res) => {
       });
     }
     
-    post.dataValues.hasLiked = hasLiked;
+    post.hasLiked = hasLiked;
     
     // Make the formatTimeAgo function available to the template
     res.locals.formatTimeAgo = formatTimeAgo;

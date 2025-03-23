@@ -11,22 +11,22 @@
   <div class="social-post">
     <div class="social-post-header">
       <div class="post-author">
-        <% if (post.Character) { %>
+        <% if (post.character) { %>
           <!-- Posted as character -->
-          <% if (post.Character.avatarUrl) { %>
-            <img src="<%= post.Character.avatarUrl %>" alt="<%= post.Character.name %>" class="post-avatar">
+          <% if (post.character.avatarUrl) { %>
+            <img src="<%= post.character.avatarUrl %>" alt="<%= post.character.name %>" class="post-avatar">
           <% } else { %>
             <div class="post-avatar-placeholder">
-              <%= post.Character.name.charAt(0).toUpperCase() %>
+              <%= post.character.name.charAt(0).toUpperCase() %>
             </div>
           <% } %>
           
           <div class="post-author-info">
             <div class="post-author-name">
-              <a href="/characters/<%= post.Character.id %>"><%= post.Character.name %></a>
+              <a href="/characters/<%= post.character.id %>"><%= post.character.name %></a>
             </div>
             <div class="post-meta">
-              <span>Character by <%= post.User.username %></span>
+              <span>Character by <%= post.user ? post.user.username : 'Unknown User' %></span>
               <span>•</span>
               <span><%= formatTimeAgo(post.createdAt) %></span>
               <% if (post.isEdited) { %>
@@ -37,12 +37,12 @@
         <% } else { %>
           <!-- Posted as user -->
           <div class="post-avatar-placeholder user-avatar">
-            <%= post.User.username.charAt(0).toUpperCase() %>
+            <%= post.user ? post.user.username.charAt(0).toUpperCase() : 'U' %>
           </div>
           
           <div class="post-author-info">
             <div class="post-author-name">
-              <%= post.User.username %>
+              <%= post.user ? post.user.username : 'Unknown User' %>
             </div>
             <div class="post-meta">
               <span><%= formatTimeAgo(post.createdAt) %></span>
@@ -74,71 +74,34 @@
       <% } %>
     </div>
     
-    <div class="social-post-content">
-      <%= post.content.replace(/\n/g, '<br>') %>
-      
-      <% if (post.imageUrl) { %>
-        <div class="post-image">
-          <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.style.display='none'">
-        </div>
-      <% } %>
-    </div>
-    
-    <div class="social-post-footer">
-      <div class="post-reactions">
-        <button class="reaction-btn <%= post.hasLiked ? 'active' : '' %>" data-post-id="<%= post.id %>" data-reaction="like">
-          <i class="ph-heart-duotone"></i>
-          <span class="reaction-count"><%= post.likeCount || 0 %></span>
-        </button>
-        
-        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="comment">
-          <i class="ph-chat-text-duotone"></i>
-          <span class="reaction-count"><%= post.commentCount || 0 %></span>
-        </button>
-        
-        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="share">
-          <i class="ph-share-duotone"></i>
-        </button>
-      </div>
-      
-      <div class="post-visibility">
-        <% if (post.privacy === 'private') { %>
-          <i class="ph-users-duotone" title="Friends Only"></i>
-        <% } else { %>
-          <i class="ph-globe-duotone" title="Public"></i>
-        <% } %>
-      </div>
-    </div>
-    
-    <!-- Comments section (always visible on single post view) -->
     <div class="post-comments">
-      <h3 class="comments-heading">Comments (<%= post.comments.length %>)</h3>
+      <h3 class="comments-heading">Comments (<%= post.comments ? post.comments.length : 0 %>)</h3>
       
       <% if (post.comments && post.comments.length > 0) { %>
         <div class="comments-list">
           <% post.comments.forEach(comment => { %>
             <div class="comment">
               <div class="comment-author">
-                <% if (comment.Character) { %>
-                  <% if (comment.Character.avatarUrl) { %>
-                    <img src="<%= comment.Character.avatarUrl %>" alt="<%= comment.Character.name %>" class="comment-avatar">
+                <% if (comment.character) { %>
+                  <% if (comment.character.avatarUrl) { %>
+                    <img src="<%= comment.character.avatarUrl %>" alt="<%= comment.character.name %>" class="comment-avatar">
                   <% } else { %>
                     <div class="comment-avatar-placeholder">
-                      <%= comment.Character.name.charAt(0).toUpperCase() %>
+                      <%= comment.character.name.charAt(0).toUpperCase() %>
                     </div>
                   <% } %>
                 <% } else { %>
                   <div class="comment-avatar-placeholder user-avatar">
-                    <%= comment.User.username.charAt(0).toUpperCase() %>
+                    <%= comment.user ? comment.user.username.charAt(0).toUpperCase() : 'U' %>
                   </div>
                 <% } %>
                 
                 <div class="comment-info">
                   <div class="comment-name">
-                    <% if (comment.Character) { %>
-                      <a href="/characters/<%= comment.Character.id %>"><%= comment.Character.name %></a>
+                    <% if (comment.character) { %>
+                      <a href="/characters/<%= comment.character.id %>"><%= comment.character.name %></a>
                     <% } else { %>
-                      <%= comment.User.username %>
+                      <%= comment.user ? comment.user.username : 'Unknown User' %>
                     <% } %>
                   </div>
                   <div class="comment-content">
@@ -147,7 +110,7 @@
                   <div class="comment-meta">
                     <span><%= formatTimeAgo(comment.createdAt) %></span>
                     
-                    <% if (user && user.id === comment.userId) { %>
+                    <% if (user && comment.user && user.id === comment.userId) { %>
                       <span>•</span>
                       <a href="#" class="delete-comment" data-comment-id="<%= comment.id %>">Delete</a>
                     <% } %>
