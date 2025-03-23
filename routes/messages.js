@@ -271,7 +271,7 @@ router.post('/groups/:characterId/create', isAuthenticated, [
     .trim()
     .isURL()
     .withMessage('Avatar URL must be a valid URL')
-], groupMessageController.createGroupConversations);
+], groupMessageController.createGroupConversation);
 
 // Send message to group
 router.post('/groups/:characterId/:groupId/send', isAuthenticated, [
