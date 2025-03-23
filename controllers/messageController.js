@@ -199,16 +199,19 @@ exports.getConversation = async (req, res) => {
     });
     
     // Mark unread messages as read
-    await Message.update(
-      { isRead: true },
-      {
-        where: {
-          senderId: partnerId,
-          receiverId: characterId,
-          isRead: false
-        }
+    const unreadMessages = await Message.findAll({
+      where: {
+        senderId: partnerId,
+        receiverId: characterId,
+        isRead: false,
+        groupId: null // Make sure we're only updating direct messages, not group messages
       }
-    );
+    });
+
+    // Update each message individually to maintain validation
+    for (const message of unreadMessages) {
+      await message.update({ isRead: true });
+    }
     
     // Check if there's a relationship between the characters
     const { Relationship } = require('../models');
