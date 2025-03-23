@@ -253,7 +253,7 @@ router.get('/groups', isAuthenticated, async (req, res) => {
 
 // Group conversation routes
 router.get('/groups/:characterId', isAuthenticated, groupMessageController.getGroupConversations);
-router.get('/groups/:characterId/:groupId', isAuthenticated, groupMessageController.getGroupConversation);
+router.get('/groups/:characterId/:groupId', isAuthenticated, groupMessageController.getGroupConversations);
 
 // Create new group conversation
 router.post('/groups/:characterId/create', isAuthenticated, [
