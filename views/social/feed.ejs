@@ -23,13 +23,13 @@
           <label for="post-as">Post as:</label>
           <select id="post-as" name="characterId" class="form-control" required>
             <option value="" disabled selected>Select a character</option>
-            <% if (characters && characters.length > 0) { %>
+            <% if (typeof characters !== 'undefined' && characters && characters.length > 0) { %>
               <% characters.forEach(char => { %>
                 <option value="<%= char.id %>"><%= char.name %></option>
               <% }); %>
             <% } %>
           </select>
-          <% if (!characters || characters.length === 0) { %>
+          <% if (typeof characters === 'undefined' || !characters || characters.length === 0) { %>
             <div class="empty-characters-notice mt-2">
               <p>You need to create a character first!</p>
               <a href="/characters/create" class="btn btn-sm mt-1">Create Character</a>
@@ -177,7 +177,9 @@
 <div class="social-feed">
   <% if (posts && posts.length > 0) { %>
     <% posts.forEach(post => { %>
+      <!-- Post content remains unchanged -->
       <div class="social-post">
+        <!-- Post content (as in the original file) -->
         <div class="social-post-header">
           <div class="post-author">
             <% if (post.character) { %>
@@ -378,7 +380,7 @@
               <div class="d-flex">
                 <select name="commentAsId" class="form-control comment-as">
                   <option value="">As <%= user.username %></option>
-                  <% if (characters && characters.length > 0) { %>
+                  <% if (typeof characters !== 'undefined' && characters && characters.length > 0) { %>
                     <% characters.forEach(char => { %>
                       <option value="<%= char.id %>">As <%= char.name %></option>
                     <% }); %>

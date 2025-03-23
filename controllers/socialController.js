@@ -47,7 +47,7 @@ exports.getFeed = async (req, res) => {
     const filter = req.query.filter || 'all';
     const sort = req.query.sort || 'recent';
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = a0;
     const offset = (page - 1) * limit;
     
     // Build query based on filter type
@@ -150,6 +150,9 @@ exports.getFeed = async (req, res) => {
       return formattedPost;
     });
     
+    // Set default values for template parameters
+    let characters = [];
+    
     // If user is logged in, check if they liked each post
     if (req.user) {
       // Get all likes from the user for these posts
@@ -173,35 +176,26 @@ exports.getFeed = async (req, res) => {
       });
       
       // Get user's characters for posting/commenting
-      const characters = await Character.findAll({
+      characters = await Character.findAll({
         where: {
           userId: req.user.id,
           isArchived: false
         },
         attributes: ['id', 'name', 'avatarUrl']
       });
-      
-      // Make the formatTimeAgo function available to the template
-      res.locals.formatTimeAgo = formatTimeAgo;
-      
-      res.render('social/feed', {
-        title: 'Activity Feed',
-        posts,
-        characters,
-        filter,
-        sort
-      });
-    } else {
-      // Make the formatTimeAgo function available to the template
-      res.locals.formatTimeAgo = formatTimeAgo;
-      
-      res.render('social/feed', {
-        title: 'Activity Feed',
-        posts,
-        filter,
-        sort
-      });
     }
+    
+    // Make the formatTimeAgo function available to the template
+    res.locals.formatTimeAgo = formatTimeAgo;
+    
+    // Always pass characters variable to template, even if empty array
+    res.render('social/feed', {
+      title: 'Activity Feed',
+      posts,
+      characters,  // This will now always be defined
+      filter,
+      sort
+    });
   } catch (error) {
     console.error('Error fetching social feed:', error);
     req.flash('error_msg', 'An error occurred while fetching the social feed');
