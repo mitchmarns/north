@@ -9,27 +9,18 @@ const Op = Sequelize.Op;
 // Get a specific group conversation
 exports.getGroupConversations = async (req, res) => {
   try {
-    console.log('User ID:', req.user.id);
-    console.log('Requested Character ID:', req.params.characterId);
-
     // Get all user's characters with full details
     const characters = await Character.findAll({
       where: {
-        userId: req.user.id
+        userId: req.user.id,
+        isArchived: false  // Add this to filter out archived characters
       },
       include: [{ model: User, attributes: ['username'] }],
       order: [['createdAt', 'ASC']]
     });
 
-    console.log('Found Characters:', characters.map(c => ({
-      id: c.id, 
-      name: c.name, 
-      isArchived: c.isArchived
-    })));
-
     // If no characters exist
     if (characters.length === 0) {
-      console.log('No characters found for user');
       return res.render('messages/group-index', {
         title: 'Group Chats',
         characters: [],
@@ -47,13 +38,40 @@ exports.getGroupConversations = async (req, res) => {
 
     // If no specific character found, use the first character
     if (!character) {
-      console.log('Using first character from the list');
       character = characters[0];
     }
 
-    // Prepare conversations (placeholder logic, replace with your existing implementation)
-    const conversations = [];
-    const totalUnread = 0;
+    // Get group conversations for this character
+    const memberships = await GroupMember.findAll({
+      where: {
+        characterId: character.id
+      },
+      include: [{
+        model: GroupConversation,
+        as: 'group',
+        include: [{ model: Team }]
+      }]
+    });
+
+    // Format conversations
+    const conversations = memberships.map(membership => {
+      const group = membership.group;
+      return {
+        id: group.id,
+        name: group.name,
+        avatarUrl: group.avatarUrl,
+        isGlobal: group.isGlobal,
+        team: group.Team,
+        lastMessageAt: group.lastMessageAt
+      };
+    });
+
+    // Sort by most recent message
+    conversations.sort((a, b) => {
+      if (!a.lastMessageAt) return 1;
+      if (!b.lastMessageAt) return -1;
+      return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+    });
 
     // Render the view
     res.render('messages/group-index', {
@@ -61,12 +79,12 @@ exports.getGroupConversations = async (req, res) => {
       characters,
       character,
       conversations,
-      totalUnread
+      totalUnread: 0 // You can calculate this properly later
     });
 
   } catch (error) {
-    console.error('FULL ERROR in getGroupConversations:', error);
-    req.flash('error_msg', `An error occurred: ${error.message}`);
+    console.error('Error in getGroupConversations:', error);
+    req.flash('error_msg', 'An error occurred while loading group chats');
     res.redirect('/dashboard');
   }
 };
