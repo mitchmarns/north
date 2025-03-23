@@ -225,25 +225,28 @@ router.delete('/:characterId/:messageId', isAuthenticated, messageController.del
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
   try {
-    // Get user's first character
-    const character = await Character.findOne({
+    // Get all of user's characters, including archived
+    const characters = await Character.findAll({
       where: {
-        userId: req.user.id,
-        isArchived: false
+        userId: req.user.id
       },
       order: [['createdAt', 'ASC']]
     });
     
-    if (!character) {
+    if (characters.length === 0) {
+      // No characters exist
       req.flash('error_msg', 'You need to create a character first');
       return res.redirect('/characters/create');
     }
     
-    // Redirect to character's group page
-    res.redirect(`/messages/groups/${character.id}`);
+    // Find the first non-archived character, or fall back to the first character
+    const activeCharacter = characters.find(char => !char.isArchived) || characters[0];
+    
+    // Redirect to the first character's group page
+    res.redirect(`/messages/groups/${activeCharacter.id}`);
   } catch (error) {
     console.error('Error finding character for group redirect:', error);
-    req.flash('error_msg', 'An error occurred');
+    req.flash('error_msg', 'An unexpected error occurred');
     res.redirect('/dashboard');
   }
 });
