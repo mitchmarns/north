@@ -74,6 +74,94 @@
       <% } %>
     </div>
     
+    <!-- ADD THIS SECTION: Post Content -->
+    <div class="social-post-content">
+      <% if (post.postType === 'text' || !post.postType) { %>
+        <!-- Text post - Add proper container div -->
+        <div class="post-text-content">
+          <%= post.content.replace(/\n/g, '<br>') %>
+        </div>
+      <% } else if (post.postType === 'image') { %>
+        <!-- Image post -->
+        <% if (post.content) { %>
+          <div class="post-caption">
+            <%= post.content.replace(/\n/g, '<br>') %>
+          </div>
+        <% } %>
+        
+        <% if (post.mediaUrls && post.mediaUrls.length > 0) { %>
+          <div class="post-images-gallery <%= post.mediaUrls.length === 1 ? 'single-image' : '' %> 
+                                          <%= post.mediaUrls.length === 3 ? 'three-images' : '' %> 
+                                          <%= post.mediaUrls.length === 4 ? 'four-images' : '' %>">
+            <% post.mediaUrls.forEach(url => { %>
+              <div class="post-image-item">
+                <img src="<%= url %>" alt="Post image" loading="lazy" onerror="this.parentNode.style.display='none'">
+              </div>
+            <% }); %>
+          </div>
+        <% } else if (post.imageUrl) { %>
+          <!-- Legacy support for old posts with single imageUrl -->
+          <div class="post-image">
+            <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
+          </div>
+        <% } %>
+      <% } else if (post.postType === 'nowListening') { %>
+        <!-- Now Listening post -->
+        <% if (post.content) { %>
+          <div class="post-caption mb-3">
+            <%= post.content.replace(/\n/g, '<br>') %>
+          </div>
+        <% } %>
+        
+        <div class="music-card">
+          <div class="album-cover">
+            <% if (post.albumCoverUrl) { %>
+              <img src="<%= post.albumCoverUrl %>" alt="Album cover" onerror="this.parentNode.innerHTML = '<div class=\'album-cover-placeholder\'><i class=\'ph-vinyl-record-duotone\'></i></div>'">
+            <% } else { %>
+              <div class="album-cover-placeholder">
+                <i class="ph-vinyl-record-duotone"></i>
+              </div>
+            <% } %>
+          </div>
+          <div class="music-info">
+            <div class="music-title"><%= post.songTitle %></div>
+            <div class="music-artist"><%= post.artistName %></div>
+            <% if (post.albumName) { %>
+              <div class="music-album"><%= post.albumName %></div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    <!-- END Added Section -->
+    
+    <!-- Post Footer -->
+    <div class="social-post-footer">
+      <div class="post-reactions">
+        <button class="reaction-btn <%= post.hasLiked ? 'active' : '' %>" data-post-id="<%= post.id %>" data-reaction="like">
+          <i class="ph-heart-duotone"></i>
+          <span class="reaction-count"><%= post.likeCount || 0 %></span>
+        </button>
+        
+        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="comment">
+          <i class="ph-chat-text-duotone"></i>
+          <span class="reaction-count"><%= post.comments ? post.comments.length : 0 %></span>
+        </button>
+        
+        <button class="reaction-btn" data-post-id="<%= post.id %>" data-reaction="share">
+          <i class="ph-share-duotone"></i>
+        </button>
+      </div>
+      
+      <div class="post-visibility">
+        <% if (post.privacy === 'private') { %>
+          <i class="ph-users-duotone" title="Friends Only"></i>
+        <% } else { %>
+          <i class="ph-globe-duotone" title="Public"></i>
+        <% } %>
+      </div>
+    </div>
+    
     <div class="post-comments">
       <h3 class="comments-heading">Comments (<%= post.comments ? post.comments.length : 0 %>)</h3>
       
@@ -298,5 +386,13 @@
     background-color: rgba(0, 0, 0, 0.1);
     border-radius: var(--radius-sm);
     margin-bottom: 15px;
+  }
+  
+  /* Add css for post text content */
+  .post-text-content {
+    font-size: var(--text-base);
+    line-height: 1.6;
+    white-space: pre-line;
+    padding: 5px 0;
   }
 </style>

@@ -766,3 +766,15 @@
 .post-images-gallery.four-images {
   grid-template-columns: repeat(2, 1fr);
 }
+
+.post-text-content {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  white-space: pre-line;
+  padding: 5px 0;
+}
+
+/* Also ensure the view post page uses the same styling */
+.social-post-content > .post-text-content {
+  margin-bottom: 10px;
+}
