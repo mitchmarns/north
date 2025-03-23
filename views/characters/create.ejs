@@ -594,6 +594,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Handle image preview
+document.getElementById('avatarUrl').addEventListener('input', function(e) {
+  const url = e.target.value.trim();
+  const previewContainer = document.getElementById('avatar-preview');
+  
+  if (url) {
+    previewContainer.innerHTML = `
+      <img src="${url}" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+    `;
+  } else {
+    previewContainer.innerHTML = `<i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>`;
+  }
+});
+
 // Function to toggle team-related fields based on character role
 function toggleTeamFields() {
   const role = document.getElementById('role').value;
