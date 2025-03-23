@@ -232,24 +232,23 @@ router.get('/groups', isAuthenticated, async (req, res) => {
       order: [['createdAt', 'ASC']]
     });
 
+    console.log(`Found ${characters.length} characters for user ID ${req.user.id}`);
+
     // If no characters exist, render a template with no character selected
     if (characters.length === 0) {
-      return res.render('messages/group-conversation', {
-        title: 'Group Chats',
-        characters: [],
-        character: null,
-        conversations: [],
-        totalUnread: 0
-      });
+      req.flash('info_msg', 'You need to create a character first before accessing group messages');
+      return res.redirect('/characters/create');
     }
 
     // Use the first character and redirect to its group chat page
     const firstCharacter = characters[0];
-    res.redirect(`/messages/groups/${firstCharacter.id}`);
+    console.log(`Redirecting to first character's groups: ${firstCharacter.id}`);
+    return res.redirect(`/messages/groups/${firstCharacter.id}`);
   } catch (error) {
     console.error('Error in /groups route:', error);
+    console.error(error.stack); // Log the full stack trace
     req.flash('error_msg', 'An error occurred while loading group chats');
-    res.redirect('/dashboard');
+    return res.redirect('/dashboard');
   }
 });
 
