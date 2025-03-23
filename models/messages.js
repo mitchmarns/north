@@ -65,14 +65,12 @@ module.exports = (sequelize, DataTypes) => {
       }
     ],
     validate: {
-      eitherReceiverOrGroup() {
-        if ((this.receiverId === null && this.groupId === null) || 
-            (this.receiverId !== null && this.groupId !== null)) {
-          throw new Error('A message must have either a receiver or a group, but not both');
+      ensureReceiverId() {
+        if (this.receiverId === null) {
+          throw new Error('A message must have a receiver');
         }
       }
     }
-  });
 
   return Message;
 };
