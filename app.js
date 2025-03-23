@@ -478,5 +478,7 @@ async function setupGroupMessaging() {
   }
 }
 
-await setupGroupMessaging();
-startServer()
+(async () => {
+  await setupGroupMessaging();
+  startServer();
+})();
