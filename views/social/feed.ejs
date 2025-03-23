@@ -74,7 +74,7 @@
             <div class="image-inputs">
               <div class="image-input-group">
                 <div class="input-group">
-                  <input type="url" class="form-control media-url" name="mediaUrls[]" placeholder="https://example.com/image1.jpg" required>
+                  <input type="url" class="form-control media-url" name="mediaUrls" placeholder="https://example.com/image1.jpg" required>
                   <div class="input-group-append">
                     <button type="button" class="btn btn-outline clear-image-btn" style="display: none;">
                       <i class="ph-x-duotone"></i>
@@ -459,73 +459,73 @@
     
     // Image preview functionality
     const imageUrlInput = document.getElementById('post-image');
-  const imagePreview = document.getElementById('image-preview');
-  const previewImage = document.getElementById('preview-image');
-  const clearImageBtn = document.getElementById('clear-image-btn');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImage = document.getElementById('preview-image');
+    const clearImageBtn = document.getElementById('clear-image-btn');
 
-  if (imageUrlInput) {
-    imageUrlInput.addEventListener('input', function() {
-      const imageUrl = this.value.trim();
-      
-      if (imageUrl) {
-        previewImage.src = imageUrl;
-        imagePreview.style.display = 'block';
+    if (imageUrlInput) {
+      imageUrlInput.addEventListener('input', function() {
+        const imageUrl = this.value.trim();
         
-        // Handle image load errors
-        previewImage.onerror = function() {
+        if (imageUrl) {
+          previewImage.src = imageUrl;
+          imagePreview.style.display = 'block';
+          
+          // Handle image load errors
+          previewImage.onerror = function() {
+            imagePreview.style.display = 'none';
+            // Add a visual indicator that the URL is invalid
+            imageUrlInput.classList.add('is-invalid');
+          };
+          
+          previewImage.onload = function() {
+            // Clear any error indicators if the image loads successfully
+            imageUrlInput.classList.remove('is-invalid');
+          };
+          
+          // Show clear button if available
+          if (clearImageBtn) {
+            clearImageBtn.style.display = 'block';
+          }
+        } else {
           imagePreview.style.display = 'none';
-          // Add a visual indicator that the URL is invalid
-          imageUrlInput.classList.add('is-invalid');
-        };
-        
-        previewImage.onload = function() {
-          // Clear any error indicators if the image loads successfully
           imageUrlInput.classList.remove('is-invalid');
-        };
-        
-        // Show clear button if available
-        if (clearImageBtn) {
-          clearImageBtn.style.display = 'block';
+          
+          // Hide clear button if available
+          if (clearImageBtn) {
+            clearImageBtn.style.display = 'none';
+          }
         }
-      } else {
-        imagePreview.style.display = 'none';
-        imageUrlInput.classList.remove('is-invalid');
-        
-        // Hide clear button if available
-        if (clearImageBtn) {
-          clearImageBtn.style.display = 'none';
-        }
-      }
-    });
-  }
+      });
+    }
 
-  // Add clear button functionality if it exists
-  if (clearImageBtn) {
-    clearImageBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      if (imageUrlInput) {
-        imageUrlInput.value = '';
-        imagePreview.style.display = 'none';
-        clearImageBtn.style.display = 'none';
-        imageUrlInput.classList.remove('is-invalid');
-      }
-    });
-  }
-
-  // Validate image URL before form submission
-  const postForm = document.getElementById('post-form');
-  if (postForm) {
-    postForm.addEventListener('submit', function(e) {
-      const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
-      
-      // If there's an image URL but it's invalid, prevent form submission
-      if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
+    // Add clear button functionality if it exists
+    if (clearImageBtn) {
+      clearImageBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Please enter a valid image URL or leave the field empty');
-      }
-    });
-  }
+        
+        if (imageUrlInput) {
+          imageUrlInput.value = '';
+          imagePreview.style.display = 'none';
+          clearImageBtn.style.display = 'none';
+          imageUrlInput.classList.remove('is-invalid');
+        }
+      });
+    }
+
+    // Validate image URL before form submission
+    const postForm = document.getElementById('post-form');
+    if (postForm) {
+      postForm.addEventListener('submit', function(e) {
+        const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
+        
+        // If there's an image URL but it's invalid, prevent form submission
+        if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
+          e.preventDefault();
+          alert('Please enter a valid image URL or leave the field empty');
+        }
+      });
+    }
 
     // Toggle comment sections
     const commentButtons = document.querySelectorAll('.reaction-btn[data-reaction="comment"]');
@@ -739,195 +739,198 @@
         });
       });
     }
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-  // Post type tabs functionality
-  const typeTabs = document.querySelectorAll('.post-type-tab');
-  const typeContents = document.querySelectorAll('.post-type-content');
-  const postTypeInput = document.getElementById('post-type');
   
-  typeTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      const type = this.getAttribute('data-type');
-      
-      // Update active tab
-      typeTabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      
-      // Show corresponding content
-      typeContents.forEach(content => {
-        content.style.display = 'none';
-      });
-      document.getElementById(`${type}-post-content`).style.display = 'block';
-      
-      // Update hidden input
-      postTypeInput.value = type;
-      
-      // Update form validation based on type
-      updateFormValidation(type);
-    });
-  });
-  
-  function updateFormValidation(type) {
-  const contentTextarea = document.getElementById('post-content');
-  const mediaUrlInputs = document.querySelectorAll('.media-url');
-  const songTitleInput = document.getElementById('song-title');
-  const artistNameInput = document.getElementById('artist-name');
-  
-  // Reset all required attributes
-  if (contentTextarea) contentTextarea.required = false;
-  if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-    mediaUrlInputs.forEach(input => {
-      input.required = false;
-    });
-  }
-  if (songTitleInput) songTitleInput.required = false;
-  if (artistNameInput) artistNameInput.required = false;
-  
-  // Set required based on post type
-  if (type === 'text') {
-    if (contentTextarea) contentTextarea.required = true;
-  } else if (type === 'image') {
-    // At least one image is required
-    if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-      mediaUrlInputs[0].required = true;
-    }
-  } else if (type === 'nowListening') {
-    if (songTitleInput) songTitleInput.required = true;
-    if (artistNameInput) artistNameInput.required = true;
-  }
-
-  if (type === 'image') {
-      // Make sure at least one image input is required
-      const mediaUrlInputs = document.querySelectorAll('.media-url');
-      if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-        // Only require the first input if it's visible
-        mediaUrlInputs[0].required = true;
+    // Post type tabs functionality
+    const typeTabs = document.querySelectorAll('.post-type-tab');
+    const typeContents = document.querySelectorAll('.post-type-content');
+    const postTypeInput = document.getElementById('post-type');
+    
+    typeTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const type = this.getAttribute('data-type');
         
-        // Also log to console for debugging
-        console.log('Image input required state set:', mediaUrlInputs[0].required);
-        console.log('Image input value:', mediaUrlInputs[0].value);
-      }
-    }
-}
-  
-  // Add image button functionality
-  const addImageBtn = document.getElementById('add-image-btn');
-  const imageInputsContainer = document.querySelector('.image-inputs');
-  
-  if (addImageBtn && imageInputsContainer) {
-    addImageBtn.addEventListener('click', function() {
-      const inputGroups = imageInputsContainer.querySelectorAll('.image-input-group');
-      
-      // Limit to 4 images
-      if (inputGroups.length >= 4) {
-        alert('Maximum 4 images allowed.');
-        return;
-      }
-      
-      // Clone the first input group
-      const newInputGroup = inputGroups[0].cloneNode(true);
-      
-      // Clear values
-      newInputGroup.querySelector('input').value = '';
-      newInputGroup.querySelector('.image-preview').style.display = 'none';
-      newInputGroup.querySelector('.clear-image-btn').style.display = 'none';
-      
-      // Add before the add button
-      imageInputsContainer.insertBefore(newInputGroup, addImageBtn);
-      
-      // Add event listeners to new elements
-      setupImageInputEventListeners(newInputGroup);
-      
-      // Show/hide add button based on count
-      if (imageInputsContainer.querySelectorAll('.image-input-group').length >= 4) {
-        addImageBtn.style.display = 'none';
-      }
+        // Update active tab
+        typeTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show corresponding content
+        typeContents.forEach(content => {
+          content.style.display = 'none';
+        });
+        document.getElementById(`${type}-post-content`).style.display = 'block';
+        
+        // Update hidden input
+        postTypeInput.value = type;
+        
+        // Update form validation based on type
+        updateFormValidation(type);
+      });
     });
     
-    // Setup event listeners for image inputs
-    function setupImageInputEventListeners(container) {
-      const input = container.querySelector('input');
-      const preview = container.querySelector('.image-preview');
-      const previewImg = container.querySelector('.preview-image');
-      const clearBtn = container.querySelector('.clear-image-btn');
+    function updateFormValidation(type) {
+      const contentTextarea = document.getElementById('post-content');
+      const mediaUrlInputs = document.querySelectorAll('.media-url');
+      const songTitleInput = document.getElementById('song-title');
+      const artistNameInput = document.getElementById('artist-name');
       
-      input.addEventListener('input', function() {
-        const imageUrl = this.value.trim();
+      // Reset all required attributes
+      if (contentTextarea) contentTextarea.required = false;
+      if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+        mediaUrlInputs.forEach(input => {
+          input.required = false;
+        });
+      }
+      if (songTitleInput) songTitleInput.required = false;
+      if (artistNameInput) artistNameInput.required = false;
+      
+      // Set required based on post type
+      if (type === 'text') {
+        if (contentTextarea) contentTextarea.required = true;
+      } else if (type === 'image') {
+        // At least one image is required
+        if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+          mediaUrlInputs[0].required = true;
+        }
+      } else if (type === 'nowListening') {
+        if (songTitleInput) songTitleInput.required = true;
+        if (artistNameInput) artistNameInput.required = true;
+      }
+
+      if (type === 'image') {
+        // Make sure at least one image input is required
+        const mediaUrlInputs = document.querySelectorAll('.media-url');
+        if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+          // Only require the first input if it's visible
+          mediaUrlInputs[0].required = true;
+          
+          // Also log to console for debugging
+          console.log('Image input required state set:', mediaUrlInputs[0].required);
+          console.log('Image input value:', mediaUrlInputs[0].value);
+        }
+      }
+    }
+    
+    // Add image button functionality
+    const addImageBtn = document.getElementById('add-image-btn');
+    const imageInputsContainer = document.querySelector('.image-inputs');
+    
+    if (addImageBtn && imageInputsContainer) {
+      addImageBtn.addEventListener('click', function() {
+        const inputGroups = imageInputsContainer.querySelectorAll('.image-input-group');
         
-        if (imageUrl) {
-          previewImg.src = imageUrl;
-          preview.style.display = 'block';
-          clearBtn.style.display = 'block';
-          
-          // Handle image load errors
-          previewImg.onerror = function() {
-            preview.style.display = 'none';
-            input.classList.add('is-invalid');
-          };
-          
-          previewImg.onload = function() {
-            input.classList.remove('is-invalid');
-          };
-        } else {
-          preview.style.display = 'none';
-          clearBtn.style.display = 'none';
-          input.classList.remove('is-invalid');
+        // Limit to 4 images
+        if (inputGroups.length >= 4) {
+          alert('Maximum 4 images allowed.');
+          return;
+        }
+        
+        // Clone the first input group
+        const newInputGroup = inputGroups[0].cloneNode(true);
+        
+        // Clear values
+        const input = newInputGroup.querySelector('input');
+        input.value = '';
+        
+        // Important fix: name attribute must be the same for proper form processing
+        input.name = 'mediaUrls';
+        
+        newInputGroup.querySelector('.image-preview').style.display = 'none';
+        newInputGroup.querySelector('.clear-image-btn').style.display = 'none';
+        
+        // Add before the add button
+        imageInputsContainer.insertBefore(newInputGroup, addImageBtn);
+        
+        // Add event listeners to new elements
+        setupImageInputEventListeners(newInputGroup);
+        
+        // Show/hide add button based on count
+        if (imageInputsContainer.querySelectorAll('.image-input-group').length >= 4) {
+          addImageBtn.style.display = 'none';
         }
       });
       
-      clearBtn.addEventListener('click', function() {
-        input.value = '';
-        preview.style.display = 'none';
-        clearBtn.style.display = 'none';
-        input.classList.remove('is-invalid');
+      // Setup event listeners for image inputs
+      function setupImageInputEventListeners(container) {
+        const input = container.querySelector('input');
+        const preview = container.querySelector('.image-preview');
+        const previewImg = container.querySelector('.preview-image');
+        const clearBtn = container.querySelector('.clear-image-btn');
+        
+        input.addEventListener('input', function() {
+          const imageUrl = this.value.trim();
+          
+          if (imageUrl) {
+            previewImg.src = imageUrl;
+            preview.style.display = 'block';
+            clearBtn.style.display = 'block';
+            
+            // Handle image load errors
+            previewImg.onerror = function() {
+              preview.style.display = 'none';
+              input.classList.add('is-invalid');
+            };
+            
+            previewImg.onload = function() {
+              input.classList.remove('is-invalid');
+            };
+          } else {
+            preview.style.display = 'none';
+            clearBtn.style.display = 'none';
+            input.classList.remove('is-invalid');
+          }
+        });
+        
+        clearBtn.addEventListener('click', function() {
+          input.value = '';
+          preview.style.display = 'none';
+          clearBtn.style.display = 'none';
+          input.classList.remove('is-invalid');
+        });
+      }
+      
+      // Setup initial image inputs
+      document.querySelectorAll('.image-input-group').forEach(group => {
+        setupImageInputEventListeners(group);
       });
     }
     
-    // Setup initial image inputs
-    document.querySelectorAll('.image-input-group').forEach(group => {
-      setupImageInputEventListeners(group);
-    });
-  }
-  
-  // Album cover preview functionality
-  const albumCoverInput = document.getElementById('album-cover');
-  const albumCoverPreview = document.getElementById('album-cover-preview');
-  const previewAlbumCover = document.getElementById('preview-album-cover');
-  const clearAlbumCoverBtn = document.getElementById('clear-album-cover-btn');
-  
-  if (albumCoverInput && albumCoverPreview && previewAlbumCover && clearAlbumCoverBtn) {
-    albumCoverInput.addEventListener('input', function() {
-      const imageUrl = this.value.trim();
-      
-      if (imageUrl) {
-        previewAlbumCover.src = imageUrl;
-        albumCoverPreview.style.display = 'block';
-        clearAlbumCoverBtn.style.display = 'block';
+    // Album cover preview functionality
+    const albumCoverInput = document.getElementById('album-cover');
+    const albumCoverPreview = document.getElementById('album-cover-preview');
+    const previewAlbumCover = document.getElementById('preview-album-cover');
+    const clearAlbumCoverBtn = document.getElementById('clear-album-cover-btn');
+    
+    if (albumCoverInput && albumCoverPreview && previewAlbumCover && clearAlbumCoverBtn) {
+      albumCoverInput.addEventListener('input', function() {
+        const imageUrl = this.value.trim();
         
-        // Handle image load errors
-        previewAlbumCover.onerror = function() {
+        if (imageUrl) {
+          previewAlbumCover.src = imageUrl;
+          albumCoverPreview.style.display = 'block';
+          clearAlbumCoverBtn.style.display = 'block';
+          
+          // Handle image load errors
+          previewAlbumCover.onerror = function() {
+            albumCoverPreview.style.display = 'none';
+            albumCoverInput.classList.add('is-invalid');
+          };
+          
+          previewAlbumCover.onload = function() {
+            albumCoverInput.classList.remove('is-invalid');
+          };
+        } else {
           albumCoverPreview.style.display = 'none';
-          albumCoverInput.classList.add('is-invalid');
-        };
-        
-        previewAlbumCover.onload = function() {
+          clearAlbumCoverBtn.style.display = 'none';
           albumCoverInput.classList.remove('is-invalid');
-        };
-      } else {
+        }
+      });
+      
+      clearAlbumCoverBtn.addEventListener('click', function() {
+        albumCoverInput.value = '';
         albumCoverPreview.style.display = 'none';
         clearAlbumCoverBtn.style.display = 'none';
         albumCoverInput.classList.remove('is-invalid');
-      }
-    });
-    
-    clearAlbumCoverBtn.addEventListener('click', function() {
-      albumCoverInput.value = '';
-      albumCoverPreview.style.display = 'none';
-      clearAlbumCoverBtn.style.display = 'none';
-      albumCoverInput.classList.remove('is-invalid');
-    });
-  }
-});
+      });
+    }
+  });
 </script>

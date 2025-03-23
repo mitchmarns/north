@@ -327,7 +327,7 @@ exports.createPost = async (req, res) => {
   try {
     const { 
       content, characterId, privacy, postType, 
-      imageCaption, mediaUrls, 
+      imageCaption, 
       songTitle, artistName, albumName, albumCoverUrl, musicThoughts 
     } = req.body;
     
@@ -367,36 +367,39 @@ exports.createPost = async (req, res) => {
         postData.content = content;
         break;
         
-        case 'image':
-          // For image posts, at least one valid image URL is required
-          postData.content = imageCaption || null;
-          
-          // Handle multiple images
-          let imageUrls = [];
-          
-          if (Array.isArray(mediaUrls)) {
+      case 'image':
+        // For image posts, at least one valid image URL is required
+        postData.content = imageCaption || null;
+        
+        // Handle multiple images
+        let imageUrls = [];
+        
+        // Check if mediaUrls exists in req.body
+        if (req.body.mediaUrls) {
+          if (Array.isArray(req.body.mediaUrls)) {
             // Filter out empty URLs
-            imageUrls = mediaUrls.filter(url => url && url.trim() !== '');
-          } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
-            imageUrls = [mediaUrls.trim()];
+            imageUrls = req.body.mediaUrls.filter(url => url && url.trim() !== '');
+          } else if (typeof req.body.mediaUrls === 'string' && req.body.mediaUrls.trim() !== '') {
+            imageUrls = [req.body.mediaUrls.trim()];
           }
-          
-          // Log to help debug the issue
-          console.log('Processing image URLs:', {
-            rawMediaUrls: mediaUrls,
-            processedImageUrls: imageUrls,
-            isEmpty: imageUrls.length === 0
-          });
-          
-          if (imageUrls.length === 0) {
-            // Check if we received a single imageUrl from the old format
-            if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
-              imageUrls = [req.body.imageUrl.trim()];
-            } else {
-              req.flash('error_msg', 'At least one image URL is required for image posts');
-              return res.redirect('/social/feed');
-            }
+        }
+        
+        // Log to help debug the issue
+        console.log('Processing image URLs:', {
+          rawMediaUrls: req.body.mediaUrls,
+          processedImageUrls: imageUrls,
+          isEmpty: imageUrls.length === 0
+        });
+        
+        if (imageUrls.length === 0) {
+          // Check if we received a single imageUrl from the old format
+          if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
+            imageUrls = [req.body.imageUrl.trim()];
+          } else {
+            req.flash('error_msg', 'At least one image URL is required for image posts');
+            return res.redirect('/social/feed');
           }
+        }
         postData.mediaUrls = imageUrls;
         break;
         
