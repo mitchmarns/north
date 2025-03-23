@@ -330,6 +330,13 @@ exports.createPost = async (req, res) => {
       imageCaption, 
       songTitle, artistName, albumName, albumCoverUrl, musicThoughts 
     } = req.body;
+
+    console.log('Received post data:', {
+      type: postType,
+      content,
+      characterId,
+      privacy
+    });
     
     // Verify character belongs to user if provided
     if (characterId) {
