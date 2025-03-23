@@ -6,46 +6,6 @@ const { validationResult } = require('express-validator');
 const discordNotifier = require('../utils/discordNotifier');
 const Op = Sequelize.Op;
 
-// Get all group conversations for a character
-exports.getGroupConversations = async (req, res) => {
-  try {
-    const characterId = req.params.characterId;
-    
-    // Find character with less strict conditions
-    const character = await Character.findOne({
-      where: {
-        id: characterId,
-        userId: req.user.id
-      }
-    });
-    
-    if (!character) {
-      // Get user's first character
-      const firstCharacter = await Character.findOne({
-        where: {
-          userId: req.user.id
-        },
-        order: [['createdAt', 'ASC']]
-      });
-      
-      if (!firstCharacter) {
-        req.flash('error_msg', 'You need to create a character first');
-        return res.redirect('/characters/create');
-      }
-      
-      // Redirect to the first character's group page
-      return res.redirect(`/messages/groups/${firstCharacter.id}`);
-    }
-    
-    // Rest of the existing method remains the same...
-    // (keep the existing implementation)
-  } catch (error) {
-    console.error('Error fetching group conversations:', error);
-    req.flash('error_msg', 'An unexpected error occurred');
-    res.redirect('/dashboard');
-  }
-};
-
 // Get a specific group conversation
 exports.getGroupConversations = async (req, res) => {
   try {
