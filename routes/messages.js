@@ -194,32 +194,6 @@ router.get('/', isAuthenticated, async (req, res) => {
   }
 });
 
-// Character inbox (all conversations)
-router.get('/:characterId', isAuthenticated, messageController.getInbox);
-
-// New message form
-router.get('/:characterId/new', isAuthenticated, messageController.newMessageForm);
-
-// View conversation with a specific character
-router.get('/:characterId/:partnerId', isAuthenticated, messageController.getConversation);
-
-// Send message
-router.post('/send', isAuthenticated, [
-  body('content')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Message cannot be empty'),
-  body('characterId')
-    .isNumeric()
-    .withMessage('Invalid sender'),
-  body('receiverId')
-    .isNumeric()
-    .withMessage('Invalid recipient')
-], messageController.sendMessage);
-
-// Delete message
-router.delete('/:characterId/:messageId', isAuthenticated, messageController.deleteMessage);
-
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
   try {
@@ -251,6 +225,32 @@ router.get('/groups', isAuthenticated, async (req, res) => {
     return res.redirect('/dashboard');
   }
 });
+
+// Character inbox (all conversations)
+router.get('/:characterId', isAuthenticated, messageController.getInbox);
+
+// New message form
+router.get('/:characterId/new', isAuthenticated, messageController.newMessageForm);
+
+// View conversation with a specific character
+router.get('/:characterId/:partnerId', isAuthenticated, messageController.getConversation);
+
+// Send message
+router.post('/send', isAuthenticated, [
+  body('content')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Message cannot be empty'),
+  body('characterId')
+    .isNumeric()
+    .withMessage('Invalid sender'),
+  body('receiverId')
+    .isNumeric()
+    .withMessage('Invalid recipient')
+], messageController.sendMessage);
+
+// Delete message
+router.delete('/:characterId/:messageId', isAuthenticated, messageController.deleteMessage);
 
 // Group conversation routes
 router.get('/groups/:characterId', isAuthenticated, groupMessageController.getGroupConversations);
