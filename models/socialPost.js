@@ -22,17 +22,41 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
+    postType: {
+      type: DataTypes.ENUM('text', 'image', 'nowListening', 'multiple_images'),
+      defaultValue: 'text'
+    },
     content: {
       type: DataTypes.TEXT,
-      allowNull: false,
-      validate: {
-        notEmpty: true
+      allowNull: true, // Can be null for some post types
+    },
+    mediaUrls: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        const rawValue = this.getDataValue('mediaUrls');
+        return rawValue ? JSON.parse(rawValue) : [];
+      },
+      set(val) {
+        this.setDataValue('mediaUrls', JSON.stringify(val));
       }
     },
-    imageUrl: {
+    // Music-related fields for "Now Listening" posts
+    songTitle: {
       type: DataTypes.STRING,
-      allowNull: true,
-      defaultValue: null
+      allowNull: true
+    },
+    artistName: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    albumName: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    albumCoverUrl: {
+      type: DataTypes.STRING,
+      allowNull: true
     },
     privacy: {
       type: DataTypes.ENUM('public', 'private'),
@@ -61,6 +85,9 @@ module.exports = (sequelize, DataTypes) => {
         fields: ['characterId']
       },
       {
+        fields: ['postType']
+      },
+      {
         fields: ['privacy']
       },
       {
@@ -70,4 +97,4 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   return SocialPost;
-};
+}

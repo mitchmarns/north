@@ -610,3 +610,145 @@
   font-size: calc(var(--text-base) * 1.05);
   line-height: 1.7;
 }
+
+/* Add to public/css/features/social.css */
+
+/* Post type tabs */
+.post-type-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.post-type-tab {
+  background: none;
+  border: none;
+  color: var(--lighttext);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+}
+
+.post-type-tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.post-type-tab.active {
+  background-color: rgba(90, 128, 149, 0.2);
+  color: var(--header);
+}
+
+.post-type-tab i {
+  font-size: 1.2em;
+}
+
+/* Image inputs */
+.image-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-input-group {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+/* Now Listening styles */
+.music-card {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 15px;
+}
+
+.album-cover {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.5rem;
+}
+
+.music-info {
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.music-title {
+  font-size: var(--text-lg);
+  font-weight: var(--semibold);
+  margin-bottom: 3px;
+}
+
+.music-artist {
+  font-size: var(--text-base);
+  margin-bottom: 2px;
+}
+
+.music-album {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+/* Multiple images gallery */
+.post-images-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.post-image-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  aspect-ratio: 1/1;
+}
+
+.post-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-image-item.single-image {
+  grid-column: span 2;
+  aspect-ratio: 16/9;
+}
+
+.post-images-gallery.three-images .post-image-item:first-child {
+  grid-column: span 2;
+}
+
+.post-images-gallery.four-images {
+  grid-template-columns: repeat(2, 1fr);
+}

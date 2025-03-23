@@ -37,27 +37,97 @@
           <% } %>
         </div>
         
+        <!-- Post Type Selector -->
         <div class="form-group">
-          <label for="post-content">What's on your mind?</label>
-          <textarea id="post-content" name="content" class="form-control" rows="4" required></textarea>
+          <label>Post Type:</label>
+          <div class="post-type-tabs">
+            <button type="button" class="post-type-tab active" data-type="text">
+              <i class="ph-text-t-duotone"></i> Text
+            </button>
+            <button type="button" class="post-type-tab" data-type="image">
+              <i class="ph-image-duotone"></i> Images
+            </button>
+            <button type="button" class="post-type-tab" data-type="nowListening">
+              <i class="ph-music-notes-duotone"></i> Now Listening
+            </button>
+          </div>
+          <input type="hidden" id="post-type" name="postType" value="text">
         </div>
         
-        <div class="form-group">
-          <label for="post-image">Image URL (optional)</label>
-          <div class="input-group">
-            <input type="url" id="post-image" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
-            <div class="input-group-append">
-              <button type="button" id="clear-image-btn" class="btn btn-outline" style="display: none;">
-                <i class="ph-x-duotone"></i>
+        <!-- Text Post Fields (default) -->
+        <div class="post-type-content" id="text-post-content">
+          <div class="form-group">
+            <label for="post-content">What's on your mind?</label>
+            <textarea id="post-content" name="content" class="form-control" rows="4" required></textarea>
+          </div>
+        </div>
+        
+        <!-- Image Post Fields (hidden by default) -->
+        <div class="post-type-content" id="image-post-content" style="display: none;">
+          <div class="form-group">
+            <label for="post-image-content">Caption (optional)</label>
+            <textarea id="post-image-content" name="imageCaption" class="form-control" rows="2"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Add Images (up to 4)</label>
+            <div class="image-inputs">
+              <div class="image-input-group">
+                <div class="input-group">
+                  <input type="url" class="form-control media-url" name="mediaUrls[]" placeholder="https://example.com/image1.jpg">
+                  <div class="input-group-append">
+                    <button type="button" class="btn btn-outline clear-image-btn" style="display: none;">
+                      <i class="ph-x-duotone"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="image-preview mt-2" style="display: none;">
+                  <img src="" alt="Preview" class="preview-image" style="max-width: 100%; max-height: 150px; object-fit: contain;">
+                </div>
+              </div>
+              
+              <button type="button" id="add-image-btn" class="btn btn-sm mt-2">
+                <i class="ph-plus-duotone"></i> Add Another Image
               </button>
             </div>
           </div>
-          <small class="text-muted">Leave blank if you don't want to include an image</small>
-          <div id="image-preview" class="mt-2" style="display: none;">
-            <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+        </div>
+        
+        <!-- Now Listening Post Fields (hidden by default) -->
+        <div class="post-type-content" id="nowListening-post-content" style="display: none;">
+          <div class="form-group">
+            <label for="song-title">Song Title</label>
+            <input type="text" id="song-title" name="songTitle" class="form-control" placeholder="Enter song title..." required>
           </div>
-          <div class="invalid-feedback" id="image-error">
-            Please enter a valid image URL or leave the field empty
+          
+          <div class="form-group">
+            <label for="artist-name">Artist</label>
+            <input type="text" id="artist-name" name="artistName" class="form-control" placeholder="Enter artist name..." required>
+          </div>
+          
+          <div class="form-group">
+            <label for="album-name">Album (optional)</label>
+            <input type="text" id="album-name" name="albumName" class="form-control" placeholder="Enter album name...">
+          </div>
+          
+          <div class="form-group">
+            <label for="album-cover">Album Cover URL (optional)</label>
+            <div class="input-group">
+              <input type="url" id="album-cover" name="albumCoverUrl" class="form-control" placeholder="https://example.com/album-cover.jpg">
+              <div class="input-group-append">
+                <button type="button" id="clear-album-cover-btn" class="btn btn-outline" style="display: none;">
+                  <i class="ph-x-duotone"></i>
+                </button>
+              </div>
+            </div>
+            <div id="album-cover-preview" class="mt-2" style="display: none;">
+              <img id="preview-album-cover" src="" alt="Album Cover Preview" style="max-width: 100%; max-height: 150px; object-fit: contain;">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="music-thoughts">Your thoughts (optional)</label>
+            <textarea id="music-thoughts" name="musicThoughts" class="form-control" rows="2" placeholder="Share your thoughts about this song..."></textarea>
           </div>
         </div>
         
@@ -174,11 +244,58 @@
         </div>
         
         <div class="social-post-content">
-          <%= post.content.replace(/\n/g, '<br>') %>
-          
-          <% if (post.imageUrl && post.imageUrl.trim() !== '') { %>
-            <div class="post-image">
-              <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
+          <% if (post.postType === 'text' || !post.postType) { %>
+            <!-- Text post -->
+            <%= post.content.replace(/\n/g, '<br>') %>
+          <% } else if (post.postType === 'image') { %>
+            <!-- Image post -->
+            <% if (post.content) { %>
+              <div class="post-caption mb-3">
+                <%= post.content.replace(/\n/g, '<br>') %>
+              </div>
+            <% } %>
+            
+            <% if (post.mediaUrls && post.mediaUrls.length > 0) { %>
+              <div class="post-images-gallery <%= post.mediaUrls.length === 1 ? 'single-image' : '' %> 
+                                               <%= post.mediaUrls.length === 3 ? 'three-images' : '' %> 
+                                               <%= post.mediaUrls.length === 4 ? 'four-images' : '' %>">
+                <% post.mediaUrls.forEach(url => { %>
+                  <div class="post-image-item">
+                    <img src="<%= url %>" alt="Post image" loading="lazy" onerror="this.parentNode.style.display='none'">
+                  </div>
+                <% }); %>
+              </div>
+            <% } else if (post.imageUrl) { %>
+              <!-- Legacy support for old posts with single imageUrl -->
+              <div class="post-image">
+                <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
+              </div>
+            <% } %>
+          <% } else if (post.postType === 'nowListening') { %>
+            <!-- Now Listening post -->
+            <% if (post.content) { %>
+              <div class="post-caption mb-3">
+                <%= post.content.replace(/\n/g, '<br>') %>
+              </div>
+            <% } %>
+            
+            <div class="music-card">
+              <div class="album-cover">
+                <% if (post.albumCoverUrl) { %>
+                  <img src="<%= post.albumCoverUrl %>" alt="Album cover" onerror="this.parentNode.innerHTML = '<div class=\'album-cover-placeholder\'><i class=\'ph-vinyl-record-duotone\'></i></div>'">
+                <% } else { %>
+                  <div class="album-cover-placeholder">
+                    <i class="ph-vinyl-record-duotone"></i>
+                  </div>
+                <% } %>
+              </div>
+              <div class="music-info">
+                <div class="music-title"><%= post.songTitle %></div>
+                <div class="music-artist"><%= post.artistName %></div>
+                <% if (post.albumName) { %>
+                  <div class="music-album"><%= post.albumName %></div>
+                <% } %>
+              </div>
             </div>
           <% } %>
         </div>
@@ -621,4 +738,177 @@
       });
     }
   });
+
+  document.addEventListener('DOMContentLoaded', function() {
+  // Post type tabs functionality
+  const typeTabs = document.querySelectorAll('.post-type-tab');
+  const typeContents = document.querySelectorAll('.post-type-content');
+  const postTypeInput = document.getElementById('post-type');
+  
+  typeTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      const type = this.getAttribute('data-type');
+      
+      // Update active tab
+      typeTabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Show corresponding content
+      typeContents.forEach(content => {
+        content.style.display = 'none';
+      });
+      document.getElementById(`${type}-post-content`).style.display = 'block';
+      
+      // Update hidden input
+      postTypeInput.value = type;
+      
+      // Update form validation based on type
+      updateFormValidation(type);
+    });
+  });
+  
+  function updateFormValidation(type) {
+    const contentTextarea = document.getElementById('post-content');
+    const mediaUrlInputs = document.querySelectorAll('.media-url');
+    const songTitleInput = document.getElementById('song-title');
+    const artistNameInput = document.getElementById('artist-name');
+    
+    // Reset all required attributes
+    contentTextarea.required = false;
+    mediaUrlInputs.forEach(input => input.required = false);
+    songTitleInput.required = false;
+    artistNameInput.required = false;
+    
+    // Set required based on post type
+    if (type === 'text') {
+      contentTextarea.required = true;
+    } else if (type === 'image') {
+      // At least one image is required
+      if (mediaUrlInputs.length > 0) {
+        mediaUrlInputs[0].required = true;
+      }
+    } else if (type === 'nowListening') {
+      songTitleInput.required = true;
+      artistNameInput.required = true;
+    }
+  }
+  
+  // Add image button functionality
+  const addImageBtn = document.getElementById('add-image-btn');
+  const imageInputsContainer = document.querySelector('.image-inputs');
+  
+  if (addImageBtn && imageInputsContainer) {
+    addImageBtn.addEventListener('click', function() {
+      const inputGroups = imageInputsContainer.querySelectorAll('.image-input-group');
+      
+      // Limit to 4 images
+      if (inputGroups.length >= 4) {
+        alert('Maximum 4 images allowed.');
+        return;
+      }
+      
+      // Clone the first input group
+      const newInputGroup = inputGroups[0].cloneNode(true);
+      
+      // Clear values
+      newInputGroup.querySelector('input').value = '';
+      newInputGroup.querySelector('.image-preview').style.display = 'none';
+      newInputGroup.querySelector('.clear-image-btn').style.display = 'none';
+      
+      // Add before the add button
+      imageInputsContainer.insertBefore(newInputGroup, addImageBtn);
+      
+      // Add event listeners to new elements
+      setupImageInputEventListeners(newInputGroup);
+      
+      // Show/hide add button based on count
+      if (imageInputsContainer.querySelectorAll('.image-input-group').length >= 4) {
+        addImageBtn.style.display = 'none';
+      }
+    });
+    
+    // Setup event listeners for image inputs
+    function setupImageInputEventListeners(container) {
+      const input = container.querySelector('input');
+      const preview = container.querySelector('.image-preview');
+      const previewImg = container.querySelector('.preview-image');
+      const clearBtn = container.querySelector('.clear-image-btn');
+      
+      input.addEventListener('input', function() {
+        const imageUrl = this.value.trim();
+        
+        if (imageUrl) {
+          previewImg.src = imageUrl;
+          preview.style.display = 'block';
+          clearBtn.style.display = 'block';
+          
+          // Handle image load errors
+          previewImg.onerror = function() {
+            preview.style.display = 'none';
+            input.classList.add('is-invalid');
+          };
+          
+          previewImg.onload = function() {
+            input.classList.remove('is-invalid');
+          };
+        } else {
+          preview.style.display = 'none';
+          clearBtn.style.display = 'none';
+          input.classList.remove('is-invalid');
+        }
+      });
+      
+      clearBtn.addEventListener('click', function() {
+        input.value = '';
+        preview.style.display = 'none';
+        clearBtn.style.display = 'none';
+        input.classList.remove('is-invalid');
+      });
+    }
+    
+    // Setup initial image inputs
+    document.querySelectorAll('.image-input-group').forEach(group => {
+      setupImageInputEventListeners(group);
+    });
+  }
+  
+  // Album cover preview functionality
+  const albumCoverInput = document.getElementById('album-cover');
+  const albumCoverPreview = document.getElementById('album-cover-preview');
+  const previewAlbumCover = document.getElementById('preview-album-cover');
+  const clearAlbumCoverBtn = document.getElementById('clear-album-cover-btn');
+  
+  if (albumCoverInput && albumCoverPreview && previewAlbumCover && clearAlbumCoverBtn) {
+    albumCoverInput.addEventListener('input', function() {
+      const imageUrl = this.value.trim();
+      
+      if (imageUrl) {
+        previewAlbumCover.src = imageUrl;
+        albumCoverPreview.style.display = 'block';
+        clearAlbumCoverBtn.style.display = 'block';
+        
+        // Handle image load errors
+        previewAlbumCover.onerror = function() {
+          albumCoverPreview.style.display = 'none';
+          albumCoverInput.classList.add('is-invalid');
+        };
+        
+        previewAlbumCover.onload = function() {
+          albumCoverInput.classList.remove('is-invalid');
+        };
+      } else {
+        albumCoverPreview.style.display = 'none';
+        clearAlbumCoverBtn.style.display = 'none';
+        albumCoverInput.classList.remove('is-invalid');
+      }
+    });
+    
+    clearAlbumCoverBtn.addEventListener('click', function() {
+      albumCoverInput.value = '';
+      albumCoverPreview.style.display = 'none';
+      clearAlbumCoverBtn.style.display = 'none';
+      albumCoverInput.classList.remove('is-invalid');
+    });
+  }
+});
 </script>

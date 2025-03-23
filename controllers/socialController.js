@@ -322,6 +322,8 @@ exports.loadMore = async (req, res) => {
 };
 
 // Create post
+// controllers/socialController.js - Update the createPost method
+
 exports.createPost = async (req, res) => {
   const errors = validationResult(req);
   
@@ -331,7 +333,11 @@ exports.createPost = async (req, res) => {
   }
   
   try {
-    const { content, characterId, imageUrl, privacy } = req.body;
+    const { 
+      content, characterId, privacy, postType, 
+      imageCaption, mediaUrls, 
+      songTitle, artistName, albumName, albumCoverUrl, musicThoughts 
+    } = req.body;
     
     // Verify character belongs to user if provided
     if (characterId) {
@@ -348,16 +354,63 @@ exports.createPost = async (req, res) => {
       }
     }
     
-    // Create post - imageUrl is now optional
-    await SocialPost.create({
+    // Prepare post data based on type
+    let postData = {
       userId: req.user.id,
       characterId: characterId || null,
-      content,
-      imageUrl: imageUrl && imageUrl.trim() !== '' ? imageUrl : null,
       privacy: privacy || 'public',
+      postType: postType || 'text',
       likeCount: 0,
       commentCount: 0
-    });
+    };
+    
+    // Add content based on post type
+    switch (postType) {
+      case 'text':
+        postData.content = content;
+        break;
+        
+      case 'image':
+        postData.content = imageCaption || null;
+        
+        // Handle multiple images
+        if (Array.isArray(mediaUrls)) {
+          // Filter out empty URLs
+          const filteredUrls = mediaUrls.filter(url => url && url.trim() !== '');
+          
+          if (filteredUrls.length === 0) {
+            req.flash('error_msg', 'At least one image URL is required for image posts');
+            return res.redirect('/social/feed');
+          }
+          
+          postData.mediaUrls = filteredUrls;
+        } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
+          postData.mediaUrls = [mediaUrls.trim()];
+        } else {
+          req.flash('error_msg', 'At least one image URL is required for image posts');
+          return res.redirect('/social/feed');
+        }
+        break;
+        
+      case 'nowListening':
+        postData.content = musicThoughts || null;
+        postData.songTitle = songTitle;
+        postData.artistName = artistName;
+        postData.albumName = albumName || null;
+        postData.albumCoverUrl = albumCoverUrl || null;
+        
+        if (!songTitle || !artistName) {
+          req.flash('error_msg', 'Song title and artist name are required for music posts');
+          return res.redirect('/social/feed');
+        }
+        break;
+        
+      default:
+        postData.content = content;
+    }
+    
+    // Create post
+    await SocialPost.create(postData);
     
     req.flash('success_msg', 'Post created successfully');
     res.redirect('/social/feed');
