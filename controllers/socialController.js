@@ -405,7 +405,7 @@ exports.createPost = async (req, res) => {
         
       case 'nowListening':
         // For music posts, song title and artist are required
-        postData.content = musicThoughts || null;
+        postData.content = musicThoughts && musicThoughts.trim() !== '' ? musicThoughts.trim() : '';
         
         if (!songTitle || songTitle.trim() === '') {
           req.flash('error_msg', 'Song title is required for music posts');

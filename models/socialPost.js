@@ -28,7 +28,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     content: {
       type: DataTypes.TEXT,
-      allowNull: true, // Can be null for some post types
+      allowNull: false,
+      defaultValue: ''
     },
     mediaUrls: {
       type: DataTypes.TEXT,
