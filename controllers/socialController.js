@@ -367,27 +367,36 @@ exports.createPost = async (req, res) => {
         postData.content = content;
         break;
         
-      case 'image':
-        // For image posts, at least one valid image URL is required
-        postData.content = imageCaption || null;
-        
-        // Handle multiple images
-        let imageUrls = [];
-        
-        if (Array.isArray(mediaUrls)) {
-          // Filter out empty URLs
-          imageUrls = mediaUrls.filter(url => url && url.trim() !== '');
-        } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
-          imageUrls = [mediaUrls.trim()];
-        }
-        
-        if (imageUrls.length === 0) {
-          req.flash('error_msg', 'At least one image URL is required for image posts');
-          return res.redirect('/social/feed');
-        }
-        
-        // Don't do any URL validation here - the browser will handle basic validation
-        // and we don't want to block posts with unusual but valid URLs
+        case 'image':
+          // For image posts, at least one valid image URL is required
+          postData.content = imageCaption || null;
+          
+          // Handle multiple images
+          let imageUrls = [];
+          
+          if (Array.isArray(mediaUrls)) {
+            // Filter out empty URLs
+            imageUrls = mediaUrls.filter(url => url && url.trim() !== '');
+          } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
+            imageUrls = [mediaUrls.trim()];
+          }
+          
+          // Log to help debug the issue
+          console.log('Processing image URLs:', {
+            rawMediaUrls: mediaUrls,
+            processedImageUrls: imageUrls,
+            isEmpty: imageUrls.length === 0
+          });
+          
+          if (imageUrls.length === 0) {
+            // Check if we received a single imageUrl from the old format
+            if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
+              imageUrls = [req.body.imageUrl.trim()];
+            } else {
+              req.flash('error_msg', 'At least one image URL is required for image posts');
+              return res.redirect('/social/feed');
+            }
+          }
         postData.mediaUrls = imageUrls;
         break;
         

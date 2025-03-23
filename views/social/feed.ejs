@@ -74,7 +74,7 @@
             <div class="image-inputs">
               <div class="image-input-group">
                 <div class="input-group">
-                  <input type="url" class="form-control media-url" name="mediaUrls[]" placeholder="https://example.com/image1.jpg">
+                  <input type="url" class="form-control media-url" name="mediaUrls[]" placeholder="https://example.com/image1.jpg" required>
                   <div class="input-group-append">
                     <button type="button" class="btn btn-outline clear-image-btn" style="display: none;">
                       <i class="ph-x-duotone"></i>
@@ -797,6 +797,19 @@
     if (songTitleInput) songTitleInput.required = true;
     if (artistNameInput) artistNameInput.required = true;
   }
+
+  if (type === 'image') {
+      // Make sure at least one image input is required
+      const mediaUrlInputs = document.querySelectorAll('.media-url');
+      if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+        // Only require the first input if it's visible
+        mediaUrlInputs[0].required = true;
+        
+        // Also log to console for debugging
+        console.log('Image input required state set:', mediaUrlInputs[0].required);
+        console.log('Image input value:', mediaUrlInputs[0].value);
+      }
+    }
 }
   
   // Add image button functionality
