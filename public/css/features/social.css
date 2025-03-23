@@ -198,6 +198,7 @@
   max-height: 500px;
   background-color: rgba(0, 0, 0, 0.1);
   position: relative;
+  transition: opacity 0.3s ease;
 }
 
 .post-image img {
@@ -559,4 +560,53 @@
 .empty-characters-notice p {
   margin-bottom: 5px;
   color: var(--warning);
+}
+
+/* Image preview styling */
+#image-preview {
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+#clear-image-btn {
+  background: none;
+  border: none;
+  color: var(--lighttext);
+  transition: color 0.3s ease;
+}
+
+#clear-image-btn:hover {
+  color: var(--danger);
+}
+
+/* Add loading indicator for images */
+.post-image.loading {
+  position: relative;
+}
+
+.post-image.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--header);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Text-only post styling - add some visual distinction for posts without images */
+.social-post-content:not(:has(.post-image)) {
+  font-size: calc(var(--text-base) * 1.05);
+  line-height: 1.7;
 }

@@ -23,8 +23,19 @@ router.post('/post', isAuthenticated, [
     .withMessage('Invalid character'),
   body('imageUrl')
     .optional({ nullable: true })
-    .isURL()
-    .withMessage('Invalid image URL'),
+    .custom((value) => {
+      // If value is empty or null, it's valid
+      if (!value || value.trim() === '') {
+        return true;
+      }
+      // Otherwise check if it's a URL
+      const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+      if (urlPattern.test(value)) {
+        return true;
+      }
+      throw new Error('Invalid image URL format');
+    })
+    .withMessage('Invalid image URL format'),
   body('privacy')
     .isIn(['public', 'private'])
     .withMessage('Invalid privacy setting')
@@ -48,8 +59,19 @@ router.put('/post/:id', isAuthenticated, [
     .withMessage('Invalid character'),
   body('imageUrl')
     .optional({ nullable: true })
-    .isURL()
-    .withMessage('Invalid image URL'),
+    .custom((value) => {
+      // If value is empty or null, it's valid
+      if (!value || value.trim() === '') {
+        return true;
+      }
+      // Otherwise check if it's a URL
+      const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+      if (urlPattern.test(value)) {
+        return true;
+      }
+      throw new Error('Invalid image URL format');
+    })
+    .withMessage('Invalid image URL format'),
   body('privacy')
     .isIn(['public', 'private'])
     .withMessage('Invalid privacy setting')

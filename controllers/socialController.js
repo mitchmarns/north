@@ -287,12 +287,12 @@ exports.createPost = async (req, res) => {
       }
     }
     
-    // Create post
+    // Create post - imageUrl is now optional
     await SocialPost.create({
       userId: req.user.id,
       characterId: characterId || null,
       content,
-      imageUrl: imageUrl || null,
+      imageUrl: imageUrl && imageUrl.trim() !== '' ? imageUrl : null,
       privacy: privacy || 'public',
       likeCount: 0,
       commentCount: 0
@@ -474,11 +474,11 @@ exports.updatePost = async (req, res) => {
       }
     }
     
-    // Update post
+    // Update post - imageUrl is now optional
     await post.update({
       characterId: characterId || null,
       content,
-      imageUrl: imageUrl || post.imageUrl,
+      imageUrl: imageUrl && imageUrl.trim() !== '' ? imageUrl : null,
       privacy: privacy || 'public',
       isEdited: true
     });

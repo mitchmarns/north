@@ -31,7 +31,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     imageUrl: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: true,
+      defaultValue: null
     },
     privacy: {
       type: DataTypes.ENUM('public', 'private'),

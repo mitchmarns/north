@@ -44,9 +44,20 @@
         
         <div class="form-group">
           <label for="post-image">Image URL (optional)</label>
-          <input type="url" id="post-image" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+          <div class="input-group">
+            <input type="url" id="post-image" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
+            <div class="input-group-append">
+              <button type="button" id="clear-image-btn" class="btn btn-outline" style="display: none;">
+                <i class="ph-x-duotone"></i>
+              </button>
+            </div>
+          </div>
+          <small class="text-muted">Leave blank if you don't want to include an image</small>
           <div id="image-preview" class="mt-2" style="display: none;">
             <img id="preview-image" src="" alt="Preview" style="max-width: 100%; max-height: 200px; object-fit: contain;">
+          </div>
+          <div class="invalid-feedback" id="image-error">
+            Please enter a valid image URL or leave the field empty
           </div>
         </div>
         
@@ -165,9 +176,9 @@
         <div class="social-post-content">
           <%= post.content.replace(/\n/g, '<br>') %>
           
-          <% if (post.imageUrl) { %>
+          <% if (post.imageUrl && post.imageUrl.trim() !== '') { %>
             <div class="post-image">
-              <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.style.display='none'">
+              <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
             </div>
           <% } %>
         </div>
@@ -329,27 +340,73 @@
     
     // Image preview functionality
     const imageUrlInput = document.getElementById('post-image');
-    const imagePreview = document.getElementById('image-preview');
-    const previewImage = document.getElementById('preview-image');
+const imagePreview = document.getElementById('image-preview');
+const previewImage = document.getElementById('preview-image');
+const clearImageBtn = document.getElementById('clear-image-btn');
+
+if (imageUrlInput) {
+  imageUrlInput.addEventListener('input', function() {
+    const imageUrl = this.value.trim();
+    
+    if (imageUrl) {
+      previewImage.src = imageUrl;
+      imagePreview.style.display = 'block';
+      
+      // Handle image load errors
+      previewImage.onerror = function() {
+        imagePreview.style.display = 'none';
+        // Add a visual indicator that the URL is invalid
+        imageUrlInput.classList.add('is-invalid');
+      };
+      
+      previewImage.onload = function() {
+        // Clear any error indicators if the image loads successfully
+        imageUrlInput.classList.remove('is-invalid');
+      };
+      
+      // Show clear button if available
+      if (clearImageBtn) {
+        clearImageBtn.style.display = 'block';
+      }
+    } else {
+      imagePreview.style.display = 'none';
+      imageUrlInput.classList.remove('is-invalid');
+      
+      // Hide clear button if available
+      if (clearImageBtn) {
+        clearImageBtn.style.display = 'none';
+      }
+    }
+  });
+}
+
+// Add clear button functionality if it exists
+if (clearImageBtn) {
+  clearImageBtn.addEventListener('click', function(e) {
+    e.preventDefault();
     
     if (imageUrlInput) {
-      imageUrlInput.addEventListener('input', function() {
-        const imageUrl = this.value.trim();
-        
-        if (imageUrl) {
-          previewImage.src = imageUrl;
-          imagePreview.style.display = 'block';
-          
-          // Handle image load errors
-          previewImage.onerror = function() {
-            imagePreview.style.display = 'none';
-          };
-        } else {
-          imagePreview.style.display = 'none';
-        }
-      });
+      imageUrlInput.value = '';
+      imagePreview.style.display = 'none';
+      clearImageBtn.style.display = 'none';
+      imageUrlInput.classList.remove('is-invalid');
     }
+  });
+}
+
+// Validate image URL before form submission
+const postForm = document.getElementById('post-form');
+if (postForm) {
+  postForm.addEventListener('submit', function(e) {
+    const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
     
+    // If there's an image URL but it's invalid, prevent form submission
+    if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
+      e.preventDefault();
+      alert('Please enter a valid image URL or leave the field empty');
+    }
+  });
+}
     // Toggle comment sections
     const commentButtons = document.querySelectorAll('.reaction-btn[data-reaction="comment"]');
     
