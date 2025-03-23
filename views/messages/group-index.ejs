@@ -119,10 +119,11 @@
           
           <div class="form-group">
             <label>Invite Characters</label>
-            <div class="character-select-container">
-              <% if (character.User && character.User.characters && character.User.characters.length > 1) { %>
-                <% character.User.characters.forEach(char => { %>
-                  <% if (char.id !== character.id) { %>
+            <!-- Your own characters -->
+              <% if (typeof otherCharacters !== 'undefined' && otherCharacters.length > 0) { %>
+                <h4 class="mb-2">Your Other Characters</h4>
+                <div class="character-select-container">
+                  <% otherCharacters.forEach(char => { %>
                     <div class="character-select-item">
                       <input type="checkbox" id="char<%= char.id %>" name="invitedCharacterIds" value="<%= char.id %>">
                       <label for="char<%= char.id %>">
@@ -134,10 +135,34 @@
                         <span><%= char.name %></span>
                       </label>
                     </div>
-                  <% } %>
-                <% }); %>
-              <% } else { %>
-                <p>You don't have any other characters to invite.</p>
+                  <% }); %>
+                </div>
+              <% } %>
+              
+              <!-- Other users' characters -->
+              <% if (typeof otherUsersCharacters !== 'undefined' && otherUsersCharacters.length > 0) { %>
+                <h4 class="mt-4 mb-2">Characters from Other Users</h4>
+                <div class="character-select-container">
+                  <% otherUsersCharacters.forEach(char => { %>
+                    <div class="character-select-item">
+                      <input type="checkbox" id="char<%= char.id %>" name="invitedCharacterIds" value="<%= char.id %>">
+                      <label for="char<%= char.id %>">
+                        <% if (char.avatarUrl) { %>
+                          <img src="<%= char.avatarUrl %>" alt="<%= char.name %>" class="character-select-avatar">
+                        <% } else { %>
+                          <div class="character-select-avatar-placeholder"><%= char.name.charAt(0).toUpperCase() %></div>
+                        <% } %>
+                        <span><%= char.name %> <small>(by <%= char.username %>)</small></span>
+                      </label>
+                    </div>
+                  <% }); %>
+                </div>
+              <% } %>
+              
+              <% if ((typeof otherCharacters === 'undefined' || otherCharacters.length === 0) && 
+                    (typeof otherUsersCharacters === 'undefined' || otherUsersCharacters.length === 0)) { %>
+                <p>You don't have any other characters to invite, and no connected characters from other users.</p>
+                <p>Create more characters or establish relationships to invite others to this group.</p>
               <% } %>
             </div>
           </div>

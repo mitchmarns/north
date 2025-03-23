@@ -26,7 +26,8 @@ exports.getGroupConversations = async (req, res) => {
         characters: [],
         character: null,
         conversations: [],
-        totalUnread: 0
+        totalUnread: 0,
+        otherCharacters: []
       });
     }
 
@@ -73,12 +74,63 @@ exports.getGroupConversations = async (req, res) => {
       return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
     });
 
-    // Render the view
+    // Get other characters owned by the same user (for inviting to groups)
+    const otherCharacters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        id: { [Op.ne]: character.id }, // Not equal to current character
+        isArchived: false
+      }
+    });
+
+    // Get other users' characters that have relationships with this character
+    let otherUsersCharacters = [];
+    
+    // Find approved relationships with this character
+    const relationships = await Relationship.findAll({
+      where: {
+        [Op.or]: [
+          { character1Id: character.id },
+          { character2Id: character.id }
+        ],
+        isApproved: true // Only include approved relationships
+      },
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username'] }]
+        }
+      ]
+    });
+    
+    // Extract the related characters from other users
+    relationships.forEach(rel => {
+      const relatedChar = rel.character1Id === character.id ? rel.character2 : rel.character1;
+      // Only add if not owned by the same user
+      if (relatedChar.userId !== req.user.id) {
+        otherUsersCharacters.push({
+          id: relatedChar.id,
+          name: relatedChar.name,
+          avatarUrl: relatedChar.avatarUrl,
+          username: relatedChar.User ? relatedChar.User.username : 'Unknown'
+        });
+      }
+    });
+
+    // Render the view with all needed data
     res.render('messages/group-index', {
       title: 'Group Chats',
       characters,
       character,
       conversations,
+      otherCharacters,
+      otherUsersCharacters,
       totalUnread: 0 // You can calculate this properly later
     });
 
