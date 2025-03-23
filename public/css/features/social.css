@@ -17,6 +17,12 @@
   position: relative;
 }
 
+.post-caption {
+  margin-bottom: 10px !important; 
+  line-height: 1.4;
+  font-size: var(--text-base);
+}
+
 .social-post:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
