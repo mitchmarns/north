@@ -12,12 +12,34 @@ exports.getGroupConversations = async (req, res) => {
     const characterId = req.params.characterId;
     
     // Verify character exists and belongs to the user
+    const characters = await Character.findAll({
+      where: {
+        userId: req.user.id
+      },
+      order: [['createdAt', 'ASC']]
+    });
+
+    // If no characters, render with empty data
+    if (characters.length === 0) {
+      return res.render('messages/group-index', {
+        title: 'Group Chats',
+        characters: [],
+        character: null,
+        conversations: [],
+        totalUnread: 0
+      });
+    }
+
+    // Verify character exists and belongs to the user
     const character = await Character.findOne({
       where: {
         id: characterId,
         userId: req.user.id
       }
     });
+
+    // If specific character not found, use first character
+    const safeCharacter = character || characters[0];
     
     if (!character) {
       // If the specific character isn't found, try to get the user's first character
@@ -204,15 +226,16 @@ exports.getGroupConversations = async (req, res) => {
     const totalUnread = conversations.reduce((sum, convo) => sum + convo.unreadCount, 0);
     
     res.render('messages/group-index', {
-      title: `${character.name}'s Group Chats`,
-      character,
-      conversations,
-      totalUnread
+      title: 'Group Chats',
+      characters,
+      character: safeCharacter,
+      conversations: [], // Your existing conversations logic
+      totalUnread: 0 // Your existing unread count logic
     });
   } catch (error) {
     console.error('Error fetching group conversations:', error);
     req.flash('error_msg', 'An error occurred while fetching group conversations');
-    res.redirect('/characters/my-characters');
+    res.redirect('/dashboard');
   }
 };
 

@@ -225,7 +225,7 @@ router.delete('/:characterId/:messageId', isAuthenticated, messageController.del
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
   try {
-    // Get all of user's characters, including archived
+    // Get all of user's characters
     const characters = await Character.findAll({
       where: {
         userId: req.user.id
@@ -233,20 +233,27 @@ router.get('/groups', isAuthenticated, async (req, res) => {
       order: [['createdAt', 'ASC']]
     });
     
+    // Always render the group messages view
+    // If no characters, pass an empty array and null for active character
     if (characters.length === 0) {
-      // No characters exist
-      req.flash('error_msg', 'You need to create a character first');
-      return res.redirect('/characters/create');
+      return res.render('messages/group-index', {
+        title: 'Group Chats',
+        characters: [],
+        activeCharacter: null,
+        conversations: [],
+        totalUnread: 0
+      });
     }
     
-    // Find the first non-archived character, or fall back to the first character
-    const activeCharacter = characters.find(char => !char.isArchived) || characters[0];
+    // If characters exist, use the first character
+    const activeCharacter = characters[0];
     
-    // Redirect to the first character's group page
-    res.redirect(`/messages/groups/${activeCharacter.id}`);
+    // Delegate to group message controller to handle the rest
+    req.params.characterId = activeCharacter.id;
+    return groupMessageController.getGroupConversations(req, res);
   } catch (error) {
-    console.error('Error finding character for group redirect:', error);
-    req.flash('error_msg', 'An unexpected error occurred');
+    console.error('Error accessing group messages:', error);
+    req.flash('error_msg', 'An error occurred while accessing group messages');
     res.redirect('/dashboard');
   }
 });
