@@ -46,12 +46,22 @@ exports.getGroupConversations = async (req, res) => {
     // Extract just the groups
     const conversations = memberships.map(m => m.group);
 
-    // Render a very simple template
+    // Get other user's characters for creating groups
+    const otherCharacters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        id: { [Sequelize.Op.ne]: activeCharacter.id },
+        isArchived: false
+      }
+    });
+
+    // Render the template
     return res.render('messages/group-index', {
       title: `${activeCharacter.name}'s Group Chats`,
       characters,
       character: activeCharacter,
-      conversations,
+      conversations: conversations || [],
+      otherCharacters: otherCharacters || [],
       totalUnread: 0
     });
   } catch (error) {
