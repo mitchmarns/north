@@ -1,6 +1,6 @@
 // controllers/groupMessageController.js
 const { 
-  GroupConversation, GroupMember, Character, Message, User, Team, sequelize, Sequelize 
+  GroupConversation, GroupMember, Character, Message, User, Team, Relationship, sequelize, Sequelize 
 } = require('../models');
 const { validationResult } = require('express-validator');
 const discordNotifier = require('../utils/discordNotifier');
