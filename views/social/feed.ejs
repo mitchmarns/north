@@ -22,7 +22,7 @@
         <div class="form-group">
           <label for="post-as">Post as:</label>
           <select id="post-as" name="characterId" class="form-control" required>
-            <option value="" disabled selected>Select a character</option>
+            <option value="">Select a character</option>
             <% if (typeof characters !== 'undefined' && characters && characters.length > 0) { %>
               <% characters.forEach(char => { %>
                 <option value="<%= char.id %>"><%= char.name %></option>
@@ -58,7 +58,10 @@
         <div class="post-type-content" id="text-post-content">
           <div class="form-group">
             <label for="post-content">What's on your mind?</label>
-            <textarea id="post-content" name="content" class="form-control" rows="4" required></textarea>
+            <textarea id="post-content" name="content" class="form-control" rows="4"></textarea>
+            <div class="invalid-feedback">
+              Please enter some content for your post.
+            </div>
           </div>
         </div>
         
