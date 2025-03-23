@@ -321,107 +321,111 @@
         </div>
 
         <!-- Stats Tab -->
-    <div id="tab-stats" class="character-tab-content active">
-      <div class="row mb-4">
-        <div class="col" style="flex: 0 0 100%;">
-          <h3 class="mb-3">Character Stats</h3>
-          
-          <% if (isOwner && (!character.strength && !character.dexterity && !character.constitution && 
-                    !character.intelligence && !character.wisdom && !character.charisma)) { %>
-            <div class="text-center p-4">
-              <p class="mb-3">No stats have been added yet.</p>
-              <a href="/characters/<%= character.id %>/stats/edit" class="btn">
-                <i class="ph-plus-circle-duotone"></i> Add Character Stats
-              </a>
-            </div>
-          <% } else if (!character.strength && !character.dexterity && !character.constitution && 
-                    !character.intelligence && !character.wisdom && !character.charisma) { %>
-            <div class="text-center p-4">
-              <p>No stats have been added yet.</p>
-            </div>
-          <% } else { %>
-            <div class="stats-container">
-              <div class="stats-grid">
-                <!-- Strength -->
-                <div class="stat-item">
-                  <div class="stat-label">Strength</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.strength || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.strength || 0 %>/100</div>
-                </div>
-                
-                <!-- Dexterity -->
-                <div class="stat-item">
-                  <div class="stat-label">Dexterity</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.dexterity || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.dexterity || 0 %>/100</div>
-                </div>
-                
-                <!-- Constitution -->
-                <div class="stat-item">
-                  <div class="stat-label">Constitution</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.constitution || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.constitution || 0 %>/100</div>
-                </div>
-                
-                <!-- Intelligence -->
-                <div class="stat-item">
-                  <div class="stat-label">Intelligence</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.intelligence || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.intelligence || 0 %>/100</div>
-                </div>
-                
-                <!-- Wisdom -->
-                <div class="stat-item">
-                  <div class="stat-label">Wisdom</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.wisdom || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.wisdom || 0 %>/100</div>
-                </div>
-                
-                <!-- Charisma -->
-                <div class="stat-item">
-                  <div class="stat-label">Charisma</div>
-                  <div class="stat-bar-container">
-                    <div class="stat-bar" style="width: <%= character.charisma || 0 %>%"></div>
-                  </div>
-                  <div class="stat-value"><%= character.charisma || 0 %>/100</div>
-                </div>
-              </div>
+        <div id="tab-stats" class="character-tab-content">
+          <div class="row mb-4">
+            <div class="col" style="flex: 0 0 100%;">
+              <h3 class="mb-3">Character Stats</h3>
               
-              <div class="character-extra-info mt-4">
-                <% if (character.personalityType) { %>
-                  <div class="extra-info-item">
-                    <span class="extra-info-label">Personality Type:</span>
-                    <span class="extra-info-value"><%= character.personalityType %></span>
-                  </div>
-                <% } %>
-                
-                <% if (character.occupation) { %>
-                  <div class="extra-info-item">
-                    <span class="extra-info-label">Occupation:</span>
-                    <span class="extra-info-value"><%= character.occupation %></span>
-                  </div>
-                <% } %>
-              </div>
-              
-              <% if (isOwner) { %>
-                <div class="text-center mt-4">
-                  <a href="/characters/<%= character.id %>/stats/edit" class="btn btn-sm">
-                    <i class="ph-pencil-simple-duotone"></i> Edit Stats
+              <% if (isOwner && (!character.strength && !character.dexterity && !character.constitution && 
+                        !character.intelligence && !character.wisdom && !character.charisma)) { %>
+                <div class="text-center p-4">
+                  <p class="mb-3">No stats have been added yet.</p>
+                  <a href="/characters/<%= character.id %>/stats/edit" class="btn">
+                    <i class="ph-plus-circle-duotone"></i> Add Character Stats
                   </a>
+                </div>
+              <% } else if (!character.strength && !character.dexterity && !character.constitution && 
+                        !character.intelligence && !character.wisdom && !character.charisma) { %>
+                <div class="text-center p-4">
+                  <p>No stats have been added yet.</p>
+                </div>
+              <% } else { %>
+                <div class="stats-container">
+                  <div class="stats-grid">
+                    <!-- Strength -->
+                    <div class="stat-item">
+                      <div class="stat-label">Strength</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.strength || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.strength || 0 %>/100</div>
+                    </div>
+                    
+                    <!-- Dexterity -->
+                    <div class="stat-item">
+                      <div class="stat-label">Dexterity</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.dexterity || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.dexterity || 0 %>/100</div>
+                    </div>
+                    
+                    <!-- Constitution -->
+                    <div class="stat-item">
+                      <div class="stat-label">Constitution</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.constitution || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.constitution || 0 %>/100</div>
+                    </div>
+                    
+                    <!-- Intelligence -->
+                    <div class="stat-item">
+                      <div class="stat-label">Intelligence</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.intelligence || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.intelligence || 0 %>/100</div>
+                    </div>
+                    
+                    <!-- Wisdom -->
+                    <div class="stat-item">
+                      <div class="stat-label">Wisdom</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.wisdom || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.wisdom || 0 %>/100</div>
+                    </div>
+                    
+                    <!-- Charisma -->
+                    <div class="stat-item">
+                      <div class="stat-label">Charisma</div>
+                      <div class="stat-bar-container">
+                        <div class="stat-bar" style="width: <%= character.charisma || 0 %>%"></div>
+                      </div>
+                      <div class="stat-value"><%= character.charisma || 0 %>/100</div>
+                    </div>
+                  </div>
+                  
+                  <div class="character-extra-info mt-4">
+                    <% if (character.personalityType) { %>
+                      <div class="extra-info-item">
+                        <span class="extra-info-label">Personality Type:</span>
+                        <span class="extra-info-value"><%= character.personalityType %></span>
+                      </div>
+                    <% } %>
+                    
+                    <% if (character.occupation) { %>
+                      <div class="extra-info-item">
+                        <span class="extra-info-label">Occupation:</span>
+                        <span class="extra-info-value"><%= character.occupation %></span>
+                      </div>
+                    <% } %>
+                  </div>
+                  
+                  <% if (isOwner) { %>
+                    <div class="text-center mt-4">
+                      <a href="/characters/<%= character.id %>/stats/edit" class="btn btn-sm">
+                        <i class="ph-pencil-simple-duotone"></i> Edit Stats
+                      </a>
+                    </div>
+                  <% } %>
                 </div>
               <% } %>
             </div>
-        
+          </div>
+        </div>
+                
         <!-- Background Tab -->
         <div id="tab-background" class="character-tab-content">
           <% if (character.background) { %>
@@ -432,6 +436,33 @@
           <% } else { %>
             <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 30px;">
               No background information has been added yet.
+            </p>
+          <% } %>
+        </div>
+                
+        <!-- Details Tab -->
+        <div id="tab-details" class="character-tab-content">
+          <% if (character.skills) { %>
+            <div class="mb-4">
+              <h3>Skills & Abilities</h3>
+              <div class="character-text">
+                <%= character.skills.replace(/\n/g, '<br>') %>
+              </div>
+            </div>
+          <% } %>
+          
+          <% if (character.fullBio) { %>
+            <div class="mb-4">
+              <h3>Full Biography</h3>
+              <div class="character-text formatted-text">
+                <%- formatTextContent(character.fullBio) %>
+              </div>
+            </div>
+          <% } %>
+          
+          <% if (!character.skills && !character.fullBio) { %>
+            <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 30px;">
+              No additional details have been added yet.
             </p>
           <% } %>
         </div>
