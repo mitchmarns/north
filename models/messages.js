@@ -1,4 +1,4 @@
-// models/message.js
+// models/message.js (updated version)
 module.exports = (sequelize, DataTypes) => {
   const Message = sequelize.define('Message', {
     id: {
@@ -16,9 +16,17 @@ module.exports = (sequelize, DataTypes) => {
     },
     receiverId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'characters',
+        key: 'id'
+      }
+    },
+    groupId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'group_conversations',
         key: 'id'
       }
     },
@@ -36,6 +44,11 @@ module.exports = (sequelize, DataTypes) => {
     isDeleted: {
       type: DataTypes.BOOLEAN,
       defaultValue: false
+    },
+    // Optional image URL for image messages
+    imageUrl: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     timestamps: true,
@@ -46,8 +59,19 @@ module.exports = (sequelize, DataTypes) => {
       },
       {
         fields: ['receiverId', 'isRead']
+      },
+      {
+        fields: ['groupId']
       }
-    ]
+    ],
+    validate: {
+      eitherReceiverOrGroup() {
+        if ((this.receiverId === null && this.groupId === null) || 
+            (this.receiverId !== null && this.groupId !== null)) {
+          throw new Error('A message must have either a receiver or a group, but not both');
+        }
+      }
+    }
   });
 
   return Message;

@@ -26,16 +26,18 @@ const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
 const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
 const Team = require('./team')(sequelize, Sequelize.DataTypes);
-const Message = require('./messages')(sequelize, Sequelize.DataTypes);
+const Message = require('./message')(sequelize, Sequelize.DataTypes);
 const SocialPost = require('./socialPost')(sequelize, Sequelize.DataTypes);
 const Comment = require('./comment')(sequelize, Sequelize.DataTypes);
 const Like = require('./like')(sequelize, Sequelize.DataTypes);
+const GroupConversation = require('./groupConversation')(sequelize, Sequelize.DataTypes);
+const GroupMember = require('./groupMember')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
 Character.belongsTo(User, { foreignKey: 'userId' });
 
-// New: Character Gallery associations
+// Character Gallery associations
 Character.hasMany(CharacterGallery, { foreignKey: 'characterId', as: 'galleryImages' });
 CharacterGallery.belongsTo(Character, { foreignKey: 'characterId' });
 
@@ -65,11 +67,30 @@ Post.belongsTo(User, { foreignKey: 'userId' });
 Team.hasMany(Character, { foreignKey: 'teamId', as: 'members' });
 Character.belongsTo(Team, { foreignKey: 'teamId' });
 
+// Message associations
 Character.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
 Message.belongsTo(Character, { foreignKey: 'senderId', as: 'sender' });
 
 Character.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(Character, { foreignKey: 'receiverId', as: 'receiver' });
+
+// Group conversation associations
+User.hasMany(GroupConversation, { foreignKey: 'createdById', as: 'createdGroups' });
+GroupConversation.belongsTo(User, { foreignKey: 'createdById', as: 'creator' });
+
+Team.hasMany(GroupConversation, { foreignKey: 'teamId', as: 'teamChats' });
+GroupConversation.belongsTo(Team, { foreignKey: 'teamId' });
+
+// Group members associations
+GroupConversation.hasMany(GroupMember, { foreignKey: 'groupId', as: 'members' });
+GroupMember.belongsTo(GroupConversation, { foreignKey: 'groupId', as: 'group' });
+
+Character.hasMany(GroupMember, { foreignKey: 'characterId', as: 'groupMemberships' });
+GroupMember.belongsTo(Character, { foreignKey: 'characterId', as: 'character' });
+
+// Group messages associations
+GroupConversation.hasMany(Message, { foreignKey: 'groupId', as: 'messages' });
+Message.belongsTo(GroupConversation, { foreignKey: 'groupId', as: 'group' });
 
 User.hasMany(SocialPost, { foreignKey: 'userId' });
 SocialPost.belongsTo(User, { foreignKey: 'userId' });
@@ -92,7 +113,6 @@ Like.belongsTo(User, { foreignKey: 'userId' });
 SocialPost.hasMany(Like, { foreignKey: 'postId' });
 Like.belongsTo(SocialPost, { foreignKey: 'postId' });
 
-
 // Export models and Sequelize instance
 module.exports = {
   sequelize,
@@ -107,5 +127,7 @@ module.exports = {
   Message,
   SocialPost,
   Comment,
-  Like
+  Like,
+  GroupConversation,
+  GroupMember
 };

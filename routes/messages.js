@@ -5,6 +5,7 @@ const { body } = require('express-validator');
 const messageController = require('../controllers/messageController');
 const { Message, Character, User, Sequelize } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
+const groupMessageController = require('../controllers/groupMessageController');
 
 // New route for messages index/hub
 router.get('/', isAuthenticated, async (req, res) => {
@@ -218,5 +219,78 @@ router.post('/send', isAuthenticated, [
 
 // Delete message
 router.delete('/:characterId/:messageId', isAuthenticated, messageController.deleteMessage);
+
+// Add this route to routes/messages.js near the top of the group routes
+
+// Default group chat route - redirects to first character
+router.get('/groups', isAuthenticated, async (req, res) => {
+  try {
+    // Get user's first character
+    const character = await Character.findOne({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      },
+      order: [['createdAt', 'ASC']]
+    });
+    
+    if (!character) {
+      req.flash('error_msg', 'You need to create a character first');
+      return res.redirect('/characters/create');
+    }
+    
+    // Redirect to character's group page
+    res.redirect(`/messages/groups/${character.id}`);
+  } catch (error) {
+    console.error('Error finding character for group redirect:', error);
+    req.flash('error_msg', 'An error occurred');
+    res.redirect('/dashboard');
+  }
+});
+
+// Group conversation routes
+router.get('/groups/:characterId', isAuthenticated, groupMessageController.getGroupConversations);
+router.get('/groups/:characterId/:groupId', isAuthenticated, groupMessageController.getGroupConversation);
+
+// Create new group conversation
+router.post('/groups/:characterId/create', isAuthenticated, [
+  body('name')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Group name is required and cannot exceed 100 characters'),
+  body('description')
+    .optional()
+    .trim(),
+  body('avatarUrl')
+    .optional()
+    .trim()
+    .isURL()
+    .withMessage('Avatar URL must be a valid URL')
+], groupMessageController.createGroupConversation);
+
+// Send message to group
+router.post('/groups/:characterId/:groupId/send', isAuthenticated, [
+  body('content')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Message cannot be empty'),
+  body('imageUrl')
+    .optional()
+    .trim()
+    .isURL()
+    .withMessage('Image URL must be a valid URL')
+], groupMessageController.sendGroupMessage);
+
+// Join group with another character
+router.post('/groups/:characterId/:groupId/join', isAuthenticated, groupMessageController.joinGroup);
+
+// Leave group
+router.post('/groups/:characterId/:groupId/leave', isAuthenticated, groupMessageController.leaveGroup);
+
+// Delete group message
+router.delete('/groups/:characterId/message/:messageId', isAuthenticated, groupMessageController.deleteGroupMessage);
+
+// Invite to group (admin only)
+router.post('/groups/:characterId/:groupId/invite', isAuthenticated, groupMessageController.inviteToGroup);
 
 module.exports = router;

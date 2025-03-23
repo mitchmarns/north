@@ -6,7 +6,7 @@ const flash = require('connect-flash');
 const session = require('express-session');
 const passport = require('passport');
 const methodOverride = require('method-override');
-const { sequelize, Character, Relationship, Message, Sequelize } = require('./models');
+const { sequelize, Character, Relationship, Message, GroupMember, Sequelize } = require('./models');
 const discordNotifier = require('./utils/discordNotifier');
 
 // Initialize Express
@@ -91,6 +91,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// Middleware to count unread direct messages
 app.use(async (req, res, next) => {
   if (req.user) {
     try {
@@ -110,6 +111,7 @@ app.use(async (req, res, next) => {
       const unreadCount = await Message.count({
         where: {
           receiverId: { [Sequelize.Op.in]: characterIds },
+          groupId: null, // Only direct messages, not group messages
           isRead: false,
           isDeleted: false
         }
@@ -124,6 +126,61 @@ app.use(async (req, res, next) => {
     }
   } else {
     res.locals.unreadMessages = 0;
+  }
+  next();
+});
+
+// Middleware to count unread group messages
+app.use(async (req, res, next) => {
+  if (req.user) {
+    try {
+      const { Character, GroupMember, Message, Sequelize } = require('./models');
+      
+      // Get all characters owned by the user
+      const userCharacters = await Character.findAll({
+        where: {
+          userId: req.user.id
+        }
+      });
+      
+      // Get IDs of all user's characters
+      const characterIds = userCharacters.map(char => char.id);
+      
+      // Get all group memberships for these characters
+      const memberships = await GroupMember.findAll({
+        where: {
+          characterId: { [Sequelize.Op.in]: characterIds }
+        }
+      });
+      
+      // Count unread group messages
+      let unreadGroupCount = 0;
+      
+      // For each membership, count messages newer than lastReadAt
+      for (const membership of memberships) {
+        const count = await Message.count({
+          where: {
+            groupId: membership.groupId,
+            senderId: { [Sequelize.Op.ne]: membership.characterId },
+            createdAt: {
+              [Sequelize.Op.gt]: membership.lastReadAt || new Date(0)
+            },
+            isDeleted: false
+          }
+        });
+        
+        unreadGroupCount += count;
+      }
+      
+      // Add unreadGroupMessages count to res.locals
+      res.locals.unreadGroupMessages = unreadGroupCount;
+    } catch (error) {
+      console.error('Error checking for unread group messages:', error.message);
+      console.error(error.stack);
+      res.locals.unreadGroupMessages = 0;
+    }
+  } else {
+    res.locals.unreadGroupMessages = 0;
   }
   next();
 });
@@ -240,6 +297,10 @@ async function startServer() {
     await sequelize.sync({ force: false });
     console.log('Database synced');
     
+    // Initialize global chat
+    const groupMessageController = require('./controllers/groupMessageController');
+    await groupMessageController.initializeGlobalChat(1); // Use a default admin ID (1)
+    
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
@@ -252,4 +313,141 @@ async function startServer() {
   }
 }
 
- startServer();
+async function setupGroupMessaging() {
+  try {
+    console.log('Starting group messaging setup...');
+    
+    // Get the sequelize instance
+    const { sequelize } = require('./models');
+    
+    // Create group_conversations table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`group_conversations\` (
+        \`id\` INTEGER PRIMARY KEY AUTO_INCREMENT,
+        \`name\` VARCHAR(100) NOT NULL,
+        \`description\` TEXT,
+        \`avatarUrl\` VARCHAR(255),
+        \`teamId\` INTEGER,
+        \`isGlobal\` BOOLEAN NOT NULL DEFAULT 0,
+        \`createdById\` INTEGER NOT NULL,
+        \`lastMessageAt\` DATETIME,
+        \`createdAt\` DATETIME NOT NULL,
+        \`updatedAt\` DATETIME NOT NULL,
+        FOREIGN KEY (\`teamId\`) REFERENCES \`teams\` (\`id\`) ON DELETE SET NULL,
+        FOREIGN KEY (\`createdById\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE
+      );
+    `);
+    console.log('Created group_conversations table');
+    
+    // Create group_members table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`group_members\` (
+        \`id\` INTEGER PRIMARY KEY AUTO_INCREMENT,
+        \`groupId\` INTEGER NOT NULL,
+        \`characterId\` INTEGER NOT NULL,
+        \`isAdmin\` BOOLEAN NOT NULL DEFAULT 0,
+        \`joinedAt\` DATETIME NOT NULL,
+        \`lastReadAt\` DATETIME,
+        \`createdAt\` DATETIME NOT NULL,
+        \`updatedAt\` DATETIME NOT NULL,
+        FOREIGN KEY (\`groupId\`) REFERENCES \`group_conversations\` (\`id\`) ON DELETE CASCADE,
+        FOREIGN KEY (\`characterId\`) REFERENCES \`characters\` (\`id\`) ON DELETE CASCADE,
+        UNIQUE KEY \`unique_group_character\` (\`groupId\`, \`characterId\`)
+      );
+    `);
+    console.log('Created group_members table');
+    
+    // Check if messages table already has groupId and imageUrl columns
+    const [messageColumns] = await sequelize.query("SHOW COLUMNS FROM messages");
+    const hasGroupId = messageColumns.some(col => col.Field === 'groupId');
+    const hasImageUrl = messageColumns.some(col => col.Field === 'imageUrl');
+    
+    // Add groupId column if it doesn't exist
+    if (!hasGroupId) {
+      await sequelize.query(`
+        ALTER TABLE \`messages\`
+        ADD COLUMN \`groupId\` INTEGER NULL;
+      `);
+      
+      await sequelize.query(`
+        ALTER TABLE \`messages\`
+        ADD FOREIGN KEY (\`groupId\`) 
+        REFERENCES \`group_conversations\` (\`id\`) 
+        ON DELETE CASCADE;
+      `);
+      console.log('Added groupId column to messages table');
+    } else {
+      console.log('groupId column already exists in messages table');
+    }
+    
+    // Add imageUrl column if it doesn't exist
+    if (!hasImageUrl) {
+      await sequelize.query(`
+        ALTER TABLE \`messages\`
+        ADD COLUMN \`imageUrl\` VARCHAR(255) NULL;
+      `);
+      console.log('Added imageUrl column to messages table');
+    } else {
+      console.log('imageUrl column already exists in messages table');
+    }
+    
+    // Create indexes
+    await sequelize.query(`
+      CREATE INDEX IF NOT EXISTS \`idx_messages_groupid\` 
+      ON \`messages\` (\`groupId\`);
+    `);
+    
+    await sequelize.query(`
+      CREATE INDEX IF NOT EXISTS \`idx_group_conversations_teamid\` 
+      ON \`group_conversations\` (\`teamId\`);
+    `);
+    
+    await sequelize.query(`
+      CREATE INDEX IF NOT EXISTS \`idx_group_conversations_isglobal\` 
+      ON \`group_conversations\` (\`isGlobal\`);
+    `);
+    
+    await sequelize.query(`
+      CREATE INDEX IF NOT EXISTS \`idx_group_members_characterid\` 
+      ON \`group_members\` (\`characterId\`);
+    `);
+    
+    await sequelize.query(`
+      CREATE INDEX IF NOT EXISTS \`idx_group_members_groupid\` 
+      ON \`group_members\` (\`groupId\`);
+    `);
+    console.log('Created indexes for group messaging tables');
+    
+    // Create global chat
+    await sequelize.query(`
+      INSERT INTO \`group_conversations\` 
+      (\`name\`, \`description\`, \`isGlobal\`, \`createdById\`, \`createdAt\`, \`updatedAt\`)
+      SELECT 'Global Chat', 'Chat with everyone on the site', 1, 1, NOW(), NOW()
+      WHERE NOT EXISTS (
+        SELECT 1 FROM \`group_conversations\` WHERE \`isGlobal\` = 1
+      );
+    `);
+    console.log('Created global chat if it didn\'t exist');
+    
+    // Initialize team chats
+    await sequelize.query(`
+      INSERT INTO \`group_conversations\` 
+      (\`name\`, \`description\`, \`teamId\`, \`isGlobal\`, \`createdById\`, \`createdAt\`, \`updatedAt\`)
+      SELECT CONCAT(t.name, ' Team Chat'), CONCAT('Official chat group for ', t.name, ' members'), 
+             t.id, 0, 1, NOW(), NOW()
+      FROM \`teams\` t
+      WHERE NOT EXISTS (
+        SELECT 1 FROM \`group_conversations\` gc WHERE gc.teamId = t.id
+      );
+    `);
+    console.log('Created team chats for existing teams');
+    
+    console.log('Group messaging setup completed successfully!');
+  } catch (error) {
+    console.error('Error setting up group messaging:', error);
+    throw error; // Re-throw to halt server startup if needed
+  }
+}
+
+await setupGroupMessaging();
+startServer();

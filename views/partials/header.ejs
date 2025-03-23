@@ -35,11 +35,19 @@
               <i class="ph-user-duotone"></i> My Characters
             </a>
             
-            <!-- New item for messages -->
+            <!-- And replace it with this updated version -->
             <a class="dropdown-item" href="/messages">
-              <i class="ph-chat-text-duotone"></i> Messages
+              <i class="ph-chat-text-duotone"></i> Direct Messages
               <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
                 <span class="notification-badge-small"><%= unreadMessages %></span>
+              <% } %>
+            </a>
+
+            <!-- Add this new menu item below the existing Messages item -->
+            <a class="dropdown-item" href="/messages/groups">
+              <i class="ph-users-three-duotone"></i> Group Chats
+              <% if (typeof unreadGroupMessages !== 'undefined' && unreadGroupMessages > 0) { %>
+                <span class="notification-badge-small"><%= unreadGroupMessages %></span>
               <% } %>
             </a>
             
