@@ -9,135 +9,55 @@ const Op = Sequelize.Op;
 // Get a specific group conversation
 exports.getGroupConversations = async (req, res) => {
   try {
-    // Get all user's characters with full details
+    const characterId = req.params.characterId;
+
+    // Get user's characters
     const characters = await Character.findAll({
       where: {
         userId: req.user.id,
         isArchived: false
-      },
-      include: [{ model: User, attributes: ['username'] }],
-      order: [['createdAt', 'ASC']]
-    });
-
-    // If no characters exist
-    if (characters.length === 0) {
-      return res.render('messages/group-index', {
-        title: 'Group Chats',
-        characters: [],
-        character: null,
-        conversations: [],
-        totalUnread: 0,
-        otherCharacters: []
-      });
-    }
-
-    // Find the specific character or use the first character
-    let character;
-    if (req.params.characterId) {
-      character = characters.find(c => c.id === parseInt(req.params.characterId));
-    }
-
-    // If no specific character found, use the first character
-    if (!character) {
-      character = characters[0];
-    }
-
-    // Get group conversations for this character
-    const memberships = await GroupMember.findAll({
-      where: {
-        characterId: character.id
-      },
-      include: [{
-        model: GroupConversation,
-        as: 'group',
-        include: [{ model: Team }]
-      }]
-    });
-
-    // Format conversations
-    const conversations = memberships.map(membership => {
-      const group = membership.group;
-      return {
-        id: group.id,
-        name: group.name,
-        avatarUrl: group.avatarUrl,
-        isGlobal: group.isGlobal,
-        team: group.Team,
-        lastMessageAt: group.lastMessageAt
-      };
-    });
-
-    // Sort by most recent message
-    conversations.sort((a, b) => {
-      if (!a.lastMessageAt) return 1;
-      if (!b.lastMessageAt) return -1;
-      return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
-    });
-
-    // Get other characters owned by the same user (for inviting to groups)
-    const otherCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        id: { [Op.ne]: character.id }, // Not equal to current character
-        isArchived: false
       }
     });
 
-    // Get other users' characters that have relationships with this character
-    let otherUsersCharacters = [];
+    // Find the active character
+    const activeCharacter = characters.find(c => c.id == characterId) || characters[0];
     
-    // Find approved relationships with this character
-    const relationships = await Relationship.findAll({
-      where: {
-        [Op.or]: [
-          { character1Id: character.id },
-          { character2Id: character.id }
-        ],
-        isApproved: true // Only include approved relationships
-      },
+    if (!activeCharacter) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters/my-characters');
+    }
+
+    console.log(`Using character: ${activeCharacter.id} - ${activeCharacter.name}`);
+
+    // Simply find all groups this character is a member of
+    const memberships = await GroupMember.findAll({
+      where: { characterId: activeCharacter.id },
       include: [
         {
-          model: Character,
-          as: 'character1',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: Character,
-          as: 'character2',
-          include: [{ model: User, attributes: ['username'] }]
+          model: GroupConversation,
+          as: 'group',
+          include: [{ model: Team }]
         }
       ]
     });
-    
-    // Extract the related characters from other users
-    relationships.forEach(rel => {
-      const relatedChar = rel.character1Id === character.id ? rel.character2 : rel.character1;
-      // Only add if not owned by the same user
-      if (relatedChar.userId !== req.user.id) {
-        otherUsersCharacters.push({
-          id: relatedChar.id,
-          name: relatedChar.name,
-          avatarUrl: relatedChar.avatarUrl,
-          username: relatedChar.User ? relatedChar.User.username : 'Unknown'
-        });
-      }
-    });
 
-    // Render the view with all needed data
-    res.render('messages/group-index', {
-      title: 'Group Chats',
+    console.log(`Found ${memberships.length} group memberships`);
+
+    // Extract just the groups
+    const conversations = memberships.map(m => m.group);
+
+    // Render a very simple template
+    return res.render('messages/group-index', {
+      title: `${activeCharacter.name}'s Group Chats`,
       characters,
-      character,
+      character: activeCharacter,
       conversations,
-      otherCharacters,
-      otherUsersCharacters,
-      totalUnread: 0 // You can calculate this properly later
+      totalUnread: 0
     });
-
   } catch (error) {
     console.error('Error in getGroupConversations:', error);
     req.flash('error_msg', 'An error occurred while loading group chats');
-    res.redirect('/dashboard');
+    return res.redirect('/dashboard');
   }
 };
 
