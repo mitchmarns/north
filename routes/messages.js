@@ -296,6 +296,6 @@ router.post('/groups/:characterId/:groupId/leave', isAuthenticated, groupMessage
 router.delete('/groups/:characterId/message/:messageId', isAuthenticated, groupMessageController.deleteGroupMessage);
 
 // Invite to group (admin only)
-router.post('/groups/:characterId/:groupId/invite', isAuthenticated, groupMessageController.inviteToGroup);
+// router.post('/groups/:characterId/:groupId/invite', isAuthenticated, groupMessageController.inviteToGroup);
 
 module.exports = router;
