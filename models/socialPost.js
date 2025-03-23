@@ -1,4 +1,4 @@
-// models/SocialPost.js
+// Modified socialPost.js model
 module.exports = (sequelize, DataTypes) => {
   const SocialPost = sequelize.define('SocialPost', {
     id: {
@@ -38,7 +38,11 @@ module.exports = (sequelize, DataTypes) => {
         return rawValue ? JSON.parse(rawValue) : [];
       },
       set(val) {
-        this.setDataValue('mediaUrls', JSON.stringify(val));
+        if (val === null) {
+          this.setDataValue('mediaUrls', null);
+        } else {
+          this.setDataValue('mediaUrls', JSON.stringify(val));
+        }
       }
     },
     // Music-related fields for "Now Listening" posts
@@ -93,7 +97,23 @@ module.exports = (sequelize, DataTypes) => {
       {
         fields: ['createdAt']
       }
-    ]
+    ],
+    // Add model hooks for validation and preprocessing
+    hooks: {
+      beforeValidate: (post, options) => {
+        // Make sure nowListening posts have required fields
+        if (post.postType === 'nowListening') {
+          if (!post.songTitle || !post.artistName) {
+            throw new Error('Song title and artist name are required for music posts');
+          }
+        }
+        
+        // Trim string values
+        if (post.songTitle) post.songTitle = post.songTitle.trim();
+        if (post.artistName) post.artistName = post.artistName.trim();
+        if (post.albumName) post.albumName = post.albumName.trim();
+      }
+    }
   });
 
   return SocialPost;

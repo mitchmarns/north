@@ -417,12 +417,23 @@ exports.createPost = async (req, res) => {
           return res.redirect('/social/feed');
         }
         
-        postData.songTitle = songTitle;
-        postData.artistName = artistName;
-        postData.albumName = albumName || null;
+        postData.songTitle = songTitle.trim();
+        postData.artistName = artistName.trim();
+        postData.albumName = albumName && albumName.trim() !== '' ? albumName.trim() : null;
+        postData.albumCoverUrl = albumCoverUrl && albumCoverUrl.trim() !== '' ? albumCoverUrl.trim() : null;
         
-        // Don't validate album cover URL format - just use it if provided
-        postData.albumCoverUrl = albumCoverUrl && albumCoverUrl.trim() !== '' ? albumCoverUrl : null;
+        // Add debug logging for nowListening posts
+        console.log('Creating nowListening post with data:', {
+          userId: postData.userId,
+          characterId: postData.characterId,
+          postType: postData.postType,
+          content: postData.content,
+          songTitle: postData.songTitle,
+          artistName: postData.artistName,
+          albumName: postData.albumName,
+          albumCoverUrl: postData.albumCoverUrl,
+          privacy: postData.privacy
+        });
         break;
         
       default:
@@ -430,10 +441,15 @@ exports.createPost = async (req, res) => {
         postData.content = content;
     }
     
-    // Create post
-    await SocialPost.create(postData);
+    // Create post with error handling
+    try {
+      await SocialPost.create(postData);
+      req.flash('success_msg', 'Post created successfully');
+    } catch (createError) {
+      console.error('Error creating post in database:', createError);
+      req.flash('error_msg', `Database error: ${createError.message}`);
+    }
     
-    req.flash('success_msg', 'Post created successfully');
     res.redirect('/social/feed');
   } catch (error) {
     console.error('Error creating post:', error);
