@@ -222,44 +222,50 @@ router.delete('/:characterId/:messageId', isAuthenticated, messageController.del
 
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
-  console.log('=================== Groups Route Debug ===================');
+  console.log('=================== Groups Route Hit ===================');
+  console.log('User:', req.user ? req.user.username : 'No User');
   console.log('User ID:', req.user ? req.user.id : 'NO USER');
-  console.log('User Object:', req.user ? JSON.stringify(req.user, null, 2) : 'NO USER');
 
   try {
-    // Explicitly log and find characters
+    // If no user, redirect to login
+    if (!req.user) {
+      console.log('No user found, redirecting to login');
+      return res.redirect('/auth/login');
+    }
+
+    // Find user's characters
     const characters = await Character.findAll({
       where: {
         userId: req.user.id
       },
       include: [{ 
         model: User, 
-        attributes: ['id', 'username'] 
+        attributes: ['username'] 
       }]
     });
 
-    console.log('Found Characters:', characters.map(c => ({
+    console.log('Characters Found:', characters.map(c => ({
       id: c.id,
       name: c.name,
-      userId: c.userId,
-      userUsername: c.User ? c.User.username : 'No User Link'
+      isArchived: c.isArchived
     })));
 
     // If no characters exist
     if (characters.length === 0) {
-      console.log('NO CHARACTERS FOUND');
+      console.log('No characters found for user');
       return res.render('messages/group-index', {
         title: 'Group Chats',
         characters: [],
-        activeCharacter: null,
+        character: null,
         conversations: [],
         totalUnread: 0
       });
     }
 
-    // Use first character
+    // Use the first character
     const activeCharacter = characters[0];
-    console.log('Active Character:', {
+    
+    console.log('Using first character:', {
       id: activeCharacter.id,
       name: activeCharacter.name
     });
@@ -269,12 +275,8 @@ router.get('/groups', isAuthenticated, async (req, res) => {
     return groupMessageController.getGroupConversations(req, res);
 
   } catch (error) {
-    console.error('FULL ERROR in groups route:', error);
-    console.error('Error Name:', error.name);
-    console.error('Error Message:', error.message);
-    console.error('Error Stack:', error.stack);
-
-    req.flash('error_msg', `Debug Error: ${error.message}`);
+    console.error('Error in groups route:', error);
+    req.flash('error_msg', `An error occurred: ${error.message}`);
     res.redirect('/dashboard');
   }
 });
