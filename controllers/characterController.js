@@ -1,4 +1,4 @@
-const { Character, User, Relationship, Team, sequelize, Sequelize } = require('../models');
+const { Character, User, Relationship, Team, CharacterGallery, sequelize, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
 
 // Get all characters (public)
