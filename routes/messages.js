@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const messageController = require('../controllers/messageController');
-const { Message, Character, User, Sequelize } = require('../models');
+const { Character, GroupConversation, GroupMember, Message, Team, User, Sequelize } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
 const groupMessageController = require('../controllers/groupMessageController');
 
