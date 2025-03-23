@@ -1,3 +1,4 @@
+// Updated models/index.js
 const { Sequelize } = require('sequelize');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/database')[env];
@@ -20,6 +21,7 @@ sequelize = new Sequelize(
 // Import models
 const User = require('./user')(sequelize, Sequelize.DataTypes);
 const Character = require('./character')(sequelize, Sequelize.DataTypes);
+const CharacterGallery = require('./characterGallery')(sequelize, Sequelize.DataTypes);
 const Relationship = require('./relationship')(sequelize, Sequelize.DataTypes);
 const Thread = require('./thread')(sequelize, Sequelize.DataTypes);
 const Post = require('./post')(sequelize, Sequelize.DataTypes);
@@ -32,6 +34,10 @@ const Like = require('./like')(sequelize, Sequelize.DataTypes);
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
 Character.belongsTo(User, { foreignKey: 'userId' });
+
+// New: Character Gallery associations
+Character.hasMany(CharacterGallery, { foreignKey: 'characterId', as: 'galleryImages' });
+CharacterGallery.belongsTo(Character, { foreignKey: 'characterId' });
 
 Character.belongsToMany(Character, {
   through: Relationship,
@@ -93,6 +99,7 @@ module.exports = {
   Sequelize,
   User,
   Character,
+  CharacterGallery,
   Relationship,
   Thread,
   Post,

@@ -141,6 +141,111 @@ router.delete(
   characterController.deleteRelationship
 );
 
+// Character gallery routes - these should go before the /:id route
+router.get('/:id/gallery', characterController.getCharacterGallery);
+router.get('/:id/gallery/upload', isAuthenticated, characterController.getUploadGalleryImage);
+router.post(
+  '/:id/gallery/upload',
+  isAuthenticated,
+  [
+    body('imageUrl')
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid image URL'),
+    body('caption')
+      .optional()
+      .trim()
+      .isLength({ max: 255 })
+      .withMessage('Caption cannot exceed 255 characters')
+  ],
+  characterController.uploadGalleryImage
+);
+router.delete('/:id/gallery/:imageId', isAuthenticated, characterController.deleteGalleryImage);
+router.post('/:id/gallery/order', isAuthenticated, characterController.updateGalleryOrder);
+
+// Character playlist routes
+router.get('/:id/playlist', characterController.getCharacterPlaylist);
+router.post(
+  '/:id/playlist',
+  isAuthenticated,
+  [
+    body('songTitle')
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Song title is required and cannot exceed 100 characters'),
+    body('artistName')
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Artist name is required and cannot exceed 100 characters'),
+    body('albumName')
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Album name cannot exceed 100 characters'),
+    body('albumCoverUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid album cover URL'),
+    body('songUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid song URL'),
+    body('description')
+      .optional()
+      .trim()
+      .isLength({ max: 255 })
+      .withMessage('Description cannot exceed 255 characters')
+  ],
+  characterController.addSongToPlaylist
+);
+router.delete('/:id/playlist/:songId', isAuthenticated, characterController.removeSongFromPlaylist);
+
+// Character stats routes
+router.get('/:id/stats/edit', isAuthenticated, characterController.getEditStats);
+router.put(
+  '/:id/stats',
+  isAuthenticated,
+  [
+    body('strength')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Strength must be between 0 and 100'),
+    body('dexterity')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Dexterity must be between 0 and 100'),
+    body('constitution')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Constitution must be between 0 and 100'),
+    body('intelligence')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Intelligence must be between 0 and 100'),
+    body('wisdom')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Wisdom must be between 0 and 100'),
+    body('charisma')
+      .optional()
+      .isInt({ min: 0, max: 100 })
+      .withMessage('Charisma must be between 0 and 100'),
+    body('personalityType')
+      .optional()
+      .trim()
+      .isLength({ max: 20 })
+      .withMessage('Personality type cannot exceed 20 characters'),
+    body('occupation')
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Occupation cannot exceed 100 characters')
+  ],
+  characterController.updateStats
+);
+
 // View character - This must be the last route because it uses a catch-all parameter
 router.get('/:id', characterController.getCharacter);
 

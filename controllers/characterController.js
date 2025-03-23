@@ -655,7 +655,7 @@ exports.addRelationship = async (req, res) => {
         }
       );
     }
-    
+
   } catch (error) {
     console.error('Error adding relationship:', error);
     req.flash('error_msg', `An error occurred while adding relationship: ${error.message}`);
@@ -945,5 +945,411 @@ exports.deleteRelationship = async (req, res) => {
     console.error('Error deleting relationship:', error);
     req.flash('error_msg', 'An error occurred while deleting relationship');
     res.redirect(req.headers.referer || '/characters');
+  }
+};
+
+// Updated Character Controller methods (add these to controllers/characterController.js)
+
+// Get character gallery
+exports.getCharacterGallery = async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId, {
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'id']
+        }
+      ]
+    });
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if character is private and user is not the owner
+    if (character.isPrivate && (!req.user || req.user.id !== character.userId)) {
+      req.flash('error_msg', 'This character is private');
+      return res.redirect('/characters');
+    }
+    
+    // Get gallery images
+    const galleryImages = await CharacterGallery.findAll({
+      where: { characterId },
+      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+    });
+    
+    res.render('characters/gallery', {
+      title: `${character.name}'s Gallery`,
+      character,
+      galleryImages,
+      isOwner: req.user && req.user.id === character.userId
+    });
+  } catch (error) {
+    console.error('Error fetching character gallery:', error);
+    req.flash('error_msg', 'An error occurred while fetching the gallery');
+    res.redirect(`/characters/${req.params.id}`);
+  }
+};
+
+// Upload gallery image form
+exports.getUploadGalleryImage = async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    res.render('characters/upload-image', {
+      title: `Add to ${character.name}'s Gallery`,
+      character
+    });
+  } catch (error) {
+    console.error('Error loading upload form:', error);
+    req.flash('error_msg', 'An error occurred while loading the upload form');
+    res.redirect(`/characters/${req.params.id}`);
+  }
+};
+
+// Upload gallery image
+exports.uploadGalleryImage = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/${req.params.id}/gallery/upload`);
+  }
+  
+  try {
+    const { imageUrl, caption } = req.body;
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    // Get highest display order
+    const highestOrder = await CharacterGallery.max('displayOrder', {
+      where: { characterId }
+    }) || 0;
+    
+    // Create new gallery image
+    await CharacterGallery.create({
+      characterId,
+      imageUrl,
+      caption: caption || null,
+      displayOrder: highestOrder + 1
+    });
+    
+    req.flash('success_msg', 'Image added to gallery');
+    res.redirect(`/characters/${characterId}/gallery`);
+  } catch (error) {
+    console.error('Error uploading gallery image:', error);
+    req.flash('error_msg', 'An error occurred while uploading the image');
+    res.redirect(`/characters/${req.params.id}/gallery/upload`);
+  }
+};
+
+// Delete gallery image
+exports.deleteGalleryImage = async (req, res) => {
+  try {
+    const imageId = req.params.imageId;
+    
+    // Find image
+    const image = await CharacterGallery.findByPk(imageId, {
+      include: [
+        {
+          model: Character,
+          attributes: ['userId']
+        }
+      ]
+    });
+    
+    if (!image) {
+      req.flash('error_msg', 'Image not found');
+      return res.redirect(`/characters/${req.params.id}/gallery`);
+    }
+    
+    // Check if user owns the character
+    if (image.Character && image.Character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${req.params.id}/gallery`);
+    }
+    
+    // Delete image
+    await image.destroy();
+    
+    req.flash('success_msg', 'Image deleted from gallery');
+    res.redirect(`/characters/${req.params.id}/gallery`);
+  } catch (error) {
+    console.error('Error deleting gallery image:', error);
+    req.flash('error_msg', 'An error occurred while deleting the image');
+    res.redirect(`/characters/${req.params.id}/gallery`);
+  }
+};
+
+// Update gallery image order
+exports.updateGalleryOrder = async (req, res) => {
+  try {
+    const { imageIds } = req.body;
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      return res.status(404).json({ success: false, message: 'Character not found' });
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    
+    // Update order for each image
+    for (let i = 0; i < imageIds.length; i++) {
+      await CharacterGallery.update(
+        { displayOrder: i },
+        { where: { id: imageIds[i], characterId } }
+      );
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating gallery order:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+// Get character playlist
+exports.getCharacterPlaylist = async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId, {
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'id']
+        }
+      ]
+    });
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if character is private and user is not the owner
+    if (character.isPrivate && (!req.user || req.user.id !== character.userId)) {
+      req.flash('error_msg', 'This character is private');
+      return res.redirect('/characters');
+    }
+    
+    res.render('characters/playlist', {
+      title: `${character.name}'s Playlist`,
+      character,
+      isOwner: req.user && req.user.id === character.userId
+    });
+  } catch (error) {
+    console.error('Error fetching character playlist:', error);
+    req.flash('error_msg', 'An error occurred while fetching the playlist');
+    res.redirect(`/characters/${req.params.id}`);
+  }
+};
+
+// Add song to playlist
+exports.addSongToPlaylist = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/${req.params.id}/playlist`);
+  }
+  
+  try {
+    const { songTitle, artistName, albumName, albumCoverUrl, songUrl, description } = req.body;
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    // Get current playlist
+    const playlist = character.playlist || [];
+    
+    // Add new song
+    playlist.push({
+      id: Date.now(), // simple unique ID
+      songTitle,
+      artistName,
+      albumName: albumName || null,
+      albumCoverUrl: albumCoverUrl || null,
+      songUrl: songUrl || null,
+      description: description || null,
+      addedAt: new Date()
+    });
+    
+    // Update character
+    await character.update({ playlist });
+    
+    req.flash('success_msg', 'Song added to playlist');
+    res.redirect(`/characters/${characterId}/playlist`);
+  } catch (error) {
+    console.error('Error adding song to playlist:', error);
+    req.flash('error_msg', 'An error occurred while adding the song');
+    res.redirect(`/characters/${req.params.id}/playlist`);
+  }
+};
+
+// Remove song from playlist
+exports.removeSongFromPlaylist = async (req, res) => {
+  try {
+    const { songId } = req.params;
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    // Get current playlist and remove song
+    let playlist = character.playlist || [];
+    playlist = playlist.filter(song => song.id != songId);
+    
+    // Update character
+    await character.update({ playlist });
+    
+    req.flash('success_msg', 'Song removed from playlist');
+    res.redirect(`/characters/${characterId}/playlist`);
+  } catch (error) {
+    console.error('Error removing song from playlist:', error);
+    req.flash('error_msg', 'An error occurred while removing the song');
+    res.redirect(`/characters/${req.params.id}/playlist`);
+  }
+};
+
+// Get character stats edit form
+exports.getEditStats = async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    res.render('characters/edit-stats', {
+      title: `Edit ${character.name}'s Stats`,
+      character
+    });
+  } catch (error) {
+    console.error('Error loading stats edit form:', error);
+    req.flash('error_msg', 'An error occurred while loading the form');
+    res.redirect(`/characters/${req.params.id}`);
+  }
+};
+
+// Update character stats
+exports.updateStats = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/${req.params.id}/stats/edit`);
+  }
+  
+  try {
+    const { 
+      strength, dexterity, constitution, intelligence, wisdom, charisma,
+      personalityType, occupation
+    } = req.body;
+    const characterId = req.params.id;
+    
+    // Find character
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/characters');
+    }
+    
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    // Update character stats
+    await character.update({
+      strength: strength || null,
+      dexterity: dexterity || null,
+      constitution: constitution || null,
+      intelligence: intelligence || null,
+      wisdom: wisdom || null,
+      charisma: charisma || null,
+      personalityType: personalityType || null,
+      occupation: occupation || null
+    });
+    
+    req.flash('success_msg', 'Character stats updated');
+    res.redirect(`/characters/${characterId}`);
+  } catch (error) {
+    console.error('Error updating character stats:', error);
+    req.flash('error_msg', 'An error occurred while updating stats');
+    res.redirect(`/characters/${req.params.id}/stats/edit`);
   }
 };

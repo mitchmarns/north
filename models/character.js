@@ -1,3 +1,4 @@
+// Updated character.js model with additional fields
 module.exports = (sequelize, DataTypes) => {
   const Character = sequelize.define('Character', {
     id: {
@@ -80,6 +81,83 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    
+    // New Character Stats Fields
+    strength: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    dexterity: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    constitution: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    intelligence: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    wisdom: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    charisma: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 0,
+        max: 100
+      }
+    },
+    
+    // Personality Type (e.g., MBTI, Enneagram, etc.)
+    personalityType: {
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    
+    // Occupation/Job
+    occupation: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    
+    // Playlist - Store as JSON array of song objects
+    playlist: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        const rawValue = this.getDataValue('playlist');
+        return rawValue ? JSON.parse(rawValue) : [];
+      },
+      set(val) {
+        this.setDataValue('playlist', val ? JSON.stringify(val) : null);
+      }
+    },
+    
+    // For Team-related fields
     role: {
       type: DataTypes.ENUM('Player', 'Staff', 'Civilian'),
       allowNull: false,
