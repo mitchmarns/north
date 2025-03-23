@@ -191,9 +191,6 @@
 /* Post Content */
 .social-post-content {
   padding: 16px 20px;
-  line-height: 1.6;
-  white-space: pre-line;
-  font-size: var(--text-base);
 }
 
 /* This targets the text content specifically */
