@@ -251,48 +251,8 @@ router.get('/groups', isAuthenticated, async (req, res) => {
   }
 });
 
-// Updated messages routes
-router.get('/groups/:characterId', isAuthenticated, async (req, res) => {
-  try {
-    const { characterId } = req.params;
-    
-    // Verify user owns the character or find a character they own
-    let character = await Character.findOne({
-      where: {
-        id: characterId,
-        userId: req.user.id
-      }
-    });
-    
-    // If no character, find the first character owned by the user
-    if (!character) {
-      character = await Character.findOne({
-        where: {
-          userId: req.user.id,
-          isArchived: false
-        },
-        order: [['createdAt', 'ASC']]
-      });
-      
-      if (!character) {
-        req.flash('error_msg', 'You need to create a character first');
-        return res.redirect('/characters/create');
-      }
-      
-      // Redirect to the first character's group page
-      return res.redirect(`/messages/groups/${character.id}`);
-    }
-    
-    // Call the group message controller method
-    return await groupMessageController.getGroupConversations(req, res);
-  } catch (error) {
-    console.error('Error handling group conversations route:', error);
-    req.flash('error_msg', 'An error occurred while accessing group conversations');
-    res.redirect('/dashboard');
-  }
-});
-
 // Group conversation routes
+router.get('/groups/:characterId', isAuthenticated, groupMessageController.getGroupConversations);
 router.get('/groups/:characterId/:groupId', isAuthenticated, groupMessageController.getGroupConversation);
 
 // Create new group conversation
