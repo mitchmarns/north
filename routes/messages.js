@@ -220,22 +220,34 @@ router.post('/send', isAuthenticated, [
 // Delete message
 router.delete('/:characterId/:messageId', isAuthenticated, messageController.deleteMessage);
 
-// Add this route to routes/messages.js near the top of the group routes
-
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
+  console.log('=================== Groups Route Debug ===================');
+  console.log('User ID:', req.user ? req.user.id : 'NO USER');
+  console.log('User Object:', req.user ? JSON.stringify(req.user, null, 2) : 'NO USER');
+
   try {
-    // Get all of user's characters
+    // Explicitly log and find characters
     const characters = await Character.findAll({
       where: {
         userId: req.user.id
       },
-      order: [['createdAt', 'ASC']]
+      include: [{ 
+        model: User, 
+        attributes: ['id', 'username'] 
+      }]
     });
-    
-    // Always render the group messages view
-    // If no characters, pass an empty array and null for active character
+
+    console.log('Found Characters:', characters.map(c => ({
+      id: c.id,
+      name: c.name,
+      userId: c.userId,
+      userUsername: c.User ? c.User.username : 'No User Link'
+    })));
+
+    // If no characters exist
     if (characters.length === 0) {
+      console.log('NO CHARACTERS FOUND');
       return res.render('messages/group-index', {
         title: 'Group Chats',
         characters: [],
@@ -244,16 +256,25 @@ router.get('/groups', isAuthenticated, async (req, res) => {
         totalUnread: 0
       });
     }
-    
-    // If characters exist, use the first character
+
+    // Use first character
     const activeCharacter = characters[0];
-    
-    // Delegate to group message controller to handle the rest
+    console.log('Active Character:', {
+      id: activeCharacter.id,
+      name: activeCharacter.name
+    });
+
+    // Delegate to group message controller
     req.params.characterId = activeCharacter.id;
     return groupMessageController.getGroupConversations(req, res);
+
   } catch (error) {
-    console.error('Error accessing group messages:', error);
-    req.flash('error_msg', 'An error occurred while accessing group messages');
+    console.error('FULL ERROR in groups route:', error);
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+
+    req.flash('error_msg', `Debug Error: ${error.message}`);
     res.redirect('/dashboard');
   }
 });
