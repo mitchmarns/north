@@ -47,10 +47,9 @@ exports.getGroupConversations = async (req, res) => {
 };
 
 // Get a specific group conversation
-exports.getGroupConversation = async (req, res) => {
+exports.getGroupConversations = async (req, res) => {
   try {
     const characterId = req.params.characterId;
-    const groupId = req.params.groupId;
     
     // Verify character exists and belongs to the user
     const character = await Character.findOne({
@@ -61,135 +60,199 @@ exports.getGroupConversation = async (req, res) => {
     });
     
     if (!character) {
-      req.flash('error_msg', 'Character not found or not authorized');
-      return res.redirect('/characters/my-characters');
-    }
-    
-    // Check if character is a member of this group
-    const membership = await GroupMember.findOne({
-      where: {
-        characterId,
-        groupId
+      // If the specific character isn't found, try to get the user's first character
+      const firstCharacter = await Character.findOne({
+        where: {
+          userId: req.user.id,
+          isArchived: false
+        },
+        order: [['createdAt', 'ASC']]
+      });
+      
+      if (!firstCharacter) {
+        req.flash('error_msg', 'You need to create a character first');
+        return res.redirect('/characters/create');
       }
-    });
-    
-    if (!membership) {
-      req.flash('error_msg', 'You are not a member of this group conversation');
-      return res.redirect(`/messages/groups/${characterId}`);
+      
+      // Redirect to the first character's group page
+      return res.redirect(`/messages/groups/${firstCharacter.id}`);
     }
     
-    // Get the group conversation details
-    const group = await GroupConversation.findByPk(groupId, {
+    // Get all group conversations this character is a part of or can join
+    let conversations = [];
+    
+    // Always include global chat
+    const globalChat = await GroupConversation.findOne({
+      where: { isGlobal: true },
       include: [
         {
           model: User,
           as: 'creator',
           attributes: ['id', 'username']
-        },
-        {
-          model: Team
         }
       ]
     });
     
-    if (!group) {
-      req.flash('error_msg', 'Group conversation not found');
-      return res.redirect(`/messages/groups/${characterId}`);
+    if (globalChat) {
+      // Check if character is already a member
+      let membership = await GroupMember.findOne({
+        where: {
+          groupId: globalChat.id,
+          characterId
+        }
+      });
+      
+      // If not a member, auto-join
+      if (!membership) {
+        membership = await GroupMember.create({
+          groupId: globalChat.id,
+          characterId,
+          isAdmin: false,
+          joinedAt: new Date(),
+          lastReadAt: new Date()
+        });
+      }
     }
     
-    // Get group members
-    const members = await GroupMember.findAll({
-      where: { groupId },
+    // Include team chat if character is on a team
+    if (character.teamId) {
+      const teamChat = await GroupConversation.findOne({
+        where: { teamId: character.teamId },
+        include: [
+          {
+            model: User,
+            as: 'creator',
+            attributes: ['id', 'username']
+          }
+        ]
+      });
+      
+      if (teamChat) {
+        // Check if character is already a member
+        let membership = await GroupMember.findOne({
+          where: {
+            groupId: teamChat.id,
+            characterId
+          }
+        });
+        
+        // If not a member, auto-join
+        if (!membership) {
+          membership = await GroupMember.create({
+            groupId: teamChat.id,
+            characterId,
+            isAdmin: character.role === 'Staff',
+            joinedAt: new Date(),
+            lastReadAt: new Date()
+          });
+        }
+      }
+    }
+    
+    // Get group memberships for this character
+    const memberships = await GroupMember.findAll({
+      where: { characterId },
       include: [
         {
-          model: Character,
-          as: 'character',
+          model: GroupConversation,
+          as: 'group',
           include: [
             {
+              model: Team,
+              attributes: ['id', 'name', 'logo']
+            },
+            {
               model: User,
+              as: 'creator',
               attributes: ['id', 'username']
             }
           ]
         }
-      ],
-      order: [['joinedAt', 'ASC']]
+      ]
     });
     
-    // Get messages
-    const messages = await Message.findAll({
-      where: {
-        groupId,
-        isDeleted: false
-      },
-      include: [
-        {
-          model: Character,
-          as: 'sender',
-          attributes: ['id', 'name', 'avatarUrl'],
-          include: [
-            {
-              model: User,
-              attributes: ['username', 'id']
-            }
-          ]
-        }
-      ],
-      order: [['createdAt', 'ASC']]
-    });
-    
-    // Format messages for display
-    const formattedMessages = messages.map(message => ({
-      id: message.id,
-      content: message.content,
-      imageUrl: message.imageUrl,
-      sender: message.sender,
-      isMine: message.senderId === parseInt(characterId),
-      createdAt: message.createdAt
-    }));
-    
-    // Mark all messages as read
-    await membership.update({
-      lastReadAt: new Date()
-    });
-    
-    // Get the user's other characters for potentially joining the group
-    const userOtherCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        id: { [Op.ne]: characterId },
-        isArchived: false
-      }
-    });
-    
-    // For each character, check if they're already in the group
-    const otherCharactersWithMembership = [];
-    for (const char of userOtherCharacters) {
-      const isMember = await GroupMember.findOne({
+    // Format the conversations and get last message & unread count for each
+    for (const membership of memberships) {
+      const group = membership.group;
+      
+      if (!group) continue; // Skip if group doesn't exist
+      
+      // Get the last message in this group
+      const lastMessage = await Message.findOne({
         where: {
-          groupId,
-          characterId: char.id
+          groupId: group.id,
+          isDeleted: false
+        },
+        include: [
+          {
+            model: Character,
+            as: 'sender',
+            attributes: ['id', 'name', 'avatarUrl'],
+            include: [
+              {
+                model: User,
+                attributes: ['username']
+              }
+            ]
+          }
+        ],
+        order: [['createdAt', 'DESC']],
+        limit: 1
+      });
+      
+      // Get unread count
+      const unreadCount = await Message.count({
+        where: {
+          groupId: group.id,
+          senderId: { [Op.ne]: characterId },
+          createdAt: {
+            [Op.gt]: membership.lastReadAt || new Date(0)
+          },
+          isDeleted: false
         }
       });
       
-      otherCharactersWithMembership.push({
-        ...char.toJSON(),
-        isMember: !!isMember
+      // Get member count
+      const memberCount = await GroupMember.count({
+        where: { groupId: group.id }
+      });
+      
+      conversations.push({
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        avatarUrl: group.avatarUrl,
+        team: group.Team,
+        isGlobal: group.isGlobal,
+        createdBy: group.creator ? group.creator.username : 'Unknown',
+        lastMessage: lastMessage,
+        lastMessageAt: lastMessage ? lastMessage.createdAt : group.lastMessageAt,
+        unreadCount: unreadCount,
+        memberCount: memberCount,
+        isAdmin: membership.isAdmin
       });
     }
     
-    res.render('messages/group-conversation', {
-      title: group.name,
+    // Sort conversations by last message timestamp
+    conversations.sort((a, b) => {
+      const aDate = a.lastMessageAt || new Date(0);
+      const bDate = b.lastMessageAt || new Date(0);
+      return new Date(bDate) - new Date(aDate);
+    });
+    
+    // Calculate total unread count
+    const totalUnread = conversations.reduce((sum, convo) => sum + convo.unreadCount, 0);
+    
+    res.render('messages/group-index', {
+      title: `${character.name}'s Group Chats`,
       character,
-      group,
-      members,
-      messages: formattedMessages,
-      isAdmin: membership.isAdmin,
-      userOtherCharacters: otherCharactersWithMembership
+      conversations,
+      totalUnread
     });
   } catch (error) {
-    console.error('Error fetching group conversation:', error);
-    req.flash('error_msg', 'An error occurred while fetching the group conversation');
-    res.redirect(`/messages/groups/${req.params.characterId}`);
+    console.error('Error fetching group conversations:', error);
+    req.flash('error_msg', 'An error occurred while fetching group conversations');
+    res.redirect('/characters/my-characters');
   }
 };
 
