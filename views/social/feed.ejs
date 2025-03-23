@@ -518,20 +518,6 @@
       });
     }
 
-    // Validate image URL before form submission
-    const postForm = document.getElementById('post-form');
-    if (postForm) {
-      postForm.addEventListener('submit', function(e) {
-        const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : '';
-        
-        // If there's an image URL but it's invalid, prevent form submission
-        if (imageUrl && imageUrlInput.classList.contains('is-invalid')) {
-          e.preventDefault();
-          alert('Please enter a valid image URL or leave the field empty');
-        }
-      });
-    }
-
     // Toggle comment sections
     const commentButtons = document.querySelectorAll('.reaction-btn[data-reaction="comment"]');
     
@@ -945,6 +931,7 @@
     }
   });
   // Form submission validation
+  document.addEventListener('DOMContentLoaded', function() {
 const postForm = document.getElementById('post-form');
 if (postForm) {
   postForm.addEventListener('submit', function(e) {
@@ -986,4 +973,5 @@ if (postForm) {
     }
   });
 }
+  });
 </script>
