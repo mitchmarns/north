@@ -10,63 +10,55 @@ const Op = Sequelize.Op;
 exports.getGroupConversations = async (req, res) => {
   try {
     const characterId = req.params.characterId;
-
-    // Get user's characters
+    
+    // Find the character without checking ownership
+    const character = await Character.findByPk(characterId);
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found');
+      return res.redirect('/dashboard');
+    }
+    
+    console.log(`Character found: ${character.id} - ${character.name}`);
+    console.log(`Character belongs to user ID: ${character.userId}`);
+    console.log(`Current user ID: ${req.user.id}`);
+    
+    // Get user's characters for sidebar
     const characters = await Character.findAll({
       where: {
         userId: req.user.id,
         isArchived: false
       }
     });
-
-    // Find the active character
-    const activeCharacter = characters.find(c => c.id == characterId) || characters[0];
     
-    if (!activeCharacter) {
-      req.flash('error_msg', 'Character not found');
-      return res.redirect('/characters/my-characters');
-    }
-
-    console.log(`Using character: ${activeCharacter.id} - ${activeCharacter.name}`);
-
-    // Simply find all groups this character is a member of
+    // Get all group conversations this character is in
     const memberships = await GroupMember.findAll({
-      where: { characterId: activeCharacter.id },
-      include: [
-        {
-          model: GroupConversation,
-          as: 'group',
-          include: [{ model: Team }]
-        }
-      ]
+      where: { characterId },
+      include: [{
+        model: GroupConversation,
+        as: 'group',
+        include: [{ model: Team }]
+      }]
     });
-
+    
     console.log(`Found ${memberships.length} group memberships`);
-
-    // Extract just the groups
+    
+    // Extract groups from memberships
     const conversations = memberships.map(m => m.group);
-
-    // Get other user's characters for creating groups
-    const otherCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        id: { [Sequelize.Op.ne]: activeCharacter.id },
-        isArchived: false
-      }
-    });
-
-    // Render the template
+    
+    // Render with minimal required data
     return res.render('messages/group-index', {
-      title: `${activeCharacter.name}'s Group Chats`,
+      title: `Group Chats`,
       characters,
-      character: activeCharacter,
-      conversations: conversations || [],
-      otherCharacters: otherCharacters || [],
-      totalUnread: 0
+      character,
+      conversations,
+      totalUnread: 0,
+      otherCharacters: []
     });
+    
   } catch (error) {
     console.error('Error in getGroupConversations:', error);
-    req.flash('error_msg', 'An error occurred while loading group chats');
+    req.flash('error_msg', `Error: ${error.message}`);
     return res.redirect('/dashboard');
   }
 };
