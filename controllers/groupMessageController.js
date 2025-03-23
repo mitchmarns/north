@@ -89,6 +89,87 @@ exports.getGroupConversations = async (req, res) => {
   }
 };
 
+// Create a new group conversation
+exports.createGroupConversation = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/messages/groups/${req.params.characterId}`);
+  }
+  
+  try {
+    const characterId = req.params.characterId;
+    const { name, description, avatarUrl, invitedCharacterIds } = req.body;
+    
+    // Verify character exists and belongs to the user
+    const character = await Character.findOne({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      },
+      order: [['createdAt', 'ASC']]
+    });
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found or not authorized');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Create group conversation
+    const group = await GroupConversation.create({
+      name,
+      description: description || null,
+      avatarUrl: avatarUrl || null,
+      teamId: null,
+      isGlobal: false,
+      createdById: req.user.id,
+      lastMessageAt: new Date()
+    });
+    
+    // Add creator as a member and admin
+    await GroupMember.create({
+      groupId: group.id,
+      characterId,
+      isAdmin: true,
+      joinedAt: new Date(),
+      lastReadAt: new Date()
+    });
+    
+    // Add other invited characters
+    if (invitedCharacterIds && invitedCharacterIds.length > 0) {
+      // Ensure it's an array
+      const characterIds = Array.isArray(invitedCharacterIds) ? 
+                          invitedCharacterIds : [invitedCharacterIds];
+      
+      // Add each character
+      for (const id of characterIds) {
+        // Skip if same as creator character
+        if (id == characterId) continue;
+        
+        // Verify the character exists
+        const invitedChar = await Character.findByPk(id);
+        if (!invitedChar) continue;
+        
+        await GroupMember.create({
+          groupId: group.id,
+          characterId: id,
+          isAdmin: false,
+          joinedAt: new Date(),
+          lastReadAt: new Date()
+        });
+      }
+    }
+    
+    req.flash('success_msg', 'Group conversation created successfully');
+    res.redirect(`/messages/groups/${characterId}/${group.id}`);
+  } catch (error) {
+    console.error('Error creating group conversation:', error);
+    req.flash('error_msg', 'An error occurred while creating the group conversation');
+    res.redirect(`/messages/groups/${req.params.characterId}`);
+  }
+};
+
 // Send a message to a group
 exports.sendGroupMessage = async (req, res) => {
   const errors = validationResult(req);

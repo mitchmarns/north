@@ -271,7 +271,7 @@ router.post('/groups/:characterId/create', isAuthenticated, [
     .trim()
     .isURL()
     .withMessage('Avatar URL must be a valid URL')
-], groupMessageController.createGroupConversation);
+], groupMessageController.createGroupConversations);
 
 // Send message to group
 router.post('/groups/:characterId/:groupId/send', isAuthenticated, [
@@ -296,6 +296,6 @@ router.post('/groups/:characterId/:groupId/leave', isAuthenticated, groupMessage
 router.delete('/groups/:characterId/message/:messageId', isAuthenticated, groupMessageController.deleteGroupMessage);
 
 // Invite to group (admin only)
-// router.post('/groups/:characterId/:groupId/invite', isAuthenticated, groupMessageController.inviteToGroup);
+router.post('/groups/:characterId/:groupId/invite', isAuthenticated, groupMessageController.inviteToGroup);
 
 module.exports = router;
