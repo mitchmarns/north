@@ -141,6 +141,132 @@ exports.getGroupConversations = async (req, res) => {
   }
 };
 
+exports.getGroupConversation = async (req, res) => {
+  try {
+    const characterId = req.params.characterId;
+    const groupId = req.params.groupId;
+    
+    // Verify character exists and belongs to the user
+    const character = await Character.findOne({
+      where: {
+        id: characterId,
+        userId: req.user.id
+      }
+    });
+    
+    if (!character) {
+      req.flash('error_msg', 'Character not found or not authorized');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Get all user's characters (for the sidebar)
+    const characters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      }
+    });
+    
+    // Verify group exists
+    const group = await GroupConversation.findByPk(groupId, {
+      include: [
+        { model: Team }
+      ]
+    });
+    
+    if (!group) {
+      req.flash('error_msg', 'Group conversation not found');
+      return res.redirect(`/messages/groups/${characterId}`);
+    }
+    
+    // Verify character is a member of this group
+    const membership = await GroupMember.findOne({
+      where: {
+        groupId,
+        characterId
+      }
+    });
+    
+    if (!membership) {
+      req.flash('error_msg', 'You are not a member of this group conversation');
+      return res.redirect(`/messages/groups/${characterId}`);
+    }
+    
+    // Get group messages
+    const messages = await Message.findAll({
+      where: {
+        groupId,
+        isDeleted: false
+      },
+      include: [
+        {
+          model: Character,
+          as: 'sender',
+          include: [{ model: User, attributes: ['username'] }]
+        }
+      ],
+      order: [['createdAt', 'ASC']]
+    });
+    
+    // Format messages
+    const formattedMessages = messages.map(message => ({
+      id: message.id,
+      content: message.content,
+      imageUrl: message.imageUrl,
+      sender: message.sender,
+      isMine: message.senderId === parseInt(characterId),
+      createdAt: message.createdAt
+    }));
+    
+    // Get group members
+    const members = await GroupMember.findAll({
+      where: { groupId },
+      include: [
+        {
+          model: Character,
+          as: 'character',
+          include: [{ model: User, attributes: ['username'] }]
+        }
+      ]
+    });
+    
+    // Get user's other characters (for joining)
+    const userOtherCharacters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        id: { [Op.ne]: characterId },
+        isArchived: false
+      }
+    });
+    
+    // Filter out characters that are already members
+    const memberCharacterIds = members.map(m => m.characterId);
+    const availableCharacters = userOtherCharacters.filter(
+      char => !memberCharacterIds.includes(char.id)
+    );
+    
+    // Update lastReadAt for this character
+    await membership.update({
+      lastReadAt: new Date()
+    });
+    
+    res.render('messages/group-chat', { // Create a new template for individual group chat
+      title: `Group Chat: ${group.name}`,
+      characters,
+      character,
+      group,
+      messages: formattedMessages,
+      members,
+      availableCharacters,
+      isAdmin: membership.isAdmin
+    });
+  } catch (error) {
+    console.error('Error fetching group conversation:', error);
+    req.flash('error_msg', 'An error occurred while loading the group conversation');
+    res.redirect(`/messages/groups/${req.params.characterId}`);
+  }
+};
+
 // Create a new group conversation
 exports.createGroupConversation = async (req, res) => {
   const errors = validationResult(req);
