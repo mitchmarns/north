@@ -368,15 +368,18 @@ exports.createPost = async (req, res) => {
       case 'text':
         // For text posts, content is required
         if (!content || content.trim() === '') {
+          console.error('Text post validation failed: empty content');
           req.flash('error_msg', 'Post content is required');
           return res.redirect('/social/feed');
         }
+        
+        console.log('Creating text post with content:', content);
         postData.content = content;
         break;
         
       case 'image':
         // For image posts, at least one valid image URL is required
-        postData.content = imageCaption || null;
+        postData.content = imageCaption || '';
         
         // Handle multiple images
         let imageUrls = [];
@@ -391,7 +394,6 @@ exports.createPost = async (req, res) => {
           }
         }
         
-        // Log to help debug the issue
         console.log('Processing image URLs:', {
           rawMediaUrls: req.body.mediaUrls,
           processedImageUrls: imageUrls,
@@ -403,6 +405,7 @@ exports.createPost = async (req, res) => {
           if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
             imageUrls = [req.body.imageUrl.trim()];
           } else {
+            console.error('Image post validation failed: no image URLs');
             req.flash('error_msg', 'At least one image URL is required for image posts');
             return res.redirect('/social/feed');
           }
