@@ -190,10 +190,21 @@
 
 /* Post Content */
 .social-post-content {
-  padding: 20px;
+  padding: 16px 20px;
   line-height: 1.6;
   white-space: pre-line;
   font-size: var(--text-base);
+}
+
+/* This targets the text content specifically */
+.social-post-content > :not(.post-image):not(.post-images-gallery):not(.music-card) {
+  margin-bottom: 12px; /* Tighter spacing above images */
+}
+
+/* Adjust the top margin for images */
+.post-image, .post-images-gallery {
+  margin-top: 0; /* Remove the top margin completely */
+  margin-bottom: 0;
 }
 
 .post-image {

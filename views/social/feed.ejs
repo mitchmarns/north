@@ -251,27 +251,30 @@
             <%= post.content.replace(/\n/g, '<br>') %>
           <% } else if (post.postType === 'image') { %>
             <!-- Image post -->
-            <% if (post.content) { %>
-              <div class="post-caption">
-                <%= post.content.replace(/\n/g, '<br>') %>
-              </div>
-            <% } %>
-            
-            <% if (post.mediaUrls && post.mediaUrls.length > 0) { %>
-              <div class="post-images-gallery <%= post.mediaUrls.length === 1 ? 'single-image' : '' %> 
+            <% if (post.postType === 'image') { %>
+              <!-- Image post -->
+              <% if (post.content) { %>
+                <div class="post-caption">
+                  <%= post.content.replace(/\n/g, '<br>') %>
+                </div>
+              <% } %>
+              
+              <% if (post.mediaUrls && post.mediaUrls.length > 0) { %>
+                <div class="post-images-gallery <%= post.mediaUrls.length === 1 ? 'single-image' : '' %> 
                                                <%= post.mediaUrls.length === 3 ? 'three-images' : '' %> 
                                                <%= post.mediaUrls.length === 4 ? 'four-images' : '' %>">
-                <% post.mediaUrls.forEach(url => { %>
-                  <div class="post-image-item">
-                    <img src="<%= url %>" alt="Post image" loading="lazy" onerror="this.parentNode.style.display='none'">
-                  </div>
-                <% }); %>
-              </div>
-            <% } else if (post.imageUrl) { %>
-              <!-- Legacy support for old posts with single imageUrl -->
-              <div class="post-image">
-                <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
-              </div>
+                  <% post.mediaUrls.forEach(url => { %>
+                    <div class="post-image-item">
+                      <img src="<%= url %>" alt="Post image" loading="lazy" onerror="this.parentNode.style.display='none'">
+                    </div>
+                  <% }); %>
+                </div>
+              <% } else if (post.imageUrl) { %>
+                <!-- Legacy support for old posts with single imageUrl -->
+                <div class="post-image">
+                  <img src="<%= post.imageUrl %>" alt="Post image" onerror="this.parentNode.style.display='none'">
+                </div>
+              <% } %>
             <% } %>
           <% } else if (post.postType === 'nowListening') { %>
             <!-- Now Listening post -->
