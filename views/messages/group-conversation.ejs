@@ -1,272 +1,126 @@
-<!-- views/messages/group-conversation.ejs -->
+<!-- views/messages/group-index.ejs -->
 <div class="d-flex justify-between align-center mb-4">
   <div>
-    <h1><%= group.name %></h1>
+    <h1>
+      <% if (typeof character !== 'undefined' && character) { %>
+        <%= character.name %>'s Group Chats
+      <% } else { %>
+        Group Chats
+      <% } %>
+    </h1>
     <div style="color: rgba(255, 255, 255, 0.7);">
-      <span><%= members.length %> members</span>
-      <% if (group.isGlobal) { %>
-        • <span class="global-badge">Global Chat</span>
-      <% } else if (group.teamId) { %>
-        • <span class="team-badge">Team Chat</span>
+      <% if (typeof conversations !== 'undefined') { %>
+        <%= conversations.length %> conversations
+        <% if (typeof totalUnread !== 'undefined' && totalUnread > 0) { %>
+          • <span class="unread-badge"><%= totalUnread %> unread</span>
+        <% } %>
       <% } %>
     </div>
   </div>
   
   <div>
-    <% if (!group.isGlobal && (!group.teamId || character.teamId !== group.teamId)) { %>
-      <form action="/messages/groups/<%= character.id %>/<%= group.id %>/leave" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-danger btn-sm mr-2">
-          <i class="ph-sign-out-duotone"></i> Leave Group
-        </button>
-      </form>
+    <% if (typeof character !== 'undefined' && character) { %>
+      <a href="/messages/<%= character.id %>/new" class="btn mr-2">
+        <i class="ph-plus-duotone"></i> New Message
+      </a>
+      <a href="/characters/<%= character.id %>" class="btn btn-outline">
+        <i class="ph-arrow-left-duotone"></i> Back to Character
+      </a>
     <% } %>
-    <a href="/messages/groups/<%= character.id %>" class="btn btn-outline">
-      <i class="ph-arrow-left-duotone"></i> Back to Groups
-    </a>
   </div>
 </div>
 
 <div class="row">
-  <!-- Messages Area -->
-  <div class="col" style="flex: 0 0 70%;">
-    <div class="card mb-3">
-      <div class="card-body message-container">
-        <% if (messages && messages.length > 0) { %>
-          <div class="message-list">
-            <% messages.forEach(message => { %>
-              <div class="message <%= message.isMine ? 'message-mine' : 'message-theirs' %>">
-                <div class="message-avatar">
-                  <% if (message.sender.avatarUrl) { %>
-                    <img src="<%= message.sender.avatarUrl %>" alt="<%= message.sender.name %>">
+  <!-- Character Selector -->
+  <div class="col" style="flex: 0 0 25%;">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Your Characters</h3>
+      </div>
+      <div class="card-body p-0">
+        <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+          <div class="character-selector">
+            <% characters.forEach(char => { %>
+              <a href="/messages/groups/<%= char.id %>" 
+                 class="character-selector-item <%= (typeof character !== 'undefined' && character && character.id === char.id) ? 'active' : '' %>">
+                <div class="character-selector-avatar">
+                  <% if (char.avatarUrl) { %>
+                    <img src="<%= char.avatarUrl %>" alt="<%= char.name %>">
                   <% } else { %>
-                    <span><%= message.sender.name.charAt(0).toUpperCase() %></span>
+                    <div class="avatar-placeholder">
+                      <%= char.name.charAt(0).toUpperCase() %>
+                    </div>
                   <% } %>
                 </div>
-                
-                <div class="message-content">
-                  <div class="message-header">
-                    <span class="message-sender"><%= message.sender.name %></span>
-                    <span class="message-time">
-                      <%= new Date(message.createdAt).toLocaleDateString() %> 
-                      <%= new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
-                    </span>
-                  </div>
-                  
-                  <div class="message-body">
-                    <%= message.content %>
-                    <% if (message.imageUrl) { %>
-                      <div class="message-image">
-                        <img src="<%= message.imageUrl %>" alt="Shared image">
-                      </div>
-                    <% } %>
-                  </div>
-                </div>
-                
-                <% if (message.isMine || isAdmin) { %>
-                  <div class="message-actions">
-                    <form action="/messages/groups/<%= character.id %>/message/<%= message.id %>?_method=DELETE" method="POST" class="delete-message-form">
-                      <button type="submit" class="delete-message-btn">
-                        <i class="ph-trash-duotone"></i>
-                      </button>
-                    </form>
-                  </div>
-                <% } %>
-              </div>
+                <div class="character-selector-name"><%= char.name %></div>
+              </a>
             <% }); %>
           </div>
         <% } else { %>
-          <div class="text-center p-5" style="color: rgba(255, 255, 255, 0.5);">
-            <i class="ph-chats-teardrop-duotone" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-            <p>No messages yet. Start a conversation!</p>
+          <div class="text-center p-3">
+            <p>You have no characters.</p>
+            <a href="/characters/create" class="btn btn-sm">Create a Character</a>
           </div>
         <% } %>
-      </div>
-    </div>
-    
-    <!-- Message Form -->
-    <div class="card">
-      <div class="card-body">
-        <form action="/messages/groups/<%= character.id %>/<%= group.id %>/send" method="POST">
-          <div class="form-group">
-            <textarea 
-              name="content" 
-              class="form-control" 
-              rows="4" 
-              placeholder="Type your message here..."
-              required
-            ></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label for="imageUrl">Image URL (optional)</label>
-            <input type="url" id="imageUrl" name="imageUrl" class="form-control" placeholder="https://example.com/image.jpg">
-            <small style="color: rgba(255, 255, 255, 0.5);">Share an image with your message</small>
-          </div>
-          
-          <div class="form-group text-right">
-            <button type="submit" class="btn">
-              <i class="ph-paper-plane-right-duotone"></i> Send Message
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   </div>
   
-  <!-- Group Info Sidebar -->
-  <div class="col" style="flex: 0 0 30%;">
-    <div class="card mb-3">
-      <div class="card-header">
-        <h3 class="mb-0">About</h3>
-      </div>
-      <div class="card-body">
-        <% if (group.description) { %>
-          <p><%= group.description %></p>
-        <% } else { %>
-          <p class="text-muted">No description provided.</p>
-        <% } %>
-        
-        <div class="group-info">
-          <div class="info-item">
-            <div class="info-label">Created by</div>
-            <div class="info-value"><%= group.creator ? group.creator.username : 'Unknown' %></div>
-          </div>
-          
-          <% if (group.Team) { %>
-            <div class="info-item">
-              <div class="info-label">Team</div>
-              <div class="info-value"><%= group.Team.name %></div>
-            </div>
-          <% } %>
-          
-          <div class="info-item">
-            <div class="info-label">Created on</div>
-            <div class="info-value"><%= new Date(group.createdAt).toLocaleDateString() %></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Group Members -->
-    <div class="card mb-3">
-      <div class="card-header d-flex justify-between align-center">
-        <h3 class="mb-0">Members (<%= members.length %>)</h3>
-        <% if (isAdmin && !group.isGlobal) { %>
-          <button type="button" class="btn btn-sm" data-toggle="modal" data-target="#inviteModal">
-            <i class="ph-user-plus-duotone"></i> Invite
-          </button>
-        <% } %>
-      </div>
-      <div class="card-body p-0">
-        <div class="group-members-list">
-          <% members.forEach(member => { %>
-            <div class="group-member-item">
-              <div class="member-avatar">
-                <% if (member.character.avatarUrl) { %>
-                  <img src="<%= member.character.avatarUrl %>" alt="<%= member.character.name %>">
-                <% } else { %>
-                  <div class="avatar-placeholder">
-                    <%= member.character.name.charAt(0).toUpperCase() %>
-                  </div>
-                <% } %>
-              </div>
-              <div class="member-info">
-                <div class="member-name">
-                  <%= member.character.name %>
-                  <% if (member.isAdmin) { %>
-                    <span class="admin-badge">Admin</span>
-                  <% } %>
-                </div>
-                <div class="member-user">
-                  <small>
-                    <%= member.character.User ? member.character.User.username : 'Unknown' %>
-                    <% if (member.character.userId === character.userId) { %>
-                      (You)
-                    <% } %>
-                  </small>
-                </div>
-              </div>
-            </div>
-          <% }); %>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Your Other Characters -->
-    <% if (userOtherCharacters && userOtherCharacters.length > 0) { %>
+  <!-- Conversations -->
+  <div class="col" style="flex: 0 0 75%;">
+    <% if (typeof character !== 'undefined' && character) { %>
       <div class="card">
         <div class="card-header">
-          <h3 class="mb-0">Your Other Characters</h3>
+          <h3 class="mb-0">Group Conversations</h3>
         </div>
         <div class="card-body">
-          <div class="your-characters-list">
-            <% userOtherCharacters.forEach(char => { %>
-              <div class="your-character-item d-flex justify-between align-center">
-                <div class="d-flex align-center">
-                  <div class="character-mini-avatar">
-                    <% if (char.avatarUrl) { %>
-                      <img src="<%= char.avatarUrl %>" alt="<%= char.name %>">
+          <% if (typeof conversations !== 'undefined' && conversations.length > 0) { %>
+            <div class="conversation-list">
+              <% conversations.forEach(conv => { %>
+                <a href="/messages/groups/<%= character.id %>/<%= conv.id %>" class="conversation-item">
+                  <div class="conversation-avatar">
+                    <% if (conv.avatarUrl) { %>
+                      <img src="<%= conv.avatarUrl %>" alt="<%= conv.name %>" class="avatar-image">
                     <% } else { %>
-                      <%= char.name.charAt(0).toUpperCase() %>
+                      <div class="avatar-placeholder">
+                        <%= conv.name.charAt(0).toUpperCase() %>
+                      </div>
                     <% } %>
                   </div>
-                  <div class="character-mini-name"><%= char.name %></div>
-                </div>
-                
-                <% if (char.isMember) { %>
-                  <span class="already-member-badge">Already in group</span>
-                <% } else { %>
-                  <form action="/messages/groups/<%= character.id %>/<%= group.id %>/join" method="POST">
-                    <input type="hidden" name="joinCharacterId" value="<%= char.id %>">
-                    <button type="submit" class="btn btn-sm">
-                      <i class="ph-sign-in-duotone"></i> Join
-                    </button>
-                  </form>
-                <% } %>
-              </div>
-            <% }); %>
-          </div>
+                  <div class="conversation-content">
+                    <div class="conversation-header">
+                      <h4 class="conversation-name"><%= conv.name %></h4>
+                      <div class="conversation-time">
+                        <%= conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleDateString() : 'No messages' %>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="text-center p-4">
+              <p>No group conversations yet.</p>
+              <a href="/messages/groups/<%= character.id %>/create" class="btn">Create a Group</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <div class="card-body text-center">
+          <p>Please select a character to view group chats.</p>
+          <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+            <p>You have <%= characters.length %> character(s) available.</p>
+          <% } else { %>
+            <p>You need to create a character first.</p>
+          <% } %>
+          <a href="/characters/create" class="btn">Create a Character</a>
         </div>
       </div>
     <% } %>
   </div>
 </div>
-
-<!-- Invite Members Modal (for group admins) -->
-<% if (isAdmin && !group.isGlobal) { %>
-  <div class="modal" id="inviteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Invite Members</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form action="/messages/groups/<%= character.id %>/<%= group.id %>/invite" method="POST">
-            <p>Select characters to invite to this group:</p>
-            
-            <div id="characterSearchContainer" class="mb-3">
-              <input type="text" id="characterSearch" class="form-control" placeholder="Search characters...">
-            </div>
-            
-            <div class="character-grid">
-              <!-- This is where we'd ideally have a searchable list of characters -->
-              <p class="text-center" style="color: rgba(255, 255, 255, 0.7);">This feature would be improved with a searchable list of characters with appropriate relationships to this character.</p>
-              <p class="text-center text-muted">For now, you can add your own characters to the group.</p>
-            </div>
-            
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn">Invite Selected</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-<% } %>
 
 <style>
   /* Message Container Styles */
