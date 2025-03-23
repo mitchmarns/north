@@ -71,6 +71,14 @@ exports.getCharacter = async (req, res) => {
       return res.redirect('/characters');
     }
 
+    // Add default values for stats
+    character.strength = character.strength || 0;
+    character.dexterity = character.dexterity || 0;
+    character.constitution = character.constitution || 0;
+    character.intelligence = character.intelligence || 0;
+    character.wisdom = character.wisdom || 0;
+    character.charisma = character.charisma || 0;
+
     // Check if character is private and not owned by user
     if (character.isPrivate && (!req.user || req.user.id !== character.userId)) {
       req.flash('error_msg', 'This character is private');
@@ -218,6 +226,15 @@ exports.getEditCharacter = async (req, res) => {
       character,
       teams: teams || []
     });
+
+    // Add default values for stats
+    character.strength = character.strength || 0;
+    character.dexterity = character.dexterity || 0;
+    character.constitution = character.constitution || 0;
+    character.intelligence = character.intelligence || 0;
+    character.wisdom = character.wisdom || 0;
+    character.charisma = character.charisma || 0;
+    
   } catch (error) {
     console.error('Error fetching character for edit:', error);
     req.flash('error_msg', 'An error occurred while fetching the character');

@@ -252,4 +252,15 @@ async function startServer() {
   }
 }
 
+async function updateDatabaseSchema() {
+  try {
+    await sequelize.sync({ alter: true });
+    console.log('Database schema updated successfully.');
+  } catch (error) {
+    console.error('Error updating database schema:', error);
+  }
+}
+
+updateDatabaseSchema();
+
  startServer();
