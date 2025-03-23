@@ -47,7 +47,7 @@ exports.getFeed = async (req, res) => {
     const filter = req.query.filter || 'all';
     const sort = req.query.sort || 'recent';
     const page = parseInt(req.query.page) || 1;
-    const limit = a0;
+    const limit = 10; // Changed from a0 (typo) to 10
     const offset = (page - 1) * limit;
     
     // Build query based on filter type
@@ -150,7 +150,7 @@ exports.getFeed = async (req, res) => {
       return formattedPost;
     });
     
-    // Set default values for template parameters
+    // Initialize characters as empty array by default
     let characters = [];
     
     // If user is logged in, check if they liked each post
