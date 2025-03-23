@@ -222,38 +222,19 @@ router.delete('/:characterId/:messageId', isAuthenticated, messageController.del
 
 // Default group chat route - redirects to first character
 router.get('/groups', isAuthenticated, async (req, res) => {
-  console.log('=================== Groups Route Hit ===================');
-  console.log('User:', req.user ? req.user.username : 'No User');
-  console.log('User ID:', req.user ? req.user.id : 'NO USER');
-
   try {
-    // If no user, redirect to login
-    if (!req.user) {
-      console.log('No user found, redirecting to login');
-      return res.redirect('/auth/login');
-    }
-
     // Find user's characters
     const characters = await Character.findAll({
       where: {
-        userId: req.user.id
+        userId: req.user.id,
+        isArchived: false // Only non-archived characters
       },
-      include: [{ 
-        model: User, 
-        attributes: ['username'] 
-      }]
+      order: [['createdAt', 'ASC']]
     });
 
-    console.log('Characters Found:', characters.map(c => ({
-      id: c.id,
-      name: c.name,
-      isArchived: c.isArchived
-    })));
-
-    // If no characters exist
+    // If no characters exist, render a template with no character selected
     if (characters.length === 0) {
-      console.log('No characters found for user');
-      return res.render('messages/group-index', {
+      return res.render('messages/group-conversation', {
         title: 'Group Chats',
         characters: [],
         character: null,
@@ -262,21 +243,12 @@ router.get('/groups', isAuthenticated, async (req, res) => {
       });
     }
 
-    // Use the first character
-    const activeCharacter = characters[0];
-    
-    console.log('Using first character:', {
-      id: activeCharacter.id,
-      name: activeCharacter.name
-    });
-
-    // Delegate to group message controller
-    req.params.characterId = activeCharacter.id;
-    return groupMessageController.getGroupConversations(req, res);
-
+    // Use the first character and redirect to its group chat page
+    const firstCharacter = characters[0];
+    res.redirect(`/messages/groups/${firstCharacter.id}`);
   } catch (error) {
-    console.error('Error in groups route:', error);
-    req.flash('error_msg', `An error occurred: ${error.message}`);
+    console.error('Error in /groups route:', error);
+    req.flash('error_msg', 'An error occurred while loading group chats');
     res.redirect('/dashboard');
   }
 });
