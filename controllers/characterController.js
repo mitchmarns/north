@@ -49,47 +49,140 @@ exports.getUserCharacters = async (req, res) => {
 };
 
 // Get single character
-exports.getCharacterGallery = async (req, res) => {
+exports.getCharacter = async (req, res) => {
   try {
-    const characterId = req.params.id;
+    // Log the character ID we're trying to fetch
+    console.log(`Fetching character with ID: ${req.params.id}`);
     
-    // Find character
-    const character = await Character.findByPk(characterId, {
+    const character = await Character.findByPk(req.params.id, {
       include: [
         {
           model: User,
           attributes: ['username', 'id']
+        },
+        {
+          model: Team
         }
       ]
     });
-    
+
     if (!character) {
       req.flash('error_msg', 'Character not found');
       return res.redirect('/characters');
     }
-    
-    // Check if character is private and user is not the owner
+
+    // Add default values for stats
+    character.strength = character.strength || 0;
+    character.dexterity = character.dexterity || 0;
+    character.constitution = character.constitution || 0;
+    character.intelligence = character.intelligence || 0;
+    character.wisdom = character.wisdom || 0;
+    character.charisma = character.charisma || 0;
+
+    // Check if character is private and not owned by user
     if (character.isPrivate && (!req.user || req.user.id !== character.userId)) {
       req.flash('error_msg', 'This character is private');
       return res.redirect('/characters');
     }
+
+    // Get user's characters for messaging (if user is logged in)
+    let userCharacters = [];
+    let canMessage = false;
     
-    // Get gallery images
-    const galleryImages = await CharacterGallery.findAll({
-      where: { characterId },
-      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
-    });
-    
-    res.render('characters/gallery', {
-      title: `${character.name}'s Gallery`,
-      character,
-      galleryImages,
-      isOwner: req.user && req.user.id === character.userId
-    });
+    if (req.user && req.user.id !== character.userId) {
+      userCharacters = await Character.findAll({
+        where: {
+          userId: req.user.id,
+          isArchived: false
+        }
+      });
+      
+      // Check if there are relationships between any of the user's characters and this character
+      if (userCharacters.length > 0) {
+        const characterIds = userCharacters.map(char => char.id);
+        
+        const relationship = await Relationship.findOne({
+          where: {
+            [Sequelize.Op.or]: [
+              {
+                character1Id: { [Sequelize.Op.in]: characterIds },
+                character2Id: character.id,
+                isApproved: true
+              },
+              {
+                character1Id: character.id,
+                character2Id: { [Sequelize.Op.in]: characterIds },
+                isApproved: true
+              }
+            ]
+          }
+        });
+        
+        canMessage = !!relationship;
+      }
+    }
+
+    // Try/catch for just the relationships query
+    try {
+      // Get character relationships
+      const relationships = await Relationship.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            { character1Id: character.id },
+            { character2Id: character.id }
+          ],
+          isApproved: true // Only show approved relationships
+        },
+        include: [
+          {
+            model: Character,
+            as: 'character1'
+          },
+          {
+            model: Character,
+            as: 'character2'
+          }
+        ]
+      });
+
+      // Format relationships for display
+      const formattedRelationships = relationships.map(rel => {
+        const isCharacter1 = rel.character1Id === character.id;
+        return {
+          id: rel.id,
+          otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
+          relationshipType: rel.relationshipType,
+          description: rel.description,
+          status: rel.status
+        };
+      });
+
+      console.log('Character team info:', character.Team ? character.Team.name : 'No team');
+
+      res.render('characters/view', {
+        title: character.name,
+        character,
+        relationships: formattedRelationships,
+        isOwner: req.user && req.user.id === character.userId,
+        userCharacters,
+        canMessage
+      });
+    } catch (relationshipError) {
+      console.error('Error fetching relationships:', relationshipError);
+      // Fall back to showing the character without relationships
+      res.render('characters/view', {
+        title: character.name,
+        character,
+        relationships: [],
+        isOwner: req.user && req.user.id === character.userId,
+        userCharacters,
+        canMessage
+      });
+    }
   } catch (error) {
-    console.error('Error fetching character gallery:', error);
-    req.flash('error_msg', 'An error occurred while fetching the gallery');
-    res.redirect(`/characters/${req.params.id}`);
+    console.error('Error fetching character:', error);
+    req.flash('error_msg', 'An error occurred while fetching the character');
+    res.redirect('/characters');
   }
 };
 
@@ -141,7 +234,7 @@ exports.getEditCharacter = async (req, res) => {
     character.intelligence = character.intelligence || 0;
     character.wisdom = character.wisdom || 0;
     character.charisma = character.charisma || 0;
-
+    
   } catch (error) {
     console.error('Error fetching character for edit:', error);
     req.flash('error_msg', 'An error occurred while fetching the character');
