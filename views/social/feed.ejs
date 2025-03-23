@@ -21,7 +21,7 @@
       <form id="post-form" action="/social/post" method="POST">
         <div class="form-group">
           <label for="post-as">Post as:</label>
-          <select id="post-as" name="characterId" class="form-control" required>
+          <select id="post-as" name="characterId" class="form-control">
             <option value="">Select a character</option>
             <% if (typeof characters !== 'undefined' && characters && characters.length > 0) { %>
               <% characters.forEach(char => { %>
@@ -773,47 +773,53 @@
     });
     
     function updateFormValidation(type) {
-      const contentTextarea = document.getElementById('post-content');
-      const mediaUrlInputs = document.querySelectorAll('.media-url');
-      const songTitleInput = document.getElementById('song-title');
-      const artistNameInput = document.getElementById('artist-name');
-      
-      // Reset all required attributes
-      if (contentTextarea) contentTextarea.required = false;
-      if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-        mediaUrlInputs.forEach(input => {
-          input.required = false;
-        });
-      }
-      if (songTitleInput) songTitleInput.required = false;
-      if (artistNameInput) artistNameInput.required = false;
-      
-      // Set required based on post type
-      if (type === 'text') {
-        if (contentTextarea) contentTextarea.required = true;
-      } else if (type === 'image') {
-        // At least one image is required
-        if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-          mediaUrlInputs[0].required = true;
-        }
-      } else if (type === 'nowListening') {
-        if (songTitleInput) songTitleInput.required = true;
-        if (artistNameInput) artistNameInput.required = true;
-      }
-
-      if (type === 'image') {
-        // Make sure at least one image input is required
-        const mediaUrlInputs = document.querySelectorAll('.media-url');
-        if (mediaUrlInputs && mediaUrlInputs.length > 0) {
-          // Only require the first input if it's visible
-          mediaUrlInputs[0].required = true;
-          
-          // Also log to console for debugging
-          console.log('Image input required state set:', mediaUrlInputs[0].required);
-          console.log('Image input value:', mediaUrlInputs[0].value);
-        }
-      }
+  const contentTextarea = document.getElementById('post-content');
+  const imageCaption = document.getElementById('post-image-content');
+  const mediaUrlInputs = document.querySelectorAll('.media-url');
+  const songTitleInput = document.getElementById('song-title');
+  const artistNameInput = document.getElementById('artist-name');
+  
+  // Reset all validation states
+  if (contentTextarea) {
+    contentTextarea.required = false;
+    contentTextarea.classList.remove('is-invalid');
+  }
+  
+  if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+    mediaUrlInputs.forEach(input => {
+      input.required = false;
+      input.classList.remove('is-invalid');
+    });
+  }
+  
+  if (songTitleInput) {
+    songTitleInput.required = false;
+    songTitleInput.classList.remove('is-invalid');
+  }
+  
+  if (artistNameInput) {
+    artistNameInput.required = false;
+    artistNameInput.classList.remove('is-invalid');
+  }
+  
+  // Set required based on post type
+  if (type === 'text') {
+    if (contentTextarea) contentTextarea.required = true;
+  } else if (type === 'image') {
+    // At least one image is required
+    if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+      mediaUrlInputs[0].required = true;
     }
+  } else if (type === 'nowListening') {
+    if (songTitleInput) songTitleInput.required = true;
+    if (artistNameInput) artistNameInput.required = true;
+  }
+  
+  // Hide any visible invalid feedback
+  document.querySelectorAll('.invalid-feedback').forEach(el => {
+    el.style.display = 'none';
+  });
+}
     
     // Add image button functionality
     const addImageBtn = document.getElementById('add-image-btn');
@@ -938,4 +944,46 @@
       });
     }
   });
+  // Form submission validation
+const postForm = document.getElementById('post-form');
+if (postForm) {
+  postForm.addEventListener('submit', function(e) {
+    const postType = document.getElementById('post-type').value;
+    
+    if (postType === 'text') {
+      const contentTextarea = document.getElementById('post-content');
+      if (!contentTextarea.value.trim()) {
+        e.preventDefault();
+        contentTextarea.classList.add('is-invalid');
+        document.getElementById('text-post-content').querySelector('.invalid-feedback').style.display = 'block';
+        return false;
+      }
+    } else if (postType === 'image') {
+      const mediaUrls = document.querySelectorAll('.media-url');
+      let hasValidUrl = false;
+      
+      mediaUrls.forEach(input => {
+        if (input.value.trim()) {
+          hasValidUrl = true;
+        }
+      });
+      
+      if (!hasValidUrl) {
+        e.preventDefault();
+        mediaUrls[0].classList.add('is-invalid');
+        return false;
+      }
+    } else if (postType === 'nowListening') {
+      const songTitle = document.getElementById('song-title');
+      const artistName = document.getElementById('artist-name');
+      
+      if (!songTitle.value.trim() || !artistName.value.trim()) {
+        e.preventDefault();
+        if (!songTitle.value.trim()) songTitle.classList.add('is-invalid');
+        if (!artistName.value.trim()) artistName.classList.add('is-invalid');
+        return false;
+      }
+    }
+  });
+}
 </script>

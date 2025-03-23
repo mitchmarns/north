@@ -17,8 +17,13 @@ router.post('/post', isAuthenticated, [
     .isIn(['text', 'image', 'nowListening', 'multiple_images'])
     .withMessage('Invalid post type'),
   body('content')
-    .optional({ nullable: true })
-    .trim(),
+  .custom((value, { req }) => {
+    // Only validate content for text posts
+    if (req.body.postType === 'text' && (!value || value.trim() === '')) {
+      throw new Error('Post content is required for text posts');
+    }
+    return true;
+  }),
   body('characterId')
     .optional({ nullable: true })
     .isNumeric()
