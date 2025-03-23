@@ -770,30 +770,34 @@
   });
   
   function updateFormValidation(type) {
-    const contentTextarea = document.getElementById('post-content');
-    const mediaUrlInputs = document.querySelectorAll('.media-url');
-    const songTitleInput = document.getElementById('song-title');
-    const artistNameInput = document.getElementById('artist-name');
-    
-    // Reset all required attributes
-    contentTextarea.required = false;
-    mediaUrlInputs.forEach(input => input.required = false);
-    songTitleInput.required = false;
-    artistNameInput.required = false;
-    
-    // Set required based on post type
-    if (type === 'text') {
-      contentTextarea.required = true;
-    } else if (type === 'image') {
-      // At least one image is required
-      if (mediaUrlInputs.length > 0) {
-        mediaUrlInputs[0].required = true;
-      }
-    } else if (type === 'nowListening') {
-      songTitleInput.required = true;
-      artistNameInput.required = true;
-    }
+  const contentTextarea = document.getElementById('post-content');
+  const mediaUrlInputs = document.querySelectorAll('.media-url');
+  const songTitleInput = document.getElementById('song-title');
+  const artistNameInput = document.getElementById('artist-name');
+  
+  // Reset all required attributes
+  if (contentTextarea) contentTextarea.required = false;
+  if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+    mediaUrlInputs.forEach(input => {
+      input.required = false;
+    });
   }
+  if (songTitleInput) songTitleInput.required = false;
+  if (artistNameInput) artistNameInput.required = false;
+  
+  // Set required based on post type
+  if (type === 'text') {
+    if (contentTextarea) contentTextarea.required = true;
+  } else if (type === 'image') {
+    // At least one image is required
+    if (mediaUrlInputs && mediaUrlInputs.length > 0) {
+      mediaUrlInputs[0].required = true;
+    }
+  } else if (type === 'nowListening') {
+    if (songTitleInput) songTitleInput.required = true;
+    if (artistNameInput) artistNameInput.required = true;
+  }
+}
   
   // Add image button functionality
   const addImageBtn = document.getElementById('add-image-btn');

@@ -47,7 +47,7 @@ exports.getFeed = async (req, res) => {
     const filter = req.query.filter || 'all';
     const sort = req.query.sort || 'recent';
     const page = parseInt(req.query.page) || 1;
-    const limit = 10; // Changed from a0 (typo) to 10
+    const limit = 10; 
     const offset = (page - 1) * limit;
     
     // Build query based on filter type
@@ -316,8 +316,6 @@ exports.loadMore = async (req, res) => {
 };
 
 // Create post
-// controllers/socialController.js - Update the createPost method
-
 exports.createPost = async (req, res) => {
   const errors = validationResult(req);
   
@@ -361,45 +359,62 @@ exports.createPost = async (req, res) => {
     // Add content based on post type
     switch (postType) {
       case 'text':
+        // For text posts, content is required
+        if (!content || content.trim() === '') {
+          req.flash('error_msg', 'Post content is required');
+          return res.redirect('/social/feed');
+        }
         postData.content = content;
         break;
         
       case 'image':
+        // For image posts, at least one valid image URL is required
         postData.content = imageCaption || null;
         
         // Handle multiple images
+        let imageUrls = [];
+        
         if (Array.isArray(mediaUrls)) {
           // Filter out empty URLs
-          const filteredUrls = mediaUrls.filter(url => url && url.trim() !== '');
-          
-          if (filteredUrls.length === 0) {
-            req.flash('error_msg', 'At least one image URL is required for image posts');
-            return res.redirect('/social/feed');
-          }
-          
-          postData.mediaUrls = filteredUrls;
+          imageUrls = mediaUrls.filter(url => url && url.trim() !== '');
         } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
-          postData.mediaUrls = [mediaUrls.trim()];
-        } else {
+          imageUrls = [mediaUrls.trim()];
+        }
+        
+        if (imageUrls.length === 0) {
           req.flash('error_msg', 'At least one image URL is required for image posts');
           return res.redirect('/social/feed');
         }
+        
+        // Don't do any URL validation here - the browser will handle basic validation
+        // and we don't want to block posts with unusual but valid URLs
+        postData.mediaUrls = imageUrls;
         break;
         
       case 'nowListening':
+        // For music posts, song title and artist are required
         postData.content = musicThoughts || null;
+        
+        if (!songTitle || songTitle.trim() === '') {
+          req.flash('error_msg', 'Song title is required for music posts');
+          return res.redirect('/social/feed');
+        }
+        
+        if (!artistName || artistName.trim() === '') {
+          req.flash('error_msg', 'Artist name is required for music posts');
+          return res.redirect('/social/feed');
+        }
+        
         postData.songTitle = songTitle;
         postData.artistName = artistName;
         postData.albumName = albumName || null;
-        postData.albumCoverUrl = albumCoverUrl || null;
         
-        if (!songTitle || !artistName) {
-          req.flash('error_msg', 'Song title and artist name are required for music posts');
-          return res.redirect('/social/feed');
-        }
+        // Don't validate album cover URL format - just use it if provided
+        postData.albumCoverUrl = albumCoverUrl && albumCoverUrl.trim() !== '' ? albumCoverUrl : null;
         break;
         
       default:
+        // Default to text post
         postData.content = content;
     }
     

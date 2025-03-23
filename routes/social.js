@@ -23,20 +23,45 @@ router.post('/post', isAuthenticated, [
     .optional({ nullable: true })
     .isNumeric()
     .withMessage('Invalid character'),
+  // Conditional URL validation based on post type
   body('mediaUrls.*')
     .optional({ nullable: true })
-    .isURL()
-    .withMessage('Invalid image URL format'),
+    .custom((value, { req }) => {
+      // Only validate URL if this is an image post and the URL is not empty
+      if (req.body.postType === 'image' && value && value.trim() !== '') {
+        const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+        if (!urlPattern.test(value)) {
+          throw new Error('Invalid image URL format');
+        }
+      }
+      return true;
+    }),
   body('songTitle')
     .optional({ nullable: true })
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('Song title cannot exceed 100 characters'),
+    .custom((value, { req }) => {
+      // Only validate if this is a nowListening post
+      if (req.body.postType === 'nowListening' && (!value || value.trim() === '')) {
+        throw new Error('Song title is required for music posts');
+      }
+      if (value && value.length > 100) {
+        throw new Error('Song title cannot exceed 100 characters');
+      }
+      return true;
+    }),
   body('artistName')
     .optional({ nullable: true })
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('Artist name cannot exceed 100 characters'),
+    .custom((value, { req }) => {
+      // Only validate if this is a nowListening post
+      if (req.body.postType === 'nowListening' && (!value || value.trim() === '')) {
+        throw new Error('Artist name is required for music posts');
+      }
+      if (value && value.length > 100) {
+        throw new Error('Artist name cannot exceed 100 characters');
+      }
+      return true;
+    }),
   body('albumName')
     .optional({ nullable: true })
     .trim()
@@ -44,8 +69,16 @@ router.post('/post', isAuthenticated, [
     .withMessage('Album name cannot exceed 100 characters'),
   body('albumCoverUrl')
     .optional({ nullable: true })
-    .isURL()
-    .withMessage('Invalid album cover URL format'),
+    .custom((value, { req }) => {
+      // Only validate URL if this is a nowListening post and the URL is not empty
+      if (req.body.postType === 'nowListening' && value && value.trim() !== '') {
+        const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-z]{2,})(\/\S*)?$/i;
+        if (!urlPattern.test(value)) {
+          throw new Error('Invalid album cover URL format');
+        }
+      }
+      return true;
+    }),
   body('privacy')
     .isIn(['public', 'private'])
     .withMessage('Invalid privacy setting')
