@@ -149,39 +149,6 @@ exports.getCharacter = async (req, res) => {
 
     // Try/catch for just the relationships query
     try {
-      // Get character relationships
-      const relationships = await Relationship.findAll({
-        where: {
-          [Sequelize.Op.or]: [
-            { character1Id: character.id },
-            { character2Id: character.id }
-          ],
-          isApproved: true // Only show approved relationships
-        },
-        include: [
-          {
-            model: Character,
-            as: 'character1'
-          },
-          {
-            model: Character,
-            as: 'character2'
-          }
-        ]
-      });
-
-      // Format relationships for display
-      const formattedRelationships = relationships.map(rel => {
-        const isCharacter1 = rel.character1Id === character.id;
-        return {
-          id: rel.id,
-          otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
-          relationshipType: rel.relationshipType,
-          description: rel.description,
-          status: rel.status
-        };
-      });
-
       console.log('Character team info:', character.Team ? character.Team.name : 'No team');
 
       res.render('characters/view', {
