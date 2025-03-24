@@ -42,14 +42,6 @@
                 <span class="notification-badge-small"><%= unreadMessages %></span>
               <% } %>
             </a>
-
-            <!-- Add this new menu item below the existing Messages item -->
-            <a class="dropdown-item" href="/messages/groups">
-              <i class="ph-users-three-duotone"></i> Group Chats
-              <% if (typeof unreadGroupMessages !== 'undefined' && unreadGroupMessages > 0) { %>
-                <span class="notification-badge-small"><%= unreadGroupMessages %></span>
-              <% } %>
-            </a>
             
             <!-- Item for relationship requests -->
             <a class="dropdown-item" href="/characters/relationship-requests">

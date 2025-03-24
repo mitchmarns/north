@@ -74,24 +74,6 @@ Message.belongsTo(Character, { foreignKey: 'senderId', as: 'sender' });
 Character.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 Message.belongsTo(Character, { foreignKey: 'receiverId', as: 'receiver' });
 
-// Group conversation associations
-User.hasMany(GroupConversation, { foreignKey: 'createdById', as: 'createdGroups' });
-GroupConversation.belongsTo(User, { foreignKey: 'createdById', as: 'creator' });
-
-Team.hasMany(GroupConversation, { foreignKey: 'teamId', as: 'teamChats' });
-GroupConversation.belongsTo(Team, { foreignKey: 'teamId' });
-
-// Group members associations
-GroupConversation.hasMany(GroupMember, { foreignKey: 'groupId', as: 'members' });
-GroupMember.belongsTo(GroupConversation, { foreignKey: 'groupId', as: 'group' });
-
-Character.hasMany(GroupMember, { foreignKey: 'characterId', as: 'groupMemberships' });
-GroupMember.belongsTo(Character, { foreignKey: 'characterId', as: 'character' });
-
-// Group messages associations
-GroupConversation.hasMany(Message, { foreignKey: 'groupId', as: 'messages' });
-Message.belongsTo(GroupConversation, { foreignKey: 'groupId', as: 'group' });
-
 User.hasMany(SocialPost, { foreignKey: 'userId' });
 SocialPost.belongsTo(User, { foreignKey: 'userId' });
 
@@ -127,7 +109,5 @@ module.exports = {
   Message,
   SocialPost,
   Comment,
-  Like,
-  GroupConversation,
-  GroupMember
+  Like
 };

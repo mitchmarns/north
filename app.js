@@ -130,61 +130,6 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Middleware to count unread group messages
-app.use(async (req, res, next) => {
-  if (req.user) {
-    try {
-      const { Character, GroupMember, Message, Sequelize } = require('./models');
-      
-      // Get all characters owned by the user
-      const userCharacters = await Character.findAll({
-        where: {
-          userId: req.user.id
-        }
-      });
-      
-      // Get IDs of all user's characters
-      const characterIds = userCharacters.map(char => char.id);
-      
-      // Get all group memberships for these characters
-      const memberships = await GroupMember.findAll({
-        where: {
-          characterId: { [Sequelize.Op.in]: characterIds }
-        }
-      });
-      
-      // Count unread group messages
-      let unreadGroupCount = 0;
-      
-      // For each membership, count messages newer than lastReadAt
-      for (const membership of memberships) {
-        const count = await Message.count({
-          where: {
-            groupId: membership.groupId,
-            senderId: { [Sequelize.Op.ne]: membership.characterId },
-            createdAt: {
-              [Sequelize.Op.gt]: membership.lastReadAt || new Date(0)
-            },
-            isDeleted: false
-          }
-        });
-        
-        unreadGroupCount += count;
-      }
-      
-      // Add unreadGroupMessages count to res.locals
-      res.locals.unreadGroupMessages = unreadGroupCount;
-    } catch (error) {
-      console.error('Error checking for unread group messages:', error.message);
-      console.error(error.stack);
-      res.locals.unreadGroupMessages = 0;
-    }
-  } else {
-    res.locals.unreadGroupMessages = 0;
-  }
-  next();
-});
-
 // Global Variables
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
@@ -296,10 +241,6 @@ async function startServer() {
     // Set force: true to drop and recreate tables (use carefully in production)
     await sequelize.sync({ force: false });
     console.log('Database synced');
-    
-    // Initialize global chat
-    const groupMessageController = require('./controllers/groupMessageController');
-    await groupMessageController.initializeGlobalChat(1); // Use a default admin ID (1)
     
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

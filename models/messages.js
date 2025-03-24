@@ -1,4 +1,5 @@
-// models/message.js (updated version)
+// In models/messages.js, modify the model definition:
+
 module.exports = (sequelize, DataTypes) => {
   const Message = sequelize.define('Message', {
     id: {
@@ -16,17 +17,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     receiverId: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: 'characters',
-        key: 'id'
-      }
-    },
-    groupId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'group_conversations',
         key: 'id'
       }
     },
@@ -59,18 +52,8 @@ module.exports = (sequelize, DataTypes) => {
       },
       {
         fields: ['receiverId', 'isRead']
-      },
-      {
-        fields: ['groupId']
       }
-    ],
-    validate: {
-      ensureReceiverId() {
-        if (this.receiverId === null) {
-          throw new Error('A message must have a receiver');
-        }
-      }
-    }
+    ]
   });
 
   return Message;
