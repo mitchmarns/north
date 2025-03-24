@@ -747,48 +747,26 @@ exports.addComment = async (req, res) => {
   }
   
   try {
-    const { content, commentAsId } = req.body;
-    const postId = req.params.id;
+    // Extract comment data
+    const commentData = {
+      content: req.body.content,
+      characterId: req.body.commentAsId
+    };
     
-    // Find post
-    const post = await SocialPost.findByPk(postId);
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/social/feed');
-    }
-    
-    // Verify character belongs to user if provided
-    if (commentAsId) {
-      const character = await Character.findOne({
-        where: {
-          id: commentAsId,
-          userId: req.user.id
-        }
-      });
-      
-      if (!character) {
-        req.flash('error_msg', 'Invalid character selection');
-        return res.redirect(`/social/post/${postId}`);
-      }
-    }
-    
-    // Create comment
-    await Comment.create({
-      postId,
-      userId: req.user.id,
-      characterId: commentAsId || null,
-      content
-    });
-    
-    // Increment comment count
-    await post.increment('commentCount');
+    // Add comment using the service
+    await socialService.addComment(req.params.id, commentData, req.user.id);
     
     req.flash('success_msg', 'Comment added successfully');
-    res.redirect(`/social/post/${postId}`);
+    res.redirect(`/social/post/${req.params.id}`);
   } catch (error) {
     console.error('Error adding comment:', error);
-    req.flash('error_msg', 'An error occurred while adding your comment');
+    
+    if (error.message.includes('not found') || error.message.includes('Invalid character')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while adding your comment');
+    }
+    
     res.redirect(`/social/post/${req.params.id}`);
   }
 };
@@ -796,34 +774,17 @@ exports.addComment = async (req, res) => {
 // Delete comment
 exports.deleteComment = async (req, res) => {
   try {
-    const commentId = req.params.id;
-    
-    // Find comment
-    const comment = await Comment.findByPk(commentId);
-    
-    if (!comment) {
-      return res.status(404).json({ success: false, message: 'Comment not found' });
-    }
-    
-    // Check if user is the creator
-    if (comment.userId !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
-    }
-    
-    // Get post to update comment count
-    const post = await SocialPost.findByPk(comment.postId);
-    
-    // Delete comment
-    await comment.destroy();
-    
-    // Decrement comment count if post exists
-    if (post) {
-      await post.decrement('commentCount');
-    }
+    // Delete comment using the service
+    await socialService.deleteComment(req.params.id, req.user.id);
     
     return res.json({ success: true });
   } catch (error) {
     console.error('Error deleting comment:', error);
-    return res.status(500).json({ success: false, message: 'An error occurred' });
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized')) {
+      return res.status(403).json({ success: false, message: error.message });
+    } else {
+      return res.status(500).json({ success: false, message: 'An error occurred' });
+    }
   }
 };

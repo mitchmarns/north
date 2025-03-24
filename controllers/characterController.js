@@ -481,107 +481,42 @@ exports.addRelationship = async (req, res) => {
 // Approve relationship request
 exports.approveRelationship = async (req, res) => {
   try {
-    const relationshipId = req.params.relationshipId;
-    
-    // Find relationship
-    const relationship = await Relationship.findByPk(relationshipId, {
-      include: [
-        {
-          model: Character,
-          as: 'character1'
-        },
-        {
-          model: Character,
-          as: 'character2'
-        }
-      ]
-    });
-    
-    if (!relationship) {
-      req.flash('error_msg', 'Relationship not found');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Determine which character belongs to the current user
-    const userCharacter = relationship.character1.userId === req.user.id ? relationship.character1 
-                         : relationship.character2.userId === req.user.id ? relationship.character2 
-                         : null;
-    
-    if (!userCharacter) {
-      req.flash('error_msg', 'Not authorized to approve this relationship');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Check if the relationship is pending and not already approved
-    if (!relationship.isPending || relationship.isApproved) {
-      req.flash('error_msg', 'This relationship is not pending approval');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Update relationship to approved status
-    await relationship.update({
-      isPending: false,
-      isApproved: true
-    });
+    // Approve relationship using the service
+    await relationshipService.approveRelationship(req.params.relationshipId, req.user.id);
     
     req.flash('success_msg', 'Relationship approved successfully');
-    res.redirect(req.headers.referer || `/characters/${userCharacter.id}/relationships`);
+    res.redirect(req.headers.referer || '/characters/relationship-requests');
   } catch (error) {
     console.error('Error approving relationship:', error);
-    req.flash('error_msg', 'An error occurred while approving the relationship');
-    res.redirect(req.headers.referer || '/characters');
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized') || error.message.includes('not pending')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while approving the relationship');
+    }
+    
+    res.redirect(req.headers.referer || '/characters/relationship-requests');
   }
 };
 
 // Decline relationship request
 exports.declineRelationship = async (req, res) => {
   try {
-    const relationshipId = req.params.relationshipId;
-    
-    // Find relationship
-    const relationship = await Relationship.findByPk(relationshipId, {
-      include: [
-        {
-          model: Character,
-          as: 'character1'
-        },
-        {
-          model: Character,
-          as: 'character2'
-        }
-      ]
-    });
-    
-    if (!relationship) {
-      req.flash('error_msg', 'Relationship not found');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Determine which character belongs to the current user
-    const userCharacter = relationship.character1.userId === req.user.id ? relationship.character1 
-                         : relationship.character2.userId === req.user.id ? relationship.character2 
-                         : null;
-    
-    if (!userCharacter) {
-      req.flash('error_msg', 'Not authorized to decline this relationship');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Check if the relationship is pending
-    if (!relationship.isPending) {
-      req.flash('error_msg', 'This relationship is not pending approval');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Delete the declined relationship request
-    await relationship.destroy();
+    // Decline relationship using the service
+    await relationshipService.declineRelationship(req.params.relationshipId, req.user.id);
     
     req.flash('success_msg', 'Relationship request declined');
-    res.redirect(req.headers.referer || `/characters/${userCharacter.id}/relationships`);
+    res.redirect(req.headers.referer || '/characters/relationship-requests');
   } catch (error) {
     console.error('Error declining relationship:', error);
-    req.flash('error_msg', 'An error occurred while declining the relationship');
-    res.redirect(req.headers.referer || '/characters');
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized') || error.message.includes('not pending')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while declining the relationship');
+    }
+    
+    res.redirect(req.headers.referer || '/characters/relationship-requests');
   }
 };
 
@@ -790,32 +725,38 @@ exports.getCharacterGallery = async (req, res) => {
 };
 
 // Upload gallery image form
-exports.getUploadGalleryImage = async (req, res) => {
+exports.uploadGalleryImage = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/${req.params.id}/gallery/upload`);
+  }
+  
   try {
-    const characterId = req.params.id;
+    // Extract image data
+    const imageData = {
+      imageUrl: req.body.imageUrl,
+      caption: req.body.caption
+    };
     
-    // Find character
-    const character = await Character.findByPk(characterId);
+    // Add gallery image using the service
+    await characterService.addGalleryImage(req.params.id, imageData, req.user.id);
     
-    if (!character) {
-      req.flash('error_msg', 'Character not found');
-      return res.redirect('/characters');
-    }
-    
-    // Check if user owns the character
-    if (character.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(`/characters/${characterId}`);
-    }
-    
-    res.render('characters/upload-image', {
-      title: `Add to ${character.name}'s Gallery`,
-      character
-    });
+    req.flash('success_msg', 'Image added to gallery successfully');
+    res.redirect(`/characters/${req.params.id}/gallery`);
   } catch (error) {
-    console.error('Error loading upload form:', error);
-    req.flash('error_msg', 'An error occurred while loading the upload form');
-    res.redirect(`/characters/${req.params.id}`);
+    console.error('Error uploading gallery image:', error);
+    
+    if (error.message === 'Character not found') {
+      req.flash('error_msg', 'Character not found');
+    } else if (error.message === 'Not authorized') {
+      req.flash('error_msg', 'Not authorized');
+    } else {
+      req.flash('error_msg', 'An error occurred while uploading the image');
+    }
+    
+    res.redirect(`/characters/${req.params.id}/gallery/upload`);
   }
 };
 
@@ -1107,43 +1048,34 @@ exports.updateStats = async (req, res) => {
   }
   
   try {
-    const { 
-      strength, dexterity, constitution, intelligence, wisdom, charisma,
-      personalityType, occupation
-    } = req.body;
-    const characterId = req.params.id;
+    // Extract stats data
+    const statsData = {
+      strength: req.body.strength,
+      dexterity: req.body.dexterity,
+      constitution: req.body.constitution,
+      intelligence: req.body.intelligence,
+      wisdom: req.body.wisdom,
+      charisma: req.body.charisma,
+      personalityType: req.body.personalityType,
+      occupation: req.body.occupation
+    };
     
-    // Find character
-    const character = await Character.findByPk(characterId);
+    // Update stats using the service
+    await characterService.updateCharacterStats(req.params.id, statsData, req.user.id);
     
-    if (!character) {
-      req.flash('error_msg', 'Character not found');
-      return res.redirect('/characters');
-    }
-    
-    // Check if user owns the character
-    if (character.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(`/characters/${characterId}`);
-    }
-    
-    // Update character stats
-    await character.update({
-      strength: strength || null,
-      dexterity: dexterity || null,
-      constitution: constitution || null,
-      intelligence: intelligence || null,
-      wisdom: wisdom || null,
-      charisma: charisma || null,
-      personalityType: personalityType || null,
-      occupation: occupation || null
-    });
-    
-    req.flash('success_msg', 'Character stats updated');
-    res.redirect(`/characters/${characterId}`);
+    req.flash('success_msg', 'Character stats updated successfully');
+    res.redirect(`/characters/${req.params.id}`);
   } catch (error) {
     console.error('Error updating character stats:', error);
-    req.flash('error_msg', 'An error occurred while updating stats');
+    
+    if (error.message === 'Character not found') {
+      req.flash('error_msg', 'Character not found');
+    } else if (error.message === 'Not authorized') {
+      req.flash('error_msg', 'Not authorized');
+    } else {
+      req.flash('error_msg', 'An error occurred while updating character stats');
+    }
+    
     res.redirect(`/characters/${req.params.id}/stats/edit`);
   }
 };

@@ -87,48 +87,21 @@ exports.sendMessage = async (req, res) => {
 // Delete a message
 exports.deleteMessage = async (req, res) => {
   try {
-    const messageId = req.params.messageId;
-    const characterId = req.params.characterId;
+    // Delete message using the service
+    await messageService.deleteMessage(req.params.messageId, req.params.characterId, req.user.id);
     
-    // Verify character belongs to the user
-    const character = await Character.findOne({
-      where: {
-        id: characterId,
-        userId: req.user.id
-      }
-    });
-    
-    if (!character) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect('/characters/my-characters');
-    }
-    
-    // Find message
-    const message = await Message.findByPk(messageId);
-    
-    if (!message) {
-      req.flash('error_msg', 'Message not found');
-      return res.redirect(`/messages/${characterId}`);
-    }
-    
-    // Verify user owns either the sender or receiver character
-    if (message.senderId !== parseInt(characterId) && message.receiverId !== parseInt(characterId)) {
-      req.flash('error_msg', 'Not authorized to delete this message');
-      return res.redirect(`/messages/${characterId}`);
-    }
-    
-    // Soft delete the message
-    await message.update({ isDeleted: true });
-    
-    req.flash('success_msg', 'Message deleted');
-    
-    // Redirect back to the conversation
-    const partnerId = message.senderId === parseInt(characterId) ? message.receiverId : message.senderId;
-    res.redirect(`/messages/${characterId}/${partnerId}`);
+    req.flash('success_msg', 'Message deleted successfully');
+    res.redirect(req.headers.referer || `/messages/${req.params.characterId}`);
   } catch (error) {
     console.error('Error deleting message:', error);
-    req.flash('error_msg', 'An error occurred while deleting the message');
-    res.redirect(`/messages/${req.params.characterId}`);
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while deleting the message');
+    }
+    
+    res.redirect(req.headers.referer || `/messages/${req.params.characterId}`);
   }
 };
 

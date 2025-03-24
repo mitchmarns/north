@@ -471,4 +471,110 @@ if (action === 'like' && !existingLike) {
 return { count: post.likeCount };
 };
 
-// Add more social service methods (comment, delete, etc.)
+/**
+ * Add a comment to a social post
+ * @param {number} postId - The post ID
+ * @param {Object} commentData - Comment data
+ * @param {number} userId - User ID
+ * @returns {Object} The created comment
+ */
+exports.addComment = async (postId, commentData, userId) => {
+  // Find post
+  const post = await SocialPost.findByPk(postId);
+  
+  if (!post) {
+    throw new Error('Post not found');
+  }
+  
+  // Extract comment data
+  const { content, characterId } = commentData;
+  
+  // Verify character belongs to user if provided
+  if (characterId) {
+    const character = await Character.findOne({
+      where: {
+        id: characterId,
+        userId: userId
+      }
+    });
+    
+    if (!character) {
+      throw new Error('Invalid character selection');
+    }
+  }
+  
+  // Create comment
+  const comment = await Comment.create({
+    postId,
+    userId,
+    characterId: characterId || null,
+    content
+  });
+  
+  // Increment comment count on post
+  await post.increment('commentCount');
+  
+  return comment;
+};
+
+/**
+ * Delete a comment
+ * @param {number} commentId - The comment ID
+ * @param {number} userId - User ID
+ * @returns {boolean} Success status
+ */
+exports.deleteComment = async (commentId, userId) => {
+  // Find comment
+  const comment = await Comment.findByPk(commentId);
+  
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  
+  // Check if user is the creator
+  if (comment.userId !== userId) {
+    throw new Error('Not authorized');
+  }
+  
+  // Get post to update comment count
+  const post = await SocialPost.findByPk(comment.postId);
+  
+  // Delete comment
+  await comment.destroy();
+  
+  // Decrement comment count if post exists
+  if (post) {
+    await post.decrement('commentCount');
+  }
+  
+  return true;
+};
+
+/**
+ * Edit a comment
+ * @param {number} commentId - The comment ID
+ * @param {string} content - Updated comment content
+ * @param {number} userId - User ID
+ * @returns {Object} Updated comment
+ */
+exports.editComment = async (commentId, content, userId) => {
+  // Find comment
+  const comment = await Comment.findByPk(commentId);
+  
+  if (!comment) {
+    throw new Error('Comment not found');
+  }
+  
+  // Check if user is the creator
+  if (comment.userId !== userId) {
+    throw new Error('Not authorized');
+  }
+  
+  // Update comment
+  await comment.update({
+    content,
+    isEdited: true
+  });
+  
+  return comment;
+};

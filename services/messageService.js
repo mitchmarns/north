@@ -308,4 +308,41 @@ exports.sendMessage = async (messageData, userId) => {
   return message;
 };
 
-// Add more message service methods (delete, etc.)
+/**
+ * Delete a message (soft delete)
+ * @param {number} messageId - The message ID
+ * @param {number} characterId - The character ID
+ * @param {number} userId - User ID
+ * @returns {boolean} Success status
+ */
+exports.deleteMessage = async (messageId, characterId, userId) => {
+  // Verify character belongs to the user
+  const character = await Character.findOne({
+    where: {
+      id: characterId,
+      userId: userId
+    }
+  });
+  
+  if (!character) {
+    throw new Error('Not authorized');
+  }
+  
+  // Find message
+  const message = await Message.findByPk(messageId);
+  
+  if (!message) {
+    throw new Error('Message not found');
+  }
+  
+  // Verify user owns either the sender or receiver character
+  if (message.senderId !== parseInt(characterId) && message.receiverId !== parseInt(characterId)) {
+    throw new Error('Not authorized to delete this message');
+  }
+  
+  // Soft delete the message
+  await message.update({ isDeleted: true });
+  
+  return true;
+};
+
