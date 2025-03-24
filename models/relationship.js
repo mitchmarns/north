@@ -58,10 +58,14 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true,
     tableName: 'relationships',
     indexes: [
-      {
-        unique: true,
-        fields: ['character1Id', 'character2Id']
-      }
+      { fields: ['character1Id'] },
+      { fields: ['character2Id'] },
+      { fields: ['isApproved'] },
+      { fields: ['isPending'] },
+      // Composite indexes for common relationship queries
+      { fields: ['character1Id', 'character2Id'] },
+      { fields: ['character1Id', 'isApproved'] },
+      { fields: ['character2Id', 'isApproved'] }
     ]
   });
 

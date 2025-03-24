@@ -193,7 +193,16 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     timestamps: true,
-    tableName: 'characters'
+    tableName: 'characters',
+    indexes: [
+      { fields: ['userId'] },
+      { fields: ['teamId'] },
+      { fields: ['isPrivate'] },
+      { fields: ['isArchived'] },
+      { fields: ['role'] },
+      // Composite index for common queries
+      { fields: ['userId', 'isArchived'] }
+    ]
   });
 
   return Character;

@@ -49,6 +49,14 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     timestamps: true,
     tableName: 'posts',
+    indexes: [
+      { fields: ['threadId'] },
+      { fields: ['userId'] },
+      { fields: ['characterId'] },
+      { fields: ['createdAt'] },
+      // For sorting and filtering
+      { fields: ['threadId', 'createdAt'] }
+    ],
     hooks: {
       beforeCreate: (post) => {
         // Count words in content
