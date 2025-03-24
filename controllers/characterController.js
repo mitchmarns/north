@@ -50,10 +50,7 @@ exports.getUserCharacters = async (req, res) => {
 
 // Get single character
 exports.getCharacter = async (req, res) => {
-  try {
-    // Log the character ID we're trying to fetch
-    console.log(`Fetching character with ID: ${req.params.id}`);
-    
+  try {    
     const character = await Character.findByPk(req.params.id, {
       include: [
         {
@@ -61,7 +58,35 @@ exports.getCharacter = async (req, res) => {
           attributes: ['username', 'id']
         },
         {
-          model: Team
+          model: Team,
+          attributes: [
+            'id',
+            'name',
+            'shortName',
+            'city',
+            'logo',
+            'primaryColor',
+            'secondaryColor'
+          ]
+        },
+        {
+          // Get approved relationships in a single query
+          model: Relationship,
+          as: 'relationships',
+          where: { isApproved: true },
+          required: false,
+          include: [
+            {
+              model: Character,
+              as: 'character1',
+              attributes: ['id', 'name', 'avatarUrl']
+            },
+            {
+              model: Character,
+              as: 'character2',
+              attributes: ['id', 'name', 'avatarUrl']
+            }
+          ]
         }
       ]
     });
