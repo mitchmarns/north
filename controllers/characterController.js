@@ -724,37 +724,31 @@ exports.getCharacterGallery = async (req, res) => {
 
 // Upload gallery image form
 exports.getUploadGalleryImage = async (req, res) => {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    req.flash('error_msg', errors.array()[0].msg);
-    return res.redirect(`/characters/${req.params.id}/gallery/upload`);
-  }
-  
   try {
-    // Extract image data
-    const imageData = {
-      imageUrl: req.body.imageUrl,
-      caption: req.body.caption
-    };
+    const characterId = req.params.id;
     
-    // Add gallery image using the service
-    await characterService.addGalleryImage(req.params.id, imageData, req.user.id);
+    // Find character
+    const character = await Character.findByPk(characterId);
     
-    req.flash('success_msg', 'Image added to gallery successfully');
-    res.redirect(`/characters/${req.params.id}/gallery`);
-  } catch (error) {
-    console.error('Error uploading gallery image:', error);
-    
-    if (error.message === 'Character not found') {
+    if (!character) {
       req.flash('error_msg', 'Character not found');
-    } else if (error.message === 'Not authorized') {
-      req.flash('error_msg', 'Not authorized');
-    } else {
-      req.flash('error_msg', 'An error occurred while uploading the image');
+      return res.redirect('/characters');
     }
     
-    res.redirect(`/characters/${req.params.id}/gallery/upload`);
+    // Check if user owns the character
+    if (character.userId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect(`/characters/${characterId}`);
+    }
+    
+    res.render('characters/upload-image', {
+      title: `Add to ${character.name}'s Gallery`,
+      character
+    });
+  } catch (error) {
+    console.error('Error loading upload form:', error);
+    req.flash('error_msg', 'An error occurred while loading the upload form');
+    res.redirect(`/characters/${req.params.id}`);
   }
 };
 
