@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const messageController = require('../controllers/messageController');
+const { Character, User, Message, Sequelize } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
 
 // New route for messages index/hub
