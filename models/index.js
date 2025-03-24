@@ -30,8 +30,6 @@ const Message = require('./messages')(sequelize, Sequelize.DataTypes);
 const SocialPost = require('./socialPost')(sequelize, Sequelize.DataTypes);
 const Comment = require('./comment')(sequelize, Sequelize.DataTypes);
 const Like = require('./like')(sequelize, Sequelize.DataTypes);
-const GroupConversation = require('./groupConversation')(sequelize, Sequelize.DataTypes);
-const GroupMember = require('./groupMember')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
