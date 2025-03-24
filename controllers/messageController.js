@@ -8,7 +8,7 @@ exports.getInbox = async (req, res) => {
   try {
     const characterId = req.params.characterId;
     
-    // Verify character exists and belongs to the user
+    // Get character with a single query
     const character = await Character.findOne({
       where: {
         id: characterId,
@@ -21,114 +21,69 @@ exports.getInbox = async (req, res) => {
       return res.redirect('/characters/my-characters');
     }
     
-    // Get unique conversation partners
-    const sentMessages = await Message.findAll({
-      where: { senderId: characterId, isDeleted: false },
-      attributes: [
-        'receiverId',
-        [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
-      ],
-      group: ['receiverId'],
-      include: [
-        {
+    // Use raw queries for better performance on complex aggregation
+    const [sentPartners, receivedPartners, unreadCounts] = await Promise.all([
+      Message.findAll({
+        where: { senderId: characterId, isDeleted: false },
+        attributes: [
+          'receiverId',
+          [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
+        ],
+        group: ['receiverId'],
+        include: [{
           model: Character,
           as: 'receiver',
           attributes: ['id', 'name', 'avatarUrl'],
-          include: [
-            {
-              model: User,
-              attributes: ['username']
-            }
-          ]
-        }
-      ],
-      raw: false
-    });
-    
-    const receivedMessages = await Message.findAll({
-      where: { receiverId: characterId, isDeleted: false },
-      attributes: [
-        'senderId',
-        [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
-      ],
-      group: ['senderId'],
-      include: [
-        {
+          include: [{
+            model: User,
+            attributes: ['username']
+          }]
+        }],
+        raw: false
+      }),
+      Message.findAll({
+        where: { receiverId: characterId, isDeleted: false },
+        attributes: [
+          'senderId',
+          [Sequelize.fn('MAX', Sequelize.col('Message.createdAt')), 'lastMessageAt']
+        ],
+        group: ['senderId'],
+        include: [{
           model: Character,
           as: 'sender',
           attributes: ['id', 'name', 'avatarUrl'],
-          include: [
-            {
-              model: User,
-              attributes: ['username']
-            }
-          ]
-        }
-      ],
-      raw: false
-    });
+          include: [{
+            model: User,
+            attributes: ['username']
+          }]
+        }],
+        raw: false
+      }),
+      Message.findAll({
+        where: {
+          receiverId: characterId,
+          isRead: false,
+          isDeleted: false
+        },
+        attributes: [
+          'senderId',
+          [Sequelize.fn('COUNT', Sequelize.col('id')), 'unreadCount']
+        ],
+        group: ['senderId'],
+        raw: true
+      })
+    ]);
     
-    // Get unread count for each conversation
-    const unreadCounts = await Message.findAll({
-      where: {
-        receiverId: characterId,
-        isRead: false,
-        isDeleted: false
-      },
-      attributes: [
-        'senderId',
-        [Sequelize.fn('COUNT', Sequelize.col('id')), 'unreadCount']
-      ],
-      group: ['senderId'],
-      raw: true
-    });
-    
-    // Convert to map for easy lookup
+    // Process in memory
     const unreadCountMap = {};
     unreadCounts.forEach(count => {
       unreadCountMap[count.senderId] = parseInt(count.unreadCount);
     });
     
-    // Combine sent and received contacts into one list
-    const conversationPartners = new Map();
+    // Combine conversations in memory
+    const conversations = processConversations(sentPartners, receivedPartners, unreadCountMap);
     
-    // Add recipients of sent messages
-    sentMessages.forEach(message => {
-      const partnerId = message.receiver.id;
-      const lastMessageAt = message.dataValues.lastMessageAt;
-      
-      conversationPartners.set(partnerId, {
-        character: message.receiver,
-        lastMessageAt: lastMessageAt,
-        unreadCount: unreadCountMap[partnerId] || 0
-      });
-    });
-    
-    // Add senders of received messages
-    receivedMessages.forEach(message => {
-      const partnerId = message.sender.id;
-      const lastMessageAt = message.dataValues.lastMessageAt;
-      
-      if (conversationPartners.has(partnerId)) {
-        // Update if this message is more recent
-        const existing = conversationPartners.get(partnerId);
-        if (new Date(lastMessageAt) > new Date(existing.lastMessageAt)) {
-          existing.lastMessageAt = lastMessageAt;
-        }
-      } else {
-        conversationPartners.set(partnerId, {
-          character: message.sender,
-          lastMessageAt: lastMessageAt,
-          unreadCount: unreadCountMap[partnerId] || 0
-        });
-      }
-    });
-    
-    // Convert to array and sort by most recent
-    const conversations = Array.from(conversationPartners.values())
-      .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
-    
-    // Get total unread message count
+    // Calculate total unread
     const totalUnread = unreadCounts.reduce((sum, item) => sum + parseInt(item.unreadCount), 0);
     
     res.render('messages/inbox', {
@@ -143,6 +98,47 @@ exports.getInbox = async (req, res) => {
     res.redirect('/characters/my-characters');
   }
 };
+
+// Helper function to process conversations
+function processConversations(sentPartners, receivedPartners, unreadCountMap) {
+  const conversationPartners = new Map();
+  
+  // Process sent messages
+  sentPartners.forEach(message => {
+    const partnerId = message.receiver.id;
+    const lastMessageAt = message.dataValues.lastMessageAt;
+    
+    conversationPartners.set(partnerId, {
+      character: message.receiver,
+      lastMessageAt: lastMessageAt,
+      unreadCount: unreadCountMap[partnerId] || 0
+    });
+  });
+  
+  // Process received messages
+  receivedPartners.forEach(message => {
+    const partnerId = message.sender.id;
+    const lastMessageAt = message.dataValues.lastMessageAt;
+    
+    if (conversationPartners.has(partnerId)) {
+      // Update if this message is more recent
+      const existing = conversationPartners.get(partnerId);
+      if (new Date(lastMessageAt) > new Date(existing.lastMessageAt)) {
+        existing.lastMessageAt = lastMessageAt;
+      }
+    } else {
+      conversationPartners.set(partnerId, {
+        character: message.sender,
+        lastMessageAt: lastMessageAt,
+        unreadCount: unreadCountMap[partnerId] || 0
+      });
+    }
+  });
+  
+  // Convert to array and sort by most recent
+  return Array.from(conversationPartners.values())
+    .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+}
 
 // Get conversation between two characters
 exports.getConversation = async (req, res) => {
