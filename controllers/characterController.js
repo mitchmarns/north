@@ -51,6 +51,7 @@ exports.getUserCharacters = async (req, res) => {
 // Get single character
 exports.getCharacter = async (req, res) => {
   try {    
+    // Remove the problematic relationship association from the query
     const character = await Character.findByPk(req.params.id, {
       include: [
         {
@@ -67,25 +68,6 @@ exports.getCharacter = async (req, res) => {
             'logo',
             'primaryColor',
             'secondaryColor'
-          ]
-        },
-        {
-          // Get approved relationships in a single query
-          model: Relationship,
-          as: 'relationships',
-          where: { isApproved: true },
-          required: false,
-          include: [
-            {
-              model: Character,
-              as: 'character1',
-              attributes: ['id', 'name', 'avatarUrl']
-            },
-            {
-              model: Character,
-              as: 'character2',
-              attributes: ['id', 'name', 'avatarUrl']
-            }
           ]
         }
       ]
@@ -147,22 +129,41 @@ exports.getCharacter = async (req, res) => {
       }
     }
 
-    // Try/catch for just the relationships query
+    // Fetch relationships in a separate query
     try {
+      const relationships = await Relationship.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            { character1Id: character.id },
+            { character2Id: character.id }
+          ],
+          isApproved: true // Only show approved relationships
+        },
+        include: [
+          {
+            model: Character,
+            as: 'character1',
+            attributes: ['id', 'name', 'avatarUrl']
+          },
+          {
+            model: Character,
+            as: 'character2',
+            attributes: ['id', 'name', 'avatarUrl']
+          }
+        ]
+      });
+
       // Format relationships for display
-      const formattedRelationships = [];
-      if (character.relationships && character.relationships.length > 0) {
-        character.relationships.forEach(rel => {
-          const isCharacter1 = rel.character1Id === character.id;
-          formattedRelationships.push({
-            id: rel.id,
-            otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
-            relationshipType: rel.relationshipType,
-            description: rel.description,
-            status: rel.status
-          });
-        });
-      }
+      const formattedRelationships = relationships.map(rel => {
+        const isCharacter1 = rel.character1Id === character.id;
+        return {
+          id: rel.id,
+          otherCharacter: isCharacter1 ? rel.character2 : rel.character1,
+          relationshipType: rel.relationshipType,
+          description: rel.description,
+          status: rel.status
+        };
+      });
 
       console.log('Character team info:', character.Team ? character.Team.name : 'No team');
 
