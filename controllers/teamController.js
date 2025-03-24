@@ -1,9 +1,24 @@
 const { Team, Character, User, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
+const teamCache = new Map(); 
+const CACHE_EXPIRY = 30 * 60 * 1000; 
 
 // Get all teams (public)
 exports.getAllTeams = async (req, res) => {
   try {
+    // Check cache first
+    const cacheKey = 'all_active_teams';
+    const cachedData = teamCache.get(cacheKey);
+    
+    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_EXPIRY)) {
+      console.log('Serving teams from cache');
+      return res.render('teams/index', {
+        title: 'Teams Directory',
+        teams: cachedData.data
+      });
+    }
+    
+    // Cache miss, fetch from database
     const teams = await Team.findAll({
       where: { 
         isActive: true
@@ -11,28 +26,28 @@ exports.getAllTeams = async (req, res) => {
       order: [['name', 'ASC']]
     });
 
-    // Count players and staff for each team (with error handling)
+    // Process teams and add data
     for (let team of teams) {
-      try {
-        team.playerCount = await Character.count({
-          where: {
-            teamId: team.id,
-            role: 'Player'
-          }
-        });
-        
-        team.staffCount = await Character.count({
-          where: {
-            teamId: team.id,
-            role: 'Staff'
-          }
-        });
-      } catch (countError) {
-        console.error('Error counting team members:', countError);
-        team.playerCount = 0;
-        team.staffCount = 0;
-      }
+      team.playerCount = await Character.count({
+        where: {
+          teamId: team.id,
+          role: 'Player'
+        }
+      });
+      
+      team.staffCount = await Character.count({
+        where: {
+          teamId: team.id,
+          role: 'Staff'
+        }
+      });
     }
+    
+    // Update cache
+    teamCache.set(cacheKey, {
+      timestamp: Date.now(),
+      data: teams
+    });
 
     res.render('teams/index', {
       title: 'Teams Directory',

@@ -212,34 +212,22 @@ exports.loadMore = async (req, res) => {
     const limit = 10;
     const offset = (page - 1) * limit;
     
-    // Build query based on filter type
+    // Build where clause
     let whereClause = {};
     
     if (filter === 'mine' && req.user) {
-      // Only show user's posts
       whereClause.userId = req.user.id;
-    } else if (filter === 'following' && req.user) {
-      // Show posts from followed users/characters
-      // This would need a follows model/table
-      // For now, just show all public posts
-      whereClause.privacy = 'public';
     } else {
-      // Show all public posts by default
       whereClause.privacy = 'public';
     }
     
-    // Build order based on sort type
-    let order = [];
+    // Build order
+    let order = sort === 'popular' 
+      ? [['likeCount', 'DESC'], ['createdAt', 'DESC']] 
+      : [['createdAt', 'DESC']];
     
-    if (sort === 'popular') {
-      order = [['likeCount', 'DESC'], ['createdAt', 'DESC']];
-    } else {
-      // Recent is default
-      order = [['createdAt', 'DESC']];
-    }
-    
-    // Get posts with user, character and comments
-    const rawPosts = await SocialPost.findAll({
+    // Single optimized query with selective includes
+    const posts = await SocialPost.findAll({
       where: whereClause,
       include: [
         {
@@ -256,52 +244,31 @@ exports.loadMore = async (req, res) => {
       offset: offset
     });
     
-    // Format the posts to ensure user and character data is properly accessible
-    const posts = rawPosts.map(post => {
-      const formattedPost = post.toJSON();
-      
-      // Ensure user object is always present with required fields
-      if (!formattedPost.User) {
-        formattedPost.user = {
-          id: formattedPost.userId,
-          username: 'Unknown User'
-        };
-      } else {
-        formattedPost.user = formattedPost.User;
-      }
-      
-      // Ensure character data is correctly assigned if it exists
-      if (formattedPost.Character) {
-        formattedPost.character = formattedPost.Character;
-      }
-      
-      return formattedPost;
-    });
-    
-    // If user is logged in, check if they liked each post
+    // Process user likes if logged in
     if (req.user) {
-      // Get all likes from the user for these posts
       const postIds = posts.map(post => post.id);
-      const userLikes = await Like.findAll({
-        where: {
-          userId: req.user.id,
-          postId: { [Op.in]: postIds }
-        }
-      });
       
-      // Create a map of post IDs to liked status
-      const likedMap = {};
-      userLikes.forEach(like => {
-        likedMap[like.postId] = true;
-      });
-      
-      // Add hasLiked property to each post
-      posts.forEach(post => {
-        post.hasLiked = likedMap[post.id] || false;
-      });
+      // Only if there are posts to check
+      if (postIds.length > 0) {
+        const userLikes = await Like.findAll({
+          where: {
+            userId: req.user.id,
+            postId: { [Sequelize.Op.in]: postIds }
+          },
+          attributes: ['postId']
+        });
+        
+        const likedMap = {};
+        userLikes.forEach(like => {
+          likedMap[like.postId] = true;
+        });
+        
+        posts.forEach(post => {
+          post.dataValues.hasLiked = likedMap[post.id] || false;
+        });
+      }
     }
     
-    // Return JSON response
     res.json({
       success: true,
       posts: posts
