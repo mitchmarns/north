@@ -4,8 +4,7 @@ const env = process.env.NODE_ENV || 'development';
 const config = require('../config/database')[env];
 
 // Initialize Sequelize with MySQL database
-let sequelize;
-sequelize = new Sequelize(
+const sequelize = new Sequelize(
   config.database,
   config.username,
   config.password,
@@ -14,7 +13,15 @@ sequelize = new Sequelize(
     dialect: 'mysql',
     dialectOptions: {
       socketPath: '/var/run/mysqld/mysqld.sock'
-    }
+    },
+    pool: {
+      max: 15,
+      min: 5,
+      idle: 10000,   
+      acquire: 30000, 
+      evict: 30000  
+    },
+    logging: process.env.NODE_ENV === 'production' ? false : console.log
   }
 );
 

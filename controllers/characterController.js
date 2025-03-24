@@ -432,10 +432,6 @@ exports.deleteCharacter = async (req, res) => {
 // Get character relationships
 exports.getCharacterRelationships = async (req, res) => {
   try {
-    console.log('==========================================');
-    console.log('DEBUG: Getting relationships for character ID:', req.params.id);
-    
-    // Get the character
     const character = await Character.findByPk(req.params.id);
     
     if (!character) {
@@ -461,8 +457,8 @@ exports.getCharacterRelationships = async (req, res) => {
     const relationships = await Relationship.findAll({
       where: {
         [Sequelize.Op.or]: [
-          { character1Id: character.id },
-          { character2Id: character.id }
+          { character1Id: characterId },
+          { character2Id: characterId }
         ]
       },
       include: [
@@ -490,7 +486,7 @@ exports.getCharacterRelationships = async (req, res) => {
     let formattedRelationships = [];
     if (relationships && relationships.length > 0) {
       formattedRelationships = relationships.map(rel => {
-        const isCharacter1 = rel.character1Id === character.id;
+        const isCharacter1 = rel.character1Id === characterId;
         const otherCharacter = isCharacter1 ? rel.character2 : rel.character1;
         return {
           id: rel.id,
@@ -513,7 +509,7 @@ exports.getCharacterRelationships = async (req, res) => {
       where: {
         userId: req.user.id,
         id: {
-          [Sequelize.Op.ne]: character.id
+          [Sequelize.Op.ne]: characterId
         },
         isArchived: false
       }
