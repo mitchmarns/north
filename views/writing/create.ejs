@@ -64,69 +64,61 @@
             <div class="form-group">
               <label>Tagged Characters (Optional)</label>
               
-              <ul class="nav nav-tabs">
-                <li class="nav-item">
-                  <a class="nav-link active" id="my-chars-tab" href="#my-chars">My Characters</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" id="other-chars-tab" href="#other-chars">Other Users' Characters</a>
-                </li>
-              </ul>
-              
-              <div class="tab-content">
-                <!-- My Characters Tab -->
-                <div class="tab-pane" id="my-chars">
-                  <div class="character-tag-grid">
-                    <% if (userCharacters && userCharacters.length > 0) { %>
-                      <% userCharacters.forEach(character => { %>
-                        <div class="character-tag-item">
-                          <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
-                          <label for="tagged-character-<%= character.id %>" class="character-tag-label">
-                            <div class="character-tag-avatar">
-                              <% if (character.avatarUrl) { %>
-                                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
-                              <% } else { %>
-                                <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
-                              <% } %>
-                            </div>
-                            <div class="character-tag-name"><%= character.name %></div>
-                          </label>
-                        </div>
-                      <% }); %>
-                    <% } else { %>
-                      <p>You don't have any characters yet.</p>
-                    <% } %>
-                  </div>
-                </div>
-                
-                <!-- Other Users' Characters Tab -->
-                <div class="tab-pane" id="other-chars">
-                  <div class="character-tag-grid">
-                    <% if (otherCharacters && otherCharacters.length > 0) { %>
-                      <% otherCharacters.forEach(character => { %>
-                        <div class="character-tag-item">
-                          <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
-                          <label for="tagged-character-<%= character.id %>" class="character-tag-label">
-                            <div class="character-tag-avatar">
-                              <% if (character.avatarUrl) { %>
-                                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
-                              <% } else { %>
-                                <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
-                              <% } %>
-                            </div>
-                            <div class="character-tag-name">
-                              <%= character.name %>
-                              <small class="character-owner">(<%= character.User.username %>)</small>
-                            </div>
-                          </label>
-                        </div>
-                      <% }); %>
-                    <% } else { %>
-                      <p>No other users' characters available.</p>
-                    <% } %>
-                  </div>
+              <!-- Your Characters Section -->
+              <div class="character-section mb-3">
+                <h4>Your Characters</h4>
+                <div class="character-tag-grid">
+                  <% if (userCharacters && userCharacters.length > 0) { %>
+                    <% userCharacters.forEach(character => { %>
+                      <div class="character-tag-item">
+                        <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
+                        <label for="tagged-character-<%= character.id %>" class="character-tag-label">
+                          <div class="character-tag-avatar">
+                            <% if (character.avatarUrl) { %>
+                              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                            <% } else { %>
+                              <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
+                            <% } %>
+                          </div>
+                          <div class="character-tag-name"><%= character.name %></div>
+                        </label>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <p>You don't have any characters yet.</p>
+                  <% } %>
                 </div>
               </div>
+              
+              <!-- Other Users' Characters Section -->
+              <div class="character-section">
+                <h4>Other Users' Characters</h4>
+                <div class="character-tag-grid">
+                  <% if (otherCharacters && otherCharacters.length > 0) { %>
+                    <% otherCharacters.forEach(character => { %>
+                      <div class="character-tag-item">
+                        <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
+                        <label for="tagged-character-<%= character.id %>" class="character-tag-label">
+                          <div class="character-tag-avatar">
+                            <% if (character.avatarUrl) { %>
+                              <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                            <% } else { %>
+                              <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
+                            <% } %>
+                          </div>
+                          <div class="character-tag-name">
+                            <%= character.name %>
+                            <small class="character-owner">(<%= character.User.username %>)</small>
+                          </div>
+                        </label>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <p>No other users' characters available.</p>
+                  <% } %>
+                </div>
+              </div>
+            </div>
             </div>
           <% } %>
 
@@ -512,6 +504,23 @@ function initTabs(tab1Id, tab2Id, pane1Id, pane2Id) {
   font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.6);
   margin-top: 2px;
+}
+
+.character-section {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.character-section h4 {
+  margin-bottom: 10px;
+  font-size: var(--text-lg);
+  color: var(--header);
+}
+
+.mb-3 {
+  margin-bottom: 15px;
 }
 
 /* Additional responsive styling */
