@@ -1,14 +1,14 @@
 <!-- teams/admin/create.ejs -->
 <div class="d-flex justify-between align-center mb-4">
   <h1>Create a New Team</h1>
-  <a href="/teams" class="btn btn-outline">
+  <a href="/teams/admin/teams" class="btn btn-outline">
     <i class="fas fa-arrow-left"></i> Back to Teams
   </a>
 </div>
 
 <div class="card">
   <div class="card-body">
-    <form action="/teams/create" method="POST">
+    <form action="/teams/admin/teams/create" method="POST">
       <div class="row">
         <!-- Main Team Info -->
         <div class="col" style="flex: 0 0 70%;">
@@ -185,7 +185,7 @@
           </div>
           
           <div class="form-group text-right mt-4">
-            <a href="/teams" class="btn btn-outline mr-2">Cancel</a>
+            <a href="/teams/admin/teams" class="btn btn-outline mr-2">Cancel</a>
             <button type="submit" class="btn">Create Team</button>
           </div>
         </div>

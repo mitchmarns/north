@@ -5,7 +5,7 @@
     <a href="/teams/<%= team.id %>" class="btn btn-outline mr-2">
       <i class="fas fa-eye"></i> View Team
     </a>
-    <a href="/teams" class="btn btn-outline">
+    <a href="/teams/admin/teams" class="btn btn-outline">
       <i class="fas fa-arrow-left"></i> Back to Teams
     </a>
   </div>
@@ -13,7 +13,7 @@
 
 <div class="card">
   <div class="card-body">
-    <form action="/teams/edit/<%= team.id %>?_method=PUT" method="POST">
+    <form action="/teams/admin/teams/edit/<%= team.id %>?_method=PUT" method="POST">
       <div class="row">
         <!-- Main Team Info -->
         <div class="col" style="flex: 0 0 70%;">
@@ -212,7 +212,7 @@
           </div>
           
           <div class="form-group text-right mt-4">
-            <a href="/teams" class="btn btn-outline mr-2">Cancel</a>
+            <a href="/teams/admin/teams" class="btn btn-outline mr-2">Cancel</a>
             <button type="submit" class="btn">Save Changes</button>
           </div>
         </div>
