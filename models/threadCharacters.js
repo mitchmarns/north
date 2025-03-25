@@ -3,7 +3,7 @@ module.exports = (sequelize, DataTypes) => {
   const ThreadCharacters = sequelize.define('ThreadCharacters', {
     threadId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      primaryKey: true,
       references: {
         model: 'threads',
         key: 'id'
@@ -11,21 +11,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     characterId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      primaryKey: true,
       references: {
         model: 'characters',
         key: 'id'
       }
     }
   }, {
-    timestamps: false,
-    tableName: 'thread_characters',
-    indexes: [
-      {
-        unique: false,
-        fields: ['threadId', 'characterId']
-      }
-    ]
+    timestamps: true,
+    tableName: 'thread_characters'
   });
 
   return ThreadCharacters;

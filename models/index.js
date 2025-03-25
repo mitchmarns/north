@@ -101,20 +101,14 @@ SocialPost.hasMany(Like, { foreignKey: 'postId' });
 Like.belongsTo(SocialPost, { foreignKey: 'postId' });
 
 Thread.belongsToMany(Character, {
-  through: {
-    model: 'ThreadCharacters', // You might need to create this model
-    unique: false
-  },
+  through: ThreadCharacters,
   foreignKey: 'threadId',
   otherKey: 'characterId',
   as: 'taggedCharacters'
 });
 
 Character.belongsToMany(Thread, {
-  through: {
-    model: 'ThreadCharacters',
-    unique: false
-  },
+  through: ThreadCharacters,
   foreignKey: 'characterId',
   otherKey: 'threadId',
   as: 'taggedInThreads'
