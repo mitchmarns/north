@@ -6,7 +6,7 @@
       <i class="fas fa-users"></i> View Roster
     </a>
     <% if(typeof user !== 'undefined' && user && user.isAdmin) { %>
-      <a href="/teams/admin/teams/edit/<%= team.id %>" class="btn">
+      <a href="/teams/edit/<%= team.id %>" class="btn">
         <i class="fas fa-edit"></i> Edit Team
       </a>
     <% } %>
