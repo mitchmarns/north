@@ -231,13 +231,13 @@ async function updateThreadDatabase() {
   try {
     const { sequelize } = require('./models');
 
-    // Add threadDate column to threads table
+    // Add threadDate column to threads table if it doesn't exist
     await sequelize.query(`
       ALTER TABLE threads 
       ADD COLUMN IF NOT EXISTS threadDate DATETIME DEFAULT NULL
     `);
 
-    // Create thread_characters join table
+    // Create thread_characters join table if it doesn't exist
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS thread_characters (
         threadId INT,
@@ -253,6 +253,49 @@ async function updateThreadDatabase() {
           ON UPDATE CASCADE
       )
     `);
+
+    // If taggedCharacters column exists in threads table, migrate data to the join table and then remove the column
+    const [results] = await sequelize.query(`
+      SHOW COLUMNS FROM threads LIKE 'taggedCharacters'
+    `);
+
+    if (results.length > 0) {
+      console.log('Found taggedCharacters column in threads table, starting migration...');
+      
+      // Get all threads with taggedCharacters
+      const [threads] = await sequelize.query(`
+        SELECT id, taggedCharacters FROM threads WHERE taggedCharacters IS NOT NULL AND taggedCharacters != ''
+      `);
+      
+      // For each thread, insert relations into thread_characters
+      for (const thread of threads) {
+        if (thread.taggedCharacters) {
+          try {
+            const characterIds = thread.taggedCharacters.split(',').filter(id => id);
+            
+            for (const characterId of characterIds) {
+              if (characterId && !isNaN(parseInt(characterId))) {
+                await sequelize.query(`
+                  INSERT IGNORE INTO thread_characters (threadId, characterId, createdAt, updatedAt)
+                  VALUES (?, ?, NOW(), NOW())
+                `, {
+                  replacements: [thread.id, parseInt(characterId)]
+                });
+              }
+            }
+          } catch (err) {
+            console.error(`Error migrating taggedCharacters for thread ${thread.id}:`, err);
+          }
+        }
+      }
+      
+      // Drop the taggedCharacters column
+      await sequelize.query(`
+        ALTER TABLE threads DROP COLUMN taggedCharacters
+      `);
+      
+      console.log('Migration of taggedCharacters completed.');
+    }
 
     console.log('Thread database update completed successfully.');
   } catch (error) {

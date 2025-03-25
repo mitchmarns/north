@@ -1,3 +1,4 @@
+// models/thread.js
 module.exports = (sequelize, DataTypes) => {
   const Thread = sequelize.define('Thread', {
     id: {
@@ -62,21 +63,6 @@ module.exports = (sequelize, DataTypes) => {
     threadDate: {
       type: DataTypes.DATE,
       allowNull: true
-    },
-    taggedCharacters: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        const rawValue = this.getDataValue('taggedCharacters');
-        return rawValue ? rawValue.split(',').map(id => parseInt(id)) : [];
-      },
-      set(val) {
-        if (Array.isArray(val)) {
-          this.setDataValue('taggedCharacters', val.join(','));
-        } else {
-          this.setDataValue('taggedCharacters', val);
-        }
-      }
     }
   },
    {

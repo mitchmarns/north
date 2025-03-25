@@ -24,7 +24,7 @@ router.get('/threads', async (req, res) => {
         },
         {
           model: Character,
-          as: 'taggedCharacters',
+          as: 'threadTags',
           attributes: ['id', 'name', 'avatarUrl']
         }
       ],
@@ -56,7 +56,7 @@ router.get('/my-threads', isAuthenticated, async (req, res) => {
         },
         {
           model: Character,
-          as: 'taggedCharacters',
+          as: 'threadTags',
           attributes: ['id', 'name', 'avatarUrl']
         }
       ],
@@ -162,7 +162,7 @@ router.post(
       
       // Add tagged characters if any
       if (taggedCharactersArray.length > 0) {
-        await thread.addTaggedCharacters(taggedCharactersArray);
+        await thread.addThreadTags(taggedCharactersArray);
       }
       
       req.flash('success_msg', 'Thread created successfully');
@@ -210,7 +210,7 @@ router.get('/thread/:id', async (req, res) => {
         },
         {
           model: Character,
-          as: 'taggedCharacters',
+          as: 'threadTags',
           attributes: ['id', 'name', 'avatarUrl']
         }
       ]
@@ -375,12 +375,12 @@ router.put(
       // Update tagged characters
       if (taggedCharactersArray.length > 0) {
         // Remove existing tagged characters
-        await thread.removeTaggedCharacters();
+        await thread.removeThreadTags();
         // Add new tagged characters
-        await thread.addTaggedCharacters(taggedCharactersArray);
+        await thread.addThreadTags(taggedCharactersArray);
       } else {
         // Ensure no characters are tagged if array is empty
-        await thread.removeTaggedCharacters();
+        await thread.removeThreadTags();
       }
       
       req.flash('success_msg', 'Thread updated successfully');

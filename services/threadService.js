@@ -35,6 +35,11 @@ exports.getAllThreads = async (page = 1, limit = 10) => {
         model: Post,
         as: 'posts',
         attributes: ['id']
+      },
+      {
+        model: Character,
+        as: 'threadTags',  // Updated from 'taggedCharacters'
+        attributes: ['id', 'name', 'avatarUrl']
       }
     ],
     order: [['lastPostAt', 'DESC']],
@@ -87,6 +92,11 @@ exports.getUserThreads = async (userId, page = 1, limit = 10) => {
         model: Post,
         as: 'posts',
         attributes: ['id']
+      },
+      {
+        model: Character,
+        as: 'threadTags',  // Updated from 'taggedCharacters'
+        attributes: ['id', 'name', 'avatarUrl']
       }
     ],
     order: [['lastPostAt', 'DESC']],
@@ -126,6 +136,11 @@ exports.getThread = async (threadId, userId = null) => {
         model: User,
         as: 'creator',
         attributes: ['username', 'id']
+      },
+      {
+        model: Character,
+        as: 'threadTags',  // Updated from 'taggedCharacters'
+        attributes: ['id', 'name', 'avatarUrl']
       }
     ]
   });
@@ -233,7 +248,7 @@ exports.createThread = async (threadData, userId) => {
   
   // Add tagged characters if any
   if (taggedCharactersArray.length > 0) {
-    await thread.addTaggedCharacters(taggedCharactersArray);
+    await thread.addThreadTags(taggedCharactersArray);  // Updated from 'addTaggedCharacters'
   }
   
   // Send Discord notification
@@ -333,9 +348,12 @@ exports.updateThread = async (threadId, threadData, userId) => {
   // Update tagged characters
   if (taggedCharactersArray.length > 0) {
     // Remove existing tagged characters
-    await thread.removeTaggedCharacters();
+    await thread.setThreadTags([]);  // Updated from 'setTaggedCharacters'
     // Add new tagged characters
-    await thread.addTaggedCharacters(taggedCharactersArray);
+    await thread.addThreadTags(taggedCharactersArray);  // Updated from 'addTaggedCharacters'
+  } else {
+    // Remove all tagged characters if array is empty
+    await thread.setThreadTags([]);  // Updated from 'setTaggedCharacters'
   }
   
   return thread;

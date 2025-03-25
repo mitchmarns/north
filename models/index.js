@@ -1,4 +1,4 @@
-// Updated models/index.js
+// models/index.js
 const { Sequelize } = require('sequelize');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/database')[env];
@@ -101,11 +101,12 @@ Like.belongsTo(User, { foreignKey: 'userId' });
 SocialPost.hasMany(Like, { foreignKey: 'postId' });
 Like.belongsTo(SocialPost, { foreignKey: 'postId' });
 
+// Fix for the naming collision - change the association name from 'taggedCharacters' to 'threadTags'
 Thread.belongsToMany(Character, {
   through: ThreadCharacters,
   foreignKey: 'threadId',
   otherKey: 'characterId',
-  as: 'taggedCharacters'
+  as: 'threadTags'  // Changed from 'taggedCharacters' to avoid naming collision
 });
 
 Character.belongsToMany(Thread, {
@@ -130,5 +131,5 @@ module.exports = {
   SocialPost,
   Comment,
   Like,
-  ThreadCharacters
+  ThreadCharacters  // Export this model as well
 };

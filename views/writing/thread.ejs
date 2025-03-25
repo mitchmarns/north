@@ -68,11 +68,11 @@ Copy    <% if (thread.setting) { %>
       </div>
     <% } %>
     
-    <% if (thread.taggedCharacters && thread.taggedCharacters.length > 0) { %>
+    <% if (thread.threadTags && thread.threadTags.length > 0) { %>
       <div>
         <h4>Tagged Characters</h4>
         <div class="thread-tagged-characters">
-          <% thread.taggedCharacters.forEach(character => { %>
+          <% thread.threadTags.forEach(character => { %>
             <a href="/characters/<%= character.id %>" class="thread-tagged-character">
               <% if (character.avatarUrl) { %>
                 <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">

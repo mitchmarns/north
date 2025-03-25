@@ -40,9 +40,9 @@
             </div>
             
             <!-- Tagged Characters -->
-            <% if (thread.taggedCharacters && thread.taggedCharacters.length > 0) { %>
+            <% if (thread.threadTags && thread.threadTags.length > 0) { %>
               <div class="thread-tagged-characters">
-                <% thread.taggedCharacters.slice(0, 3).forEach(character => { %>
+                <% thread.threadTags.slice(0, 3).forEach(character => { %>
                   <div class="thread-tagged-character">
                     <% if (character.avatarUrl) { %>
                       <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
@@ -54,9 +54,9 @@
                   </div>
                 <% }); %>
                 
-                <% if (thread.taggedCharacters.length > 3) { %>
+                <% if (thread.threadTags.length > 3) { %>
                   <div class="thread-tagged-character-more">
-                    +<%= thread.taggedCharacters.length - 3 %>
+                    +<%= thread.threadTags.length - 3 %>
                   </div>
                 <% } %>
               </div>
