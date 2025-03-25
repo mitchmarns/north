@@ -240,101 +240,91 @@
     `;
   }
   
-  // Show image preview if URL exists on page load
-  document.addEventListener('DOMContentLoaded', function() {
-    const featuredImage = document.getElementById('featuredImage').value;
-    if (featuredImage) {
-      document.getElementById('image-preview').innerHTML = `
-        <img src="${featuredImage}" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
-      `;
-    }
-
-  // Get tab links for character tagging
-  const myCharsTab = document.getElementById('my-chars-tab');
-  const otherCharsTab = document.getElementById('other-chars-tab');
+// Handle featured image preview
+document.getElementById('featuredImage').addEventListener('input', function(e) {
+  const url = e.target.value.trim();
+  const previewContainer = document.getElementById('image-preview');
   
-  if (myCharsTab && otherCharsTab) {
-    // Initialize tabs
-    const myCharsPane = document.getElementById('my-chars');
-    const otherCharsPane = document.getElementById('other-chars');
-    
-    if (myCharsPane && otherCharsPane) {
-      // Show my characters tab by default
-      myCharsPane.style.display = 'block';
-      otherCharsPane.style.display = 'none';
-      myCharsTab.classList.add('active');
-      
-      // My characters tab click handler
-      myCharsTab.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Toggle tab active state
-        myCharsTab.classList.add('active');
-        otherCharsTab.classList.remove('active');
-        
-        // Toggle tab content visibility
-        myCharsPane.style.display = 'block';
-        otherCharsPane.style.display = 'none';
-      });
-      
-      // Other characters tab click handler
-      otherCharsTab.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Toggle tab active state
-        otherCharsTab.classList.add('active');
-        myCharsTab.classList.remove('active');
-        
-        // Toggle tab content visibility
-        otherCharsPane.style.display = 'block';
-        myCharsPane.style.display = 'none';
-      });
-    }
-  }
-  
-  // Also handle the edit page tabs if they exist
-  const editMyCharsTab = document.getElementById('edit-my-chars-tab');
-  const editOtherCharsTab = document.getElementById('edit-other-chars-tab');
-  
-  if (editMyCharsTab && editOtherCharsTab) {
-    // Initialize edit tabs
-    const editMyCharsPane = document.getElementById('edit-my-chars');
-    const editOtherCharsPane = document.getElementById('edit-other-chars');
-    
-    if (editMyCharsPane && editOtherCharsPane) {
-      // Show my characters tab by default
-      editMyCharsPane.style.display = 'block';
-      editOtherCharsPane.style.display = 'none';
-      editMyCharsTab.classList.add('active');
-      
-      // My characters tab click handler
-      editMyCharsTab.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Toggle tab active state
-        editMyCharsTab.classList.add('active');
-        editOtherCharsTab.classList.remove('active');
-        
-        // Toggle tab content visibility
-        editMyCharsPane.style.display = 'block';
-        editOtherCharsPane.style.display = 'none';
-      });
-      
-      // Other characters tab click handler
-      editOtherCharsTab.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Toggle tab active state
-        editOtherCharsTab.classList.add('active');
-        editMyCharsTab.classList.remove('active');
-        
-        // Toggle tab content visibility
-        editOtherCharsPane.style.display = 'block';
-        editMyCharsPane.style.display = 'none';
-      });
-    }
+  if (url) {
+    previewContainer.innerHTML = `
+      <img src="${url}" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+    `;
+  } else {
+    previewContainer.innerHTML = `<i class="fas fa-image" style="font-size: 3rem; color: #999;"></i>`;
   }
 });
+
+function imageLoadError(img) {
+  img.onerror = null;
+  img.parentNode.innerHTML = `
+    <div style="width: 100%; height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999;">
+      <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+      <span>Invalid image URL</span>
+    </div>
+  `;
+}
+
+// Initialize all tab functionality when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Show image preview if URL exists on page load
+  const featuredImage = document.getElementById('featuredImage');
+  if (featuredImage && featuredImage.value) {
+    document.getElementById('image-preview').innerHTML = `
+      <img src="${featuredImage.value}" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
+    `;
+  }
+
+  // Character tagging tabs for create page
+  initTabs('my-chars-tab', 'other-chars-tab', 'my-chars', 'other-chars');
+  
+  // Character tagging tabs for edit page
+  initTabs('edit-my-chars-tab', 'edit-other-chars-tab', 'edit-my-chars', 'edit-other-chars');
+});
+
+// Function to initialize tab functionality
+function initTabs(tab1Id, tab2Id, pane1Id, pane2Id) {
+  const tab1 = document.getElementById(tab1Id);
+  const tab2 = document.getElementById(tab2Id);
+  
+  if (!tab1 || !tab2) return; // Exit if tabs don't exist on this page
+  
+  const pane1 = document.getElementById(pane1Id);
+  const pane2 = document.getElementById(pane2Id);
+  
+  if (!pane1 || !pane2) return; // Exit if panes don't exist
+  
+  // Set initial state
+  pane1.style.display = 'block';
+  pane2.style.display = 'none';
+  tab1.classList.add('active');
+  tab2.classList.remove('active');
+  
+  // Tab 1 click handler
+  tab1.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Update active tab
+    tab1.classList.add('active');
+    tab2.classList.remove('active');
+    
+    // Show/hide content
+    pane1.style.display = 'block';
+    pane2.style.display = 'none';
+  });
+  
+  // Tab 2 click handler
+  tab2.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Update active tab
+    tab2.classList.add('active');
+    tab1.classList.remove('active');
+    
+    // Show/hide content
+    pane2.style.display = 'block';
+    pane1.style.display = 'none';
+  });
+}
 </script>
 
 <style>
@@ -403,82 +393,21 @@
     text-overflow: ellipsis;
   }
 
-  .character-tag-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-  }
-  
-  .character-tag-item {
-    text-align: center;
-  }
-  
-  .character-tag-item input[type="checkbox"] {
-    display: none;
-  }
-  
-  .character-tag-label {
-    display: block;
-    cursor: pointer;
-    padding: 10px;
-    border-radius: var(--radius-md);
-    border: 2px solid transparent;
-    transition: all var(--transition-fast);
-  }
-  
-  .character-tag-label:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  .character-tag-item input[type="checkbox"]:checked + .character-tag-label {
-    border-color: var(--header);
-    background-color: rgba(90, 128, 149, 0.1);
-  }
-  
-  .character-tag-avatar {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 10px;
-    border-radius: 50%;
-    overflow: hidden;
-  }
-  
-  .character-tag-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .character-avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    background-color: #555;
-    color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-  }
-  
-  .character-tag-name {
-    font-size: var(--text-sm);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .character-tabs {
+/* Tab Navigation Styling */
+.nav-tabs {
   display: flex;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 15px;
+  padding-left: 0;
 }
 
-.character-tabs .nav-item {
+.nav-item {
   list-style: none;
+  margin-bottom: -1px;
 }
 
-.character-tabs .nav-link {
+.nav-link {
+  display: block;
   padding: 10px 20px;
   color: var(--lighttext);
   text-decoration: none;
@@ -487,15 +416,16 @@
   transition: all var(--transition-fast);
 }
 
-.character-tabs .nav-link:hover {
+.nav-link:hover {
   color: var(--header);
 }
 
-.character-tabs .nav-link.active {
+.nav-link.active {
   color: var(--header);
   border-bottom-color: var(--header);
 }
 
+/* Tab Content Styling */
 .tab-content > .tab-pane {
   display: none;
 }
@@ -504,11 +434,88 @@
   display: block;
 }
 
-/* Add some additional styling for the character owner name */
+/* Character tagging styling */
+.character-tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.character-tag-item {
+  text-align: center;
+}
+
+.character-tag-item input[type="checkbox"] {
+  display: none;
+}
+
+.character-tag-label {
+  display: block;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.character-tag-label:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.character-tag-item input[type="checkbox"]:checked + .character-tag-label {
+  border-color: var(--header);
+  background-color: rgba(90, 128, 149, 0.1);
+}
+
+.character-tag-avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.character-tag-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.character-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #555;
+  color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.character-tag-name {
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .character-owner {
   display: block;
   font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.6);
   margin-top: 2px;
+}
+
+/* Additional responsive styling */
+@media (max-width: 768px) {
+  .character-tag-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  
+  .character-tag-avatar {
+    width: 60px;
+    height: 60px;
+  }
 }
 </style>
