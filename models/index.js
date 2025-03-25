@@ -129,5 +129,6 @@ module.exports = {
   Message,
   SocialPost,
   Comment,
-  Like
+  Like,
+  ThreadCharacters
 };
