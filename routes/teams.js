@@ -3,69 +3,26 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const teamController = require('../controllers/teamController');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
-// Public routes (no authentication required)
+// Get all teams
 router.get('/', teamController.getAllTeams);
+
+// View team
 router.get('/:id', teamController.getTeam);
+
+// View team roster
 router.get('/:id/roster', teamController.getTeamRoster);
 
-// Authenticated routes for team management
-router.get('/my-teams', isAuthenticated, teamController.getUserTeams);
-
-// Team creation routes
-router.get('/create', isAuthenticated, teamController.getCreateTeam);
-router.post('/create', isAuthenticated, [
-  // Validation middleware
-  body('name')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Team name is required and cannot exceed 100 characters'),
-  body('shortName')
-    .trim()
-    .isLength({ min: 1, max: 10 })
-    .withMessage('Short name is required and cannot exceed 10 characters'),
-  body('city')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('City is required and cannot exceed 100 characters'),
-  body('foundedYear')
-    .optional({ nullable: true })
-    .isInt({ min: 1800, max: new Date().getFullYear() })
-    .withMessage('Founded year must be a valid year'),
-  body('logo')
-    .optional({ nullable: true })
-    .isURL()
-    .withMessage('Logo must be a valid URL'),
+// Change these routes to be accessible by any authenticated user
+router.get('/admin/teams', isAuthenticated, teamController.getAdminTeams);
+router.get('/admin/teams/create', isAuthenticated, teamController.getCreateTeam);
+router.post('/admin/teams/create', isAuthenticated, [
+  // Validation
 ], teamController.createTeam);
-
-// Team edit routes
-router.get('/edit/:id', isAuthenticated, teamController.getEditTeam);
-router.put('/edit/:id', isAuthenticated, [
-  // Validation middleware (similar to create team)
-  body('name')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Team name is required and cannot exceed 100 characters'),
-  body('shortName')
-    .trim()
-    .isLength({ min: 1, max: 10 })
-    .withMessage('Short name is required and cannot exceed 10 characters'),
-  body('city')
-    .trim()
-    .isLength({ min: 1, max: 100 })
-    .withMessage('City is required and cannot exceed 100 characters'),
-  body('foundedYear')
-    .optional({ nullable: true })
-    .isInt({ min: 1800, max: new Date().getFullYear() })
-    .withMessage('Founded year must be a valid year'),
-  body('logo')
-    .optional({ nullable: true })
-    .isURL()
-    .withMessage('Logo must be a valid URL'),
+router.get('/admin/teams/edit/:id', isAuthenticated, teamController.getEditTeam);
+router.put('/admin/teams/edit/:id', isAuthenticated, [
+  // Validation
 ], teamController.updateTeam);
-
-// Team delete route
-router.delete('/:id', isAuthenticated, teamController.deleteTeam);
 
 module.exports = router;
