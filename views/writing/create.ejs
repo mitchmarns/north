@@ -248,9 +248,94 @@
         <img src="${featuredImage}" alt="Featured Image Preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);" onerror="imageLoadError(this)">
       `;
     }
-  });
+
+  // Get tab links for character tagging
+  const myCharsTab = document.getElementById('my-chars-tab');
+  const otherCharsTab = document.getElementById('other-chars-tab');
+  
+  if (myCharsTab && otherCharsTab) {
+    // Initialize tabs
+    const myCharsPane = document.getElementById('my-chars');
+    const otherCharsPane = document.getElementById('other-chars');
+    
+    if (myCharsPane && otherCharsPane) {
+      // Show my characters tab by default
+      myCharsPane.style.display = 'block';
+      otherCharsPane.style.display = 'none';
+      myCharsTab.classList.add('active');
+      
+      // My characters tab click handler
+      myCharsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Toggle tab active state
+        myCharsTab.classList.add('active');
+        otherCharsTab.classList.remove('active');
+        
+        // Toggle tab content visibility
+        myCharsPane.style.display = 'block';
+        otherCharsPane.style.display = 'none';
+      });
+      
+      // Other characters tab click handler
+      otherCharsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Toggle tab active state
+        otherCharsTab.classList.add('active');
+        myCharsTab.classList.remove('active');
+        
+        // Toggle tab content visibility
+        otherCharsPane.style.display = 'block';
+        myCharsPane.style.display = 'none';
+      });
+    }
+  }
+  
+  // Also handle the edit page tabs if they exist
+  const editMyCharsTab = document.getElementById('edit-my-chars-tab');
+  const editOtherCharsTab = document.getElementById('edit-other-chars-tab');
+  
+  if (editMyCharsTab && editOtherCharsTab) {
+    // Initialize edit tabs
+    const editMyCharsPane = document.getElementById('edit-my-chars');
+    const editOtherCharsPane = document.getElementById('edit-other-chars');
+    
+    if (editMyCharsPane && editOtherCharsPane) {
+      // Show my characters tab by default
+      editMyCharsPane.style.display = 'block';
+      editOtherCharsPane.style.display = 'none';
+      editMyCharsTab.classList.add('active');
+      
+      // My characters tab click handler
+      editMyCharsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Toggle tab active state
+        editMyCharsTab.classList.add('active');
+        editOtherCharsTab.classList.remove('active');
+        
+        // Toggle tab content visibility
+        editMyCharsPane.style.display = 'block';
+        editOtherCharsPane.style.display = 'none';
+      });
+      
+      // Other characters tab click handler
+      editOtherCharsTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Toggle tab active state
+        editOtherCharsTab.classList.add('active');
+        editMyCharsTab.classList.remove('active');
+        
+        // Toggle tab content visibility
+        editOtherCharsPane.style.display = 'block';
+        editMyCharsPane.style.display = 'none';
+      });
+    }
+  }
+});
 </script>
-<script src="/js/thread-character-tabs.js"></script>
 
 <style>
   .character-select-grid {
@@ -382,4 +467,48 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .character-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 15px;
+}
+
+.character-tabs .nav-item {
+  list-style: none;
+}
+
+.character-tabs .nav-link {
+  padding: 10px 20px;
+  color: var(--lighttext);
+  text-decoration: none;
+  font-weight: var(--medium);
+  border-bottom: 3px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.character-tabs .nav-link:hover {
+  color: var(--header);
+}
+
+.character-tabs .nav-link.active {
+  color: var(--header);
+  border-bottom-color: var(--header);
+}
+
+.tab-content > .tab-pane {
+  display: none;
+}
+
+.tab-content > .active {
+  display: block;
+}
+
+/* Add some additional styling for the character owner name */
+.character-owner {
+  display: block;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
 </style>
