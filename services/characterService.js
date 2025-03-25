@@ -391,4 +391,140 @@ exports.getCharacterGallery = async (characterId, userId) => {
   };
 };
 
-// Add more services for relationships, stats, etc.
+/**
+ * Update character stats
+ * @param {number} characterId - The character ID
+ * @param {Object} statsData - Character stats data
+ * @param {number} userId - The user ID
+ * @returns {Object} The updated character
+ */
+exports.updateCharacterStats = async (characterId, statsData, userId) => {
+  // Find character
+  const character = await Character.findByPk(characterId);
+  
+  if (!character) {
+    throw new Error('Character not found');
+  }
+  
+  // Check if user owns the character
+  if (character.userId !== userId) {
+    throw new Error('Not authorized');
+  }
+  
+  // Sanitize and validate stats data
+  const sanitizedStats = {
+    strength: statsData.strength ? Math.min(Math.max(parseInt(statsData.strength), 0), 100) : 0,
+    dexterity: statsData.dexterity ? Math.min(Math.max(parseInt(statsData.dexterity), 0), 100) : 0,
+    constitution: statsData.constitution ? Math.min(Math.max(parseInt(statsData.constitution), 0), 100) : 0,
+    intelligence: statsData.intelligence ? Math.min(Math.max(parseInt(statsData.intelligence), 0), 100) : 0,
+    wisdom: statsData.wisdom ? Math.min(Math.max(parseInt(statsData.wisdom), 0), 100) : 0,
+    charisma: statsData.charisma ? Math.min(Math.max(parseInt(statsData.charisma), 0), 100) : 0,
+    personalityType: statsData.personalityType || null,
+    occupation: statsData.occupation || null
+  };
+  
+  // Update character
+  await character.update(sanitizedStats);
+  
+  return character;
+};
+
+/**
+ * Get character gallery images
+ * @param {number} characterId - The character ID
+ * @returns {Array} Gallery images
+ */
+exports.getCharacterGalleryImages = async (characterId) => {
+  return await CharacterGallery.findAll({
+    where: { characterId },
+    order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+  });
+};
+
+/**
+ * Add song to character playlist
+ * @param {number} characterId - The character ID
+ * @param {Object} songData - Song data
+ * @param {number} userId - The user ID
+ * @returns {Object} The updated character
+ */
+exports.addSongToPlaylist = async (characterId, songData, userId) => {
+  // Find character
+  const character = await Character.findByPk(characterId);
+  
+  if (!character) {
+    throw new Error('Character not found');
+  }
+  
+  // Check if user owns the character
+  if (character.userId !== userId) {
+    throw new Error('Not authorized');
+  }
+  
+  // Validate required fields
+  if (!songData.songTitle || !songData.artistName) {
+    throw new Error('Song title and artist name are required');
+  }
+  
+  // Get current playlist
+  const playlist = character.playlist || [];
+  
+  // Create new song object
+  const newSong = {
+    id: Date.now(), // simple unique ID
+    songTitle: songData.songTitle,
+    artistName: songData.artistName,
+    albumName: songData.albumName || null,
+    albumCoverUrl: songData.albumCoverUrl || null,
+    songUrl: songData.songUrl || null,
+    description: songData.description || null,
+    addedAt: new Date()
+  };
+  
+  // Add new song to playlist
+  playlist.push(newSong);
+  
+  // Update character
+  await character.update({ playlist });
+  
+  return character;
+};
+
+/**
+ * Remove song from character playlist
+ * @param {number} characterId - The character ID
+ * @param {number} songId - The song ID
+ * @param {number} userId - The user ID
+ * @returns {Object} The updated character
+ */
+exports.removeSongFromPlaylist = async (characterId, songId, userId) => {
+  // Find character
+  const character = await Character.findByPk(characterId);
+  
+  if (!character) {
+    throw new Error('Character not found');
+  }
+  
+  // Check if user owns the character
+  if (character.userId !== userId) {
+    throw new Error('Not authorized');
+  }
+  
+  // Get current playlist
+  const playlist = character.playlist || [];
+  
+  // Check if song exists
+  const songIndex = playlist.findIndex(song => song.id == songId);
+  
+  if (songIndex === -1) {
+    throw new Error('Song not found in playlist');
+  }
+  
+  // Remove song
+  playlist.splice(songIndex, 1);
+  
+  // Update character
+  await character.update({ playlist });
+  
+  return character;
+};

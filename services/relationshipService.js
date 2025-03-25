@@ -204,4 +204,336 @@ exports.addRelationship = async (character1Id, character2Id, relationshipData, u
   return newRelationship;
 };
 
-// Add more relationship service methods (approve, decline, update, delete, etc.)
+/**
+ * Get all pending relationship requests for a user
+ * @param {number} userId - The user ID
+ * @returns {Array} Formatted pending relationship requests
+ */
+exports.getPendingRequests = async (userId) => {
+  // Get all characters owned by the user
+  const userCharacters = await Character.findAll({
+    where: {
+      userId: userId
+    }
+  });
+  
+  // Get IDs of all user's characters
+  const characterIds = userCharacters.map(char => char.id);
+  
+  // Find pending relationships involving user's characters
+  const pendingRelationships = await Relationship.findAll({
+    where: {
+      [Op.or]: [
+        {
+          character1Id: { [Op.in]: characterIds },
+          isPending: true,
+          requestedById: { [Op.ne]: userId }
+        },
+        {
+          character2Id: { [Op.in]: characterIds },
+          isPending: true,
+          requestedById: { [Op.ne]: userId }
+        }
+      ]
+    },
+    include: [
+      {
+        model: Character,
+        as: 'character1',
+        include: [{ model: User, attributes: ['username'] }]
+      },
+      {
+        model: Character,
+        as: 'character2',
+        include: [{ model: User, attributes: ['username'] }]
+      },
+      {
+        model: User,
+        as: 'requestedBy',
+        attributes: ['username']
+      }
+    ]
+  });
+  
+  // Format relationships for display
+  const formattedRequests = pendingRelationships.map(rel => {
+    // Determine which character belongs to the current user
+    const userCharacter = characterIds.includes(rel.character1Id) 
+      ? rel.character1 
+      : rel.character2;
+    
+    // Determine which character belongs to the other user
+    const otherCharacter = userCharacter.id === rel.character1Id
+      ? rel.character2
+      : rel.character1;
+    
+    return {
+      id: rel.id,
+      userCharacter: userCharacter,
+      otherCharacter: otherCharacter,
+      relationshipType: rel.relationshipType,
+      description: rel.description,
+      status: rel.status,
+      requestedBy: rel.requestedBy ? rel.requestedBy.username : 'Unknown'
+    };
+  });
+  
+  return formattedRequests;
+};
+
+/**
+ * Approve a relationship request
+ * @param {number} relationshipId - The relationship ID
+ * @param {number} userId - The user ID approving the request
+ * @returns {Object} The updated relationship
+ */
+exports.approveRelationship = async (relationshipId, userId) => {
+  // Find relationship
+  const relationship = await Relationship.findByPk(relationshipId, {
+    include: [
+      {
+        model: Character,
+        as: 'character1'
+      },
+      {
+        model: Character,
+        as: 'character2'
+      }
+    ]
+  });
+  
+  if (!relationship) {
+    throw new Error('Relationship not found');
+  }
+  
+  // Check if relationship is pending
+  if (!relationship.isPending) {
+    throw new Error('This relationship is not pending approval');
+  }
+  
+  // Check if user owns one of the characters
+  const userOwnsCharacter1 = relationship.character1.userId === userId;
+  const userOwnsCharacter2 = relationship.character2.userId === userId;
+  
+  if (!userOwnsCharacter1 && !userOwnsCharacter2) {
+    throw new Error('Not authorized to approve this relationship');
+  }
+  
+  // Check if user is not the requester
+  if (relationship.requestedById === userId) {
+    throw new Error('You cannot approve your own relationship request');
+  }
+  
+  // Update relationship
+  await relationship.update({
+    isPending: false,
+    isApproved: true
+  });
+
+  // Send notification
+  try {
+    // Get requestor info
+    const requestor = await User.findByPk(relationship.requestedById);
+    
+    // Send Discord notification
+    discordNotifier.sendNotification(
+      `Relationship approved!`,
+      {
+        embeds: [{
+          title: `Relationship Approved: ${relationship.character1.name} & ${relationship.character2.name}`,
+          description: `A relationship has been approved: ${relationship.relationshipType}`,
+          color: 0x28a745, // Success color
+          fields: [
+            { name: 'Requested By', value: requestor ? requestor.username : 'Unknown', inline: true },
+            { name: 'Approved By', value: userOwnsCharacter1 ? relationship.character1.User?.username : relationship.character2.User?.username, inline: true },
+            { name: 'Status', value: relationship.status || 'Neutral', inline: true }
+          ],
+          timestamp: new Date()
+        }]
+      }
+    );
+  } catch (notificationError) {
+    console.error('Error sending relationship approval notification:', notificationError);
+    // Continue execution even if notification fails
+  }
+  
+  return relationship;
+};
+
+/**
+ * Decline a relationship request
+ * @param {number} relationshipId - The relationship ID
+ * @param {number} userId - The user ID declining the request
+ * @returns {boolean} Success status
+ */
+exports.declineRelationship = async (relationshipId, userId) => {
+  // Find relationship
+  const relationship = await Relationship.findByPk(relationshipId, {
+    include: [
+      {
+        model: Character,
+        as: 'character1'
+      },
+      {
+        model: Character,
+        as: 'character2'
+      }
+    ]
+  });
+  
+  if (!relationship) {
+    throw new Error('Relationship not found');
+  }
+  
+  // Check if relationship is pending
+  if (!relationship.isPending) {
+    throw new Error('This relationship is not pending approval');
+  }
+  
+  // Check if user owns one of the characters
+  const userOwnsCharacter1 = relationship.character1.userId === userId;
+  const userOwnsCharacter2 = relationship.character2.userId === userId;
+  
+  if (!userOwnsCharacter1 && !userOwnsCharacter2) {
+    throw new Error('Not authorized to decline this relationship');
+  }
+  
+  // Check if user is not the requester
+  if (relationship.requestedById === userId) {
+    throw new Error('You cannot decline your own relationship request');
+  }
+  
+  // Delete relationship
+  await relationship.destroy();
+  
+  // Send notification
+  try {
+    // Get requestor info
+    const requestor = await User.findByPk(relationship.requestedById);
+    
+    // Send Discord notification
+    discordNotifier.sendNotification(
+      `Relationship declined`,
+      {
+        embeds: [{
+          title: `Relationship Declined: ${relationship.character1.name} & ${relationship.character2.name}`,
+          description: `A relationship request has been declined: ${relationship.relationshipType}`,
+          color: 0xdc3545, // Danger color
+          fields: [
+            { name: 'Requested By', value: requestor ? requestor.username : 'Unknown', inline: true },
+            { name: 'Declined By', value: userOwnsCharacter1 ? relationship.character1.User?.username : relationship.character2.User?.username, inline: true }
+          ],
+          timestamp: new Date()
+        }]
+      }
+    );
+  } catch (notificationError) {
+    console.error('Error sending relationship decline notification:', notificationError);
+    // Continue execution even if notification fails
+  }
+  
+  return true;
+};
+
+/**
+ * Update an existing relationship
+ * @param {number} relationshipId - The relationship ID
+ * @param {Object} relationshipData - Updated relationship data
+ * @param {number} userId - The user ID
+ * @returns {Object} The updated relationship
+ */
+exports.updateRelationship = async (relationshipId, relationshipData, userId) => {
+  const { relationshipType, description, status } = relationshipData;
+  
+  // Find relationship
+  const relationship = await Relationship.findByPk(relationshipId, {
+    include: [
+      {
+        model: Character,
+        as: 'character1'
+      },
+      {
+        model: Character,
+        as: 'character2'
+      }
+    ]
+  });
+  
+  if (!relationship) {
+    throw new Error('Relationship not found');
+  }
+  
+  // Check if user owns at least one of the characters
+  if (relationship.character1.userId !== userId && relationship.character2.userId !== userId) {
+    throw new Error('Not authorized to update this relationship');
+  }
+  
+  // Update relationship
+  await relationship.update({
+    relationshipType,
+    description: description || null,
+    status: status || 'Neutral'
+  });
+  
+  return relationship;
+};
+
+/**
+ * Delete a relationship
+ * @param {number} relationshipId - The relationship ID
+ * @param {number} userId - The user ID
+ * @returns {boolean} Success status
+ */
+exports.deleteRelationship = async (relationshipId, userId) => {
+  // Find relationship
+  const relationship = await Relationship.findByPk(relationshipId, {
+    include: [
+      {
+        model: Character,
+        as: 'character1'
+      },
+      {
+        model: Character,
+        as: 'character2'
+      }
+    ]
+  });
+  
+  if (!relationship) {
+    throw new Error('Relationship not found');
+  }
+  
+  // Check if user owns at least one of the characters
+  if (relationship.character1.userId !== userId && relationship.character2.userId !== userId) {
+    throw new Error('Not authorized to delete this relationship');
+  }
+  
+  // Delete relationship
+  await relationship.destroy();
+  
+  return true;
+};
+
+/**
+ * Check if there is a relationship between two characters
+ * @param {number} character1Id - The first character ID
+ * @param {number} character2Id - The second character ID
+ * @returns {Object|null} The relationship or null if none exists
+ */
+exports.checkRelationshipExists = async (character1Id, character2Id) => {
+  return await Relationship.findOne({
+    where: {
+      [Op.or]: [
+        {
+          character1Id: character1Id,
+          character2Id: character2Id
+        },
+        {
+          character1Id: character2Id,
+          character2Id: character1Id
+        }
+      ],
+      isApproved: true
+    }
+  });
+};

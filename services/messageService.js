@@ -245,6 +245,96 @@ exports.getConversation = async (characterId, partnerId, userId) => {
 };
 
 /**
+ * Get potential message recipients for a character
+ * @param {number} characterId - The character ID
+ * @param {number} userId - User ID
+ * @returns {Array} Potential recipients
+ */
+exports.getPotentialRecipients = async (characterId, userId) => {
+  // Verify character exists and belongs to the user
+  const character = await Character.findOne({
+    where: {
+      id: characterId,
+      userId: userId
+    }
+  });
+  
+  if (!character) {
+    throw new Error('Character not found or not authorized');
+  }
+  
+  // Get all approved relationships
+  const relationships = await Relationship.findAll({
+    where: {
+      [Op.or]: [
+        { character1Id: characterId },
+        { character2Id: characterId }
+      ],
+      isApproved: true
+    },
+    include: [
+      {
+        model: Character,
+        as: 'character1',
+        include: [{ model: User, attributes: ['username'] }]
+      },
+      {
+        model: Character,
+        as: 'character2',
+        include: [{ model: User, attributes: ['username'] }]
+      }
+    ]
+  });
+  
+  // Get user's other characters
+  const userCharacters = await Character.findAll({
+    where: {
+      userId: userId,
+      id: { [Op.ne]: characterId }
+    }
+  });
+  
+  // Format potential recipients
+  const recipients = [];
+  
+  // Add characters from relationships
+  relationships.forEach(rel => {
+    const otherCharacter = rel.character1Id === parseInt(characterId) ? rel.character2 : rel.character1;
+    
+    // Don't add duplicates
+    if (!recipients.some(r => r.id === otherCharacter.id)) {
+      recipients.push({
+        id: otherCharacter.id,
+        name: otherCharacter.name,
+        avatarUrl: otherCharacter.avatarUrl,
+        username: otherCharacter.User ? otherCharacter.User.username : 'Unknown',
+        isOwn: otherCharacter.userId === userId
+      });
+    }
+  });
+  
+  // Add user's other characters
+  userCharacters.forEach(char => {
+    // Don't add duplicates
+    if (!recipients.some(r => r.id === char.id)) {
+      recipients.push({
+        id: char.id,
+        name: char.name,
+        avatarUrl: char.avatarUrl,
+        username: userId,
+        isOwn: true
+      });
+    }
+  });
+  
+  // Sort recipients by name
+  recipients.sort((a, b) => a.name.localeCompare(b.name));
+  
+  return recipients;
+};
+
+
+/**
  * Send a message between characters
  * @param {Object} messageData - Message data
  * @param {number} userId - User ID
@@ -346,3 +436,66 @@ exports.deleteMessage = async (messageId, characterId, userId) => {
   return true;
 };
 
+/**
+ * Get unread message count for a user
+ * @param {number} userId - User ID
+ * @returns {number} Total unread message count
+ */
+exports.getUnreadMessageCount = async (userId) => {
+  // Get all characters owned by the user
+  const characters = await Character.findAll({
+    where: {
+      userId: userId
+    },
+    attributes: ['id']
+  });
+  
+  if (characters.length === 0) {
+    return 0;
+  }
+  
+  // Get IDs of all user's characters
+  const characterIds = characters.map(char => char.id);
+  
+  // Count unread messages
+  const unreadCount = await Message.count({
+    where: {
+      receiverId: { [Op.in]: characterIds },
+      isRead: false,
+      isDeleted: false
+    }
+  });
+  
+  return unreadCount;
+};
+
+/**
+ * Get unread message count for a specific character
+ * @param {number} characterId - Character ID
+ * @param {number} userId - User ID (for authorization)
+ * @returns {number} Unread message count for the character
+ */
+exports.getCharacterUnreadCount = async (characterId, userId) => {
+  // Verify character belongs to the user
+  const character = await Character.findOne({
+    where: {
+      id: characterId,
+      userId: userId
+    }
+  });
+  
+  if (!character) {
+    throw new Error('Character not found or not authorized');
+  }
+  
+  // Count unread messages
+  const unreadCount = await Message.count({
+    where: {
+      receiverId: characterId,
+      isRead: false,
+      isDeleted: false
+    }
+  });
+  
+  return unreadCount;
+};
