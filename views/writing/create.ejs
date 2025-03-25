@@ -324,6 +324,13 @@ function initTabs(tab1Id, tab2Id, pane1Id, pane2Id) {
     pane2.style.display = 'block';
     pane1.style.display = 'none';
   });
+
+  console.log('Tab elements:', {
+  tab1: document.getElementById('my-chars-tab'),
+  tab2: document.getElementById('other-chars-tab'),
+  pane1: document.getElementById('my-chars'),
+  pane2: document.getElementById('other-chars')
+});
 }
 </script>
 
