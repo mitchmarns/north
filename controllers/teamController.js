@@ -3,7 +3,6 @@ const teamService = require('../services/teamService');
 const { validationResult } = require('express-validator');
 const teamCache = new Map(); 
 const CACHE_EXPIRY = 30 * 60 * 1000; 
-const teamService = require('../services/teamService');
 
 // Get all teams (public)
 exports.getAllTeams = async (req, res) => {
