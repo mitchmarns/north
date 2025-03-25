@@ -227,6 +227,39 @@ app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });
 });
 
+async function updateThreadDatabase() {
+  try {
+    const { sequelize } = require('./models');
+
+    // Add threadDate column to threads table
+    await sequelize.query(`
+      ALTER TABLE threads 
+      ADD COLUMN IF NOT EXISTS threadDate DATETIME DEFAULT NULL
+    `);
+
+    // Create thread_characters join table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS thread_characters (
+        threadId INT,
+        characterId INT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (threadId, characterId),
+        FOREIGN KEY (threadId) REFERENCES threads(id) 
+          ON DELETE CASCADE 
+          ON UPDATE CASCADE,
+        FOREIGN KEY (characterId) REFERENCES characters(id) 
+          ON DELETE CASCADE 
+          ON UPDATE CASCADE
+      )
+    `);
+
+    console.log('Thread database update completed successfully.');
+  } catch (error) {
+    console.error('Error updating thread database:', error);
+  }
+}
+
 // Database Connection & Server Start
 async function startServer() {
   try {
@@ -237,6 +270,8 @@ async function startServer() {
     
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
+
+    await updateThreadDatabase();
     
     // Set force: true to drop and recreate tables (use carefully in production)
     await sequelize.sync({ force: false });
