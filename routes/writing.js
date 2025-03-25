@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { Thread, Post, Character, User } = require('../models');
+const { Thread, Post, Character, User, Sequelize } = require('../models');  // Add Sequelize here
 const { isAuthenticated } = require('../middleware/auth');
 
 // Update GET routes to include tagged characters
