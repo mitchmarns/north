@@ -74,19 +74,37 @@ router.get('/my-threads', isAuthenticated, async (req, res) => {
   }
 });
 
+// Create thread form
 router.get('/create', isAuthenticated, async (req, res) => {
   try {
-    // Get user's characters for the form
-    const characters = await Character.findAll({
+    // Get user's characters
+    const userCharacters = await Character.findAll({
       where: {
         userId: req.user.id,
         isArchived: false
       }
     });
+    
+    // Get public characters from other users
+    const otherCharacters = await Character.findAll({
+      where: {
+        userId: { [Sequelize.Op.ne]: req.user.id },
+        isPrivate: false,
+        isArchived: false
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        }
+      ],
+      limit: 50 // Limit to prevent overloading
+    });
 
     res.render('writing/create', {
       title: 'Create New Thread',
-      characters
+      userCharacters,
+      otherCharacters
     });
   } catch (error) {
     console.error('Error loading create form:', error);
@@ -123,10 +141,9 @@ router.post(
       .isISO8601()
       .toDate()
       .withMessage('Invalid date format'),
-    body('taggedCharacters')
+      body('taggedCharacters')
       .optional()
       .custom((value) => {
-        // Ensure taggedCharacters is an array of numeric IDs
         if (value) {
           const characterIds = Array.isArray(value) ? value : value.split(',');
           if (!characterIds.every(id => !isNaN(parseInt(id)))) {
@@ -291,6 +308,71 @@ router.get('/thread/:id', async (req, res) => {
   }
 });
 
+// Update edit thread route to include other users' characters
+router.get('/edit/:id', isAuthenticated, async (req, res) => {
+  try {
+    const thread = await Thread.findByPk(req.params.id, {
+      include: [
+        {
+          model: Character,
+          as: 'threadTags',
+          attributes: ['id', 'name', 'avatarUrl']
+        }
+      ]
+    });
+    
+    if (!thread) {
+      req.flash('error_msg', 'Thread not found');
+      return res.redirect('/writing/my-threads');
+    }
+    
+    // Check if user is the creator
+    if (thread.creatorId !== req.user.id) {
+      req.flash('error_msg', 'Not authorized');
+      return res.redirect('/writing/my-threads');
+    }
+    
+    // Get user's characters
+    const userCharacters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      }
+    });
+    
+    // Get public characters from other users
+    const otherCharacters = await Character.findAll({
+      where: {
+        userId: { [Sequelize.Op.ne]: req.user.id },
+        isPrivate: false,
+        isArchived: false
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['username']
+        }
+      ],
+      limit: 50
+    });
+    
+    // Get IDs of currently tagged characters for pre-selecting
+    const taggedCharacterIds = thread.threadTags.map(char => char.id);
+    
+    res.render('writing/edit', {
+      title: `Edit ${thread.title}`,
+      thread,
+      userCharacters,
+      otherCharacters,
+      taggedCharacterIds
+    });
+  } catch (error) {
+    console.error('Error fetching thread for edit:', error);
+    req.flash('error_msg', 'An error occurred while fetching the thread');
+    res.redirect('/writing/my-threads');
+  }
+});
+
 // Update thread route - Add support for threadDate and taggedCharacters
 router.put(
   '/edit/:id',
@@ -365,21 +447,6 @@ router.put(
           ? taggedCharacters 
           : taggedCharacters.split(',').map(id => parseInt(id)))
         : [];
-      
-      // Validate tagged characters belong to the user
-      if (taggedCharactersArray.length > 0) {
-        const validCharacters = await Character.findAll({
-          where: {
-            id: taggedCharactersArray,
-            userId: req.user.id
-          }
-        });
-        
-        if (validCharacters.length !== taggedCharactersArray.length) {
-          req.flash('error_msg', 'Some tagged characters are invalid');
-          return res.redirect(`/writing/edit/${req.params.id}`);
-        }
-      }
       
       // Update thread
       await thread.update({

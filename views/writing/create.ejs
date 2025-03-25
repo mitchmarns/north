@@ -63,30 +63,70 @@
           <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
             <div class="form-group">
               <label>Tagged Characters (Optional)</label>
-              <div class="character-tag-grid">
-                <% characters.forEach(character => { %>
-                  <div class="character-tag-item">
-                    <input 
-                      type="checkbox" 
-                      name="taggedCharacters" 
-                      id="tagged-character-<%= character.id %>" 
-                      value="<%= character.id %>"
-                      <%= typeof thread !== 'undefined' && thread.taggedCharacters && thread.taggedCharacters.includes(character.id) ? 'checked' : '' %>
-                    >
-                    <label for="tagged-character-<%= character.id %>" class="character-tag-label">
-                      <div class="character-tag-avatar">
-                        <% if (character.avatarUrl) { %>
-                          <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
-                        <% } else { %>
-                          <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
-                        <% } %>
-                      </div>
-                      <div class="character-tag-name"><%= character.name %></div>
-                    </label>
+              
+              <ul class="nav nav-tabs character-tabs mb-3">
+                <li class="nav-item">
+                  <a class="nav-link active" id="my-chars-tab" data-toggle="tab" href="#my-chars">My Characters</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="other-chars-tab" data-toggle="tab" href="#other-chars">Other Users' Characters</a>
+                </li>
+              </ul>
+              
+              <div class="tab-content">
+                <!-- My Characters Tab -->
+                <div class="tab-pane fade show active" id="my-chars">
+                  <div class="character-tag-grid">
+                    <% if (userCharacters && userCharacters.length > 0) { %>
+                      <% userCharacters.forEach(character => { %>
+                        <div class="character-tag-item">
+                          <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
+                          <label for="tagged-character-<%= character.id %>" class="character-tag-label">
+                            <div class="character-tag-avatar">
+                              <% if (character.avatarUrl) { %>
+                                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                              <% } else { %>
+                                <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
+                              <% } %>
+                            </div>
+                            <div class="character-tag-name"><%= character.name %></div>
+                          </label>
+                        </div>
+                      <% }); %>
+                    <% } else { %>
+                      <p>You don't have any characters yet.</p>
+                    <% } %>
                   </div>
-                <% }); %>
+                </div>
+                
+                <!-- Other Users' Characters Tab -->
+                <div class="tab-pane fade" id="other-chars">
+                  <div class="character-tag-grid">
+                    <% if (otherCharacters && otherCharacters.length > 0) { %>
+                      <% otherCharacters.forEach(character => { %>
+                        <div class="character-tag-item">
+                          <input type="checkbox" name="taggedCharacters" id="tagged-character-<%= character.id %>" value="<%= character.id %>">
+                          <label for="tagged-character-<%= character.id %>" class="character-tag-label">
+                            <div class="character-tag-avatar">
+                              <% if (character.avatarUrl) { %>
+                                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                              <% } else { %>
+                                <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
+                              <% } %>
+                            </div>
+                            <div class="character-tag-name">
+                              <%= character.name %>
+                              <small class="character-owner">(<%= character.User.username %>)</small>
+                            </div>
+                          </label>
+                        </div>
+                      <% }); %>
+                    <% } else { %>
+                      <p>No other users' characters available.</p>
+                    <% } %>
+                  </div>
+                </div>
               </div>
-              <small style="color: rgba(255, 255, 255, 0.5);">Select characters involved in this thread</small>
             </div>
           <% } %>
 
