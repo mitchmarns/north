@@ -15,7 +15,7 @@ router.get('/:id', teamController.getTeam);
 router.get('/:id/roster', teamController.getTeamRoster);
 
 // Change these routes to be accessible by any authenticated user
-router.get('/admin/teams', isAuthenticated, teamController.getAdminTeams);
+router.get('/admin/teams', isAuthenticated, teamController.getUserTeams);
 router.get('/admin/teams/create', isAuthenticated, teamController.getCreateTeam);
 router.post('/admin/teams/create', isAuthenticated, [
   // Validation
