@@ -64,18 +64,18 @@
             <div class="form-group">
               <label>Tagged Characters (Optional)</label>
               
-              <ul class="nav nav-tabs character-tabs mb-3">
+              <ul class="nav nav-tabs">
                 <li class="nav-item">
-                  <a class="nav-link active" id="my-chars-tab" data-toggle="tab" href="#my-chars">My Characters</a>
+                  <a class="nav-link active" id="my-chars-tab" href="#my-chars">My Characters</a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" id="other-chars-tab" data-toggle="tab" href="#other-chars">Other Users' Characters</a>
+                  <a class="nav-link" id="other-chars-tab" href="#other-chars">Other Users' Characters</a>
                 </li>
               </ul>
               
               <div class="tab-content">
                 <!-- My Characters Tab -->
-                <div class="tab-pane fade show active" id="my-chars">
+                <div class="tab-pane" id="my-chars">
                   <div class="character-tag-grid">
                     <% if (userCharacters && userCharacters.length > 0) { %>
                       <% userCharacters.forEach(character => { %>
@@ -100,7 +100,7 @@
                 </div>
                 
                 <!-- Other Users' Characters Tab -->
-                <div class="tab-pane fade" id="other-chars">
+                <div class="tab-pane" id="other-chars">
                   <div class="character-tag-grid">
                     <% if (otherCharacters && otherCharacters.length > 0) { %>
                       <% otherCharacters.forEach(character => { %>
