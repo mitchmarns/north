@@ -6,11 +6,15 @@ const { Character, CharacterGallery, User } = require('../models');
 // Get all characters (public)
 exports.getAllCharacters = async (req, res) => {
   try {
-    const characters = await characterService.getAllCharacters();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+
+    const characters = await characterService.getAllCharacters(page, limit);
 
     res.render('characters/index', {
       title: 'Character Directory',
-      characters
+      characters: result.characters,
+      pagination: result.pagination
     });
   } catch (error) {
     console.error('Error fetching characters:', error);
@@ -22,11 +26,15 @@ exports.getAllCharacters = async (req, res) => {
 // Get user's characters
 exports.getUserCharacters = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+
     const characters = await characterService.getUserCharacters(req.user.id);
 
     res.render('characters/my-characters', {
       title: 'My Characters',
-      characters
+      characters: result.characters,
+      pagination: result.pagination
     });
   } catch (error) {
     console.error('Error fetching user characters:', error);

@@ -1,0 +1,60 @@
+/* Add this to public/css/components/pagination.css */
+
+.pagination-container {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  gap: 5px;
+}
+
+.page-item {
+  margin: 0;
+}
+
+.page-link {
+  display: inline-block;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--lighttext);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.page-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--header);
+}
+
+.page-item.active .page-link {
+  background-color: var(--header);
+  color: white;
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pagination-info {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

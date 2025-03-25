@@ -143,8 +143,19 @@ exports.getMessagingData = async (userId, targetCharacterId) => {
  * Get a list of all characters
  * @returns {Array} List of all public characters
  */
-exports.getAllCharacters = async () => {
-  return await Character.findAll({
+exports.getAllCharacters = async (page = 1, limit = 12) => {
+  const offset = (page - 1) * limit;
+
+  // Get total count for pagination
+  const totalCount = await Character.count({
+    where: { 
+      isPrivate: false,
+      isArchived: false
+    }
+  });
+
+  // Get characters for current page
+  const characters = await Character.findAll({
     where: { 
       isPrivate: false,
       isArchived: false
@@ -155,20 +166,68 @@ exports.getAllCharacters = async () => {
         attributes: ['username']
       }
     ],
-    order: [['createdAt', 'DESC']]
+    order: [['createdAt', 'DESC']],
+    limit: limit,
+    offset: offset
   });
+
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(totalCount / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+
+  return {
+    characters,
+    pagination: {
+      totalCount,
+      totalPages,
+      currentPage: page,
+      hasNextPage,
+      hasPrevPage,
+      limit
+    }
+  };
 };
 
 /**
- * Get a user's characters
+ * Get a user's characters with pagination
  * @param {number} userId - The user's ID
- * @returns {Array} List of user's characters
+ * @param {number} page - The page number (starts at 1)
+ * @param {number} limit - The number of records per page
+ * @returns {Object} Paginated list of user's characters with metadata
  */
-exports.getUserCharacters = async (userId) => {
-  return await Character.findAll({
-    where: { userId: userId },
-    order: [['createdAt', 'DESC']]
+exports.getUserCharacters = async (userId, page = 1, limit = 12) => {
+  const offset = (page - 1) * limit;
+  
+  // Get total count for pagination
+  const totalCount = await Character.count({
+    where: { userId: userId }
   });
+  
+  // Get characters for current page
+  const characters = await Character.findAll({
+    where: { userId: userId },
+    order: [['createdAt', 'DESC']],
+    limit: limit,
+    offset: offset
+  });
+  
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(totalCount / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+  
+  return {
+    characters,
+    pagination: {
+      totalCount,
+      totalPages,
+      currentPage: page,
+      hasNextPage,
+      hasPrevPage,
+      limit
+    }
+  };
 };
 
 /**
