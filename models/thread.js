@@ -58,8 +58,28 @@ module.exports = (sequelize, DataTypes) => {
     lastPostAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    threadDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    taggedCharacters: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        const rawValue = this.getDataValue('taggedCharacters');
+        return rawValue ? rawValue.split(',').map(id => parseInt(id)) : [];
+      },
+      set(val) {
+        if (Array.isArray(val)) {
+          this.setDataValue('taggedCharacters', val.join(','));
+        } else {
+          this.setDataValue('taggedCharacters', val);
+        }
+      }
     }
-  }, {
+  },
+   {
     timestamps: true,
     tableName: 'threads'
   });

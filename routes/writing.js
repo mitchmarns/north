@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const { Thread, Post, Character, User } = require('../models');
 const { isAuthenticated } = require('../middleware/auth');
 
-// Get all threads
+// Update GET routes to include tagged characters
 router.get('/threads', async (req, res) => {
   try {
     const threads = await Thread.findAll({
@@ -21,6 +21,11 @@ router.get('/threads', async (req, res) => {
           model: Post,
           as: 'posts',
           attributes: ['id']
+        },
+        {
+          model: Character,
+          as: 'taggedCharacters',
+          attributes: ['id', 'name', 'avatarUrl']
         }
       ],
       order: [['updatedAt', 'DESC']]
@@ -37,7 +42,6 @@ router.get('/threads', async (req, res) => {
   }
 });
 
-// Get user's threads
 router.get('/my-threads', isAuthenticated, async (req, res) => {
   try {
     const threads = await Thread.findAll({
@@ -49,6 +53,11 @@ router.get('/my-threads', isAuthenticated, async (req, res) => {
           model: Post,
           as: 'posts',
           attributes: ['id']
+        },
+        {
+          model: Character,
+          as: 'taggedCharacters',
+          attributes: ['id', 'name', 'avatarUrl']
         }
       ],
       order: [['updatedAt', 'DESC']]
@@ -65,29 +74,7 @@ router.get('/my-threads', isAuthenticated, async (req, res) => {
   }
 });
 
-// Create thread form
-router.get('/create', isAuthenticated, async (req, res) => {
-  try {
-    // Get user's characters for the character selection
-    const characters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        isArchived: false
-      }
-    });
-
-    res.render('writing/create', {
-      title: 'Create a New Thread',
-      characters
-    });
-  } catch (error) {
-    console.error('Error loading create thread form:', error);
-    req.flash('error_msg', 'An error occurred while loading the form');
-    res.redirect('/writing/my-threads');
-  }
-});
-
-// Create thread
+// Create thread route - Add validation and handling for new fields
 router.post(
   '/create',
   isAuthenticated,
@@ -109,14 +96,56 @@ router.post(
       .withMessage('Featured image must be a valid URL'),
     body('tags')
       .optional()
-      .trim()
+      .trim(),
+    body('threadDate')
+      .optional()
+      .isISO8601()
+      .toDate()
+      .withMessage('Invalid date format'),
+    body('taggedCharacters')
+      .optional()
+      .custom((value) => {
+        // Ensure taggedCharacters is an array of numeric IDs
+        if (value) {
+          const characterIds = Array.isArray(value) ? value : value.split(',');
+          if (!characterIds.every(id => !isNaN(parseInt(id)))) {
+            throw new Error('Invalid character IDs');
+          }
+        }
+        return true;
+      })
   ],
   async (req, res) => {
     try {
-      const { title, description, setting, tags, featuredImage, isPrivate } = req.body;
+      const { 
+        title, description, setting, tags, 
+        featuredImage, isPrivate, threadDate, taggedCharacters 
+      } = req.body;
       
       // Handle tags (convert comma-separated string to array)
       const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
+      
+      // Prepare tagged characters array
+      const taggedCharactersArray = taggedCharacters 
+        ? (Array.isArray(taggedCharacters) 
+          ? taggedCharacters 
+          : taggedCharacters.split(',').map(id => parseInt(id)))
+        : [];
+      
+      // Validate tagged characters belong to the user
+      if (taggedCharactersArray.length > 0) {
+        const validCharacters = await Character.findAll({
+          where: {
+            id: taggedCharactersArray,
+            userId: req.user.id
+          }
+        });
+        
+        if (validCharacters.length !== taggedCharactersArray.length) {
+          req.flash('error_msg', 'Some tagged characters are invalid');
+          return res.redirect('/writing/create');
+        }
+      }
       
       // Create thread
       const thread = await Thread.create({
@@ -127,13 +156,19 @@ router.post(
         tags: tagArray,
         featuredImage: featuredImage || null,
         isPrivate: isPrivate === 'on',
+        threadDate: threadDate || null,
         lastPostAt: new Date()
       });
+      
+      // Add tagged characters if any
+      if (taggedCharactersArray.length > 0) {
+        await thread.addTaggedCharacters(taggedCharactersArray);
+      }
       
       req.flash('success_msg', 'Thread created successfully');
       res.redirect(`/writing/thread/${thread.id}`);
 
-            // After thread is created
+      // After thread is created
       const discordNotifier = require('../utils/discordNotifier');
       
       // Send Discord notification
@@ -146,7 +181,8 @@ router.post(
             color: 0x5a8095, // Your site's header color
             fields: [
               { name: 'Creator', value: req.user.username, inline: true },
-              { name: 'Privacy', value: thread.isPrivate ? 'Private' : 'Public', inline: true }
+              { name: 'Privacy', value: thread.isPrivate ? 'Private' : 'Public', inline: true },
+              { name: 'Thread Date', value: thread.threadDate ? new Date(thread.threadDate).toLocaleDateString() : 'Not specified', inline: true }
             ],
             url: `https://your-site.com/writing/thread/${thread.id}`,
             timestamp: new Date()
@@ -162,7 +198,7 @@ router.post(
   }
 );
 
-// View thread
+// Update existing view thread route to include tagged characters
 router.get('/thread/:id', async (req, res) => {
   try {
     const thread = await Thread.findByPk(req.params.id, {
@@ -171,6 +207,11 @@ router.get('/thread/:id', async (req, res) => {
           model: User,
           as: 'creator',
           attributes: ['username', 'id']
+        },
+        {
+          model: Character,
+          as: 'taggedCharacters',
+          attributes: ['id', 'name', 'avatarUrl']
         }
       ]
     });
@@ -229,34 +270,7 @@ router.get('/thread/:id', async (req, res) => {
   }
 });
 
-// Edit thread form
-router.get('/edit/:id', isAuthenticated, async (req, res) => {
-  try {
-    const thread = await Thread.findByPk(req.params.id);
-    
-    if (!thread) {
-      req.flash('error_msg', 'Thread not found');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    // Check if user is the creator
-    if (thread.creatorId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    res.render('writing/edit', {
-      title: `Edit ${thread.title}`,
-      thread
-    });
-  } catch (error) {
-    console.error('Error fetching thread for edit:', error);
-    req.flash('error_msg', 'An error occurred while fetching the thread');
-    res.redirect('/writing/my-threads');
-  }
-});
-
-// Update thread
+// Update thread route - Add support for threadDate and taggedCharacters
 router.put(
   '/edit/:id',
   isAuthenticated,
@@ -281,11 +295,31 @@ router.put(
       .trim(),
     body('status')
       .isIn(['Active', 'Paused', 'Completed', 'Abandoned'])
-      .withMessage('Invalid status')
+      .withMessage('Invalid status'),
+    body('threadDate')
+      .optional()
+      .isISO8601()
+      .toDate()
+      .withMessage('Invalid date format'),
+    body('taggedCharacters')
+      .optional()
+      .custom((value) => {
+        // Ensure taggedCharacters is an array of numeric IDs
+        if (value) {
+          const characterIds = Array.isArray(value) ? value : value.split(',');
+          if (!characterIds.every(id => !isNaN(parseInt(id)))) {
+            throw new Error('Invalid character IDs');
+          }
+        }
+        return true;
+      })
   ],
   async (req, res) => {
     try {
-      const { title, description, setting, featuredImage, tags, status, isPrivate } = req.body;
+      const { 
+        title, description, setting, featuredImage, 
+        tags, status, isPrivate, threadDate, taggedCharacters 
+      } = req.body;
       
       // Find thread
       const thread = await Thread.findByPk(req.params.id);
@@ -304,6 +338,28 @@ router.put(
       // Handle tags
       const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
       
+      // Prepare tagged characters array
+      const taggedCharactersArray = taggedCharacters 
+        ? (Array.isArray(taggedCharacters) 
+          ? taggedCharacters 
+          : taggedCharacters.split(',').map(id => parseInt(id)))
+        : [];
+      
+      // Validate tagged characters belong to the user
+      if (taggedCharactersArray.length > 0) {
+        const validCharacters = await Character.findAll({
+          where: {
+            id: taggedCharactersArray,
+            userId: req.user.id
+          }
+        });
+        
+        if (validCharacters.length !== taggedCharactersArray.length) {
+          req.flash('error_msg', 'Some tagged characters are invalid');
+          return res.redirect(`/writing/edit/${req.params.id}`);
+        }
+      }
+      
       // Update thread
       await thread.update({
         title,
@@ -312,8 +368,20 @@ router.put(
         tags: tagArray,
         featuredImage: featuredImage || thread.featuredImage,
         status,
-        isPrivate: isPrivate === 'on'
+        isPrivate: isPrivate === 'on',
+        threadDate: threadDate || null
       });
+      
+      // Update tagged characters
+      if (taggedCharactersArray.length > 0) {
+        // Remove existing tagged characters
+        await thread.removeTaggedCharacters();
+        // Add new tagged characters
+        await thread.addTaggedCharacters(taggedCharactersArray);
+      } else {
+        // Ensure no characters are tagged if array is empty
+        await thread.removeTaggedCharacters();
+      }
       
       req.flash('success_msg', 'Thread updated successfully');
       res.redirect(`/writing/thread/${thread.id}`);
@@ -324,232 +392,5 @@ router.put(
     }
   }
 );
-
-// Add post to thread
-router.post(
-  '/thread/:id/post',
-  isAuthenticated,
-  [
-    body('content')
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage('Post content is required'),
-    body('characterId')
-      .optional()
-      .isNumeric()
-      .withMessage('Invalid character')
-  ],
-  async (req, res) => {
-    try {
-      const { content, characterId } = req.body;
-      const threadId = req.params.id;
-      
-      // Find thread
-      const thread = await Thread.findByPk(threadId);
-      
-      if (!thread) {
-        req.flash('error_msg', 'Thread not found');
-        return res.redirect('/writing/threads');
-      }
-      
-      // Check if thread is active
-      if (thread.status !== 'Active') {
-        req.flash('error_msg', 'Cannot post in a non-active thread');
-        return res.redirect(`/writing/thread/${threadId}`);
-      }
-      
-      // Verify character belongs to user if provided
-      if (characterId) {
-        const character = await Character.findByPk(characterId);
-        if (!character || character.userId !== req.user.id) {
-          req.flash('error_msg', 'Invalid character');
-          return res.redirect(`/writing/thread/${threadId}`);
-        }
-      }
-      
-      // Create post
-      await Post.create({
-        threadId,
-        userId: req.user.id,
-        characterId: characterId || null,
-        content
-      });
-      
-      // Update thread's lastPostAt
-      await thread.update({
-        lastPostAt: new Date()
-      });
-      
-      req.flash('success_msg', 'Reply posted successfully');
-      res.redirect(`/writing/thread/${threadId}`);
-    } catch (error) {
-      console.error('Error posting reply:', error);
-      req.flash('error_msg', 'An error occurred while posting your reply');
-      res.redirect(`/writing/thread/${req.params.id}`);
-    }
-  }
-);
-
-// Edit post form
-router.get('/post/:id/edit', isAuthenticated, async (req, res) => {
-  try {
-    const post = await Post.findByPk(req.params.id, {
-      include: [
-        {
-          model: Thread
-        },
-        {
-          model: Character
-        }
-      ]
-    });
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    // Check if user is the author
-    if (post.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(`/writing/thread/${post.threadId}`);
-    }
-    
-    // Get user's characters
-    const characters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        isArchived: false
-      }
-    });
-    
-    res.render('writing/edit-post', {
-      title: 'Edit Post',
-      post,
-      characters
-    });
-  } catch (error) {
-    console.error('Error fetching post for edit:', error);
-    req.flash('error_msg', 'An error occurred while fetching the post');
-    res.redirect('/writing/my-threads');
-  }
-});
-
-// Update post
-router.put(
-  '/post/:id',
-  isAuthenticated,
-  [
-    body('content')
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage('Post content is required'),
-    body('characterId')
-      .optional()
-      .isNumeric()
-      .withMessage('Invalid character')
-  ],
-  async (req, res) => {
-    try {
-      const { content, characterId } = req.body;
-      
-      // Find post
-      const post = await Post.findByPk(req.params.id);
-      
-      if (!post) {
-        req.flash('error_msg', 'Post not found');
-        return res.redirect('/writing/my-threads');
-      }
-      
-      // Check if user is the author
-      if (post.userId !== req.user.id) {
-        req.flash('error_msg', 'Not authorized');
-        return res.redirect(`/writing/thread/${post.threadId}`);
-      }
-      
-      // Verify character belongs to user if provided
-      if (characterId) {
-        const character = await Character.findByPk(characterId);
-        if (!character || character.userId !== req.user.id) {
-          req.flash('error_msg', 'Invalid character');
-          return res.redirect(`/writing/post/${post.id}/edit`);
-        }
-      }
-      
-      // Update post
-      await post.update({
-        content,
-        characterId: characterId || null
-      });
-      
-      req.flash('success_msg', 'Post updated successfully');
-      res.redirect(`/writing/thread/${post.threadId}`);
-    } catch (error) {
-      console.error('Error updating post:', error);
-      req.flash('error_msg', 'An error occurred while updating the post');
-      res.redirect(`/writing/post/${req.params.id}/edit`);
-    }
-  }
-);
-
-// Delete post
-router.delete('/post/:id', isAuthenticated, async (req, res) => {
-  try {
-    // Find post
-    const post = await Post.findByPk(req.params.id);
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    // Check if user is the author or thread creator
-    const thread = await Thread.findByPk(post.threadId);
-    
-    if (post.userId !== req.user.id && thread.creatorId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(`/writing/thread/${post.threadId}`);
-    }
-    
-    // Delete post
-    await post.destroy();
-    
-    req.flash('success_msg', 'Post deleted successfully');
-    res.redirect(`/writing/thread/${post.threadId}`);
-  } catch (error) {
-    console.error('Error deleting post:', error);
-    req.flash('error_msg', 'An error occurred while deleting the post');
-    res.redirect(`/writing/thread/${post.threadId}`);
-  }
-});
-
-// Delete thread
-router.delete('/thread/:id', isAuthenticated, async (req, res) => {
-  try {
-    // Find thread
-    const thread = await Thread.findByPk(req.params.id);
-    
-    if (!thread) {
-      req.flash('error_msg', 'Thread not found');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    // Check if user is the creator
-    if (thread.creatorId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect('/writing/my-threads');
-    }
-    
-    // Delete thread (and associated posts due to cascade)
-    await thread.destroy();
-    
-    req.flash('success_msg', 'Thread deleted successfully');
-    res.redirect('/writing/my-threads');
-  } catch (error) {
-    console.error('Error deleting thread:', error);
-    req.flash('error_msg', 'An error occurred while deleting the thread');
-    res.redirect('/writing/my-threads');
-  }
-});
 
 module.exports = router;

@@ -183,7 +183,10 @@ exports.getThread = async (threadId, userId = null) => {
  * @returns {Object} The created thread
  */
 exports.createThread = async (threadData, userId) => {
-  const { title, description, setting, tags, featuredImage, isPrivate } = threadData;
+  const { 
+    title, description, setting, tags, featuredImage, 
+    isPrivate, threadDate, taggedCharacters 
+  } = threadData;
   
   // Validate title
   if (!title || title.trim() === '') {
@@ -192,6 +195,27 @@ exports.createThread = async (threadData, userId) => {
   
   // Process tags (convert comma-separated string to array)
   const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : [];
+  
+  // Prepare tagged characters array
+  const taggedCharactersArray = taggedCharacters 
+    ? (Array.isArray(taggedCharacters) 
+      ? taggedCharacters 
+      : taggedCharacters.split(',').map(id => parseInt(id)))
+    : [];
+  
+  // Validate tagged characters belong to the user
+  if (taggedCharactersArray.length > 0) {
+    const validCharacters = await Character.findAll({
+      where: {
+        id: taggedCharactersArray,
+        userId: userId
+      }
+    });
+    
+    if (validCharacters.length !== taggedCharactersArray.length) {
+      throw new Error('Some tagged characters are invalid');
+    }
+  }
   
   // Create thread
   const thread = await Thread.create({
@@ -203,8 +227,14 @@ exports.createThread = async (threadData, userId) => {
     featuredImage: featuredImage || null,
     isPrivate: isPrivate === 'on' || isPrivate === true,
     status: 'Active',
+    threadDate: threadDate || null,
     lastPostAt: new Date()
   });
+  
+  // Add tagged characters if any
+  if (taggedCharactersArray.length > 0) {
+    await thread.addTaggedCharacters(taggedCharactersArray);
+  }
   
   // Send Discord notification
   try {
@@ -221,7 +251,8 @@ exports.createThread = async (threadData, userId) => {
           fields: [
             { name: 'Creator', value: creator ? creator.username : 'Unknown', inline: true },
             { name: 'Privacy', value: thread.isPrivate ? 'Private' : 'Public', inline: true },
-            { name: 'Tags', value: thread.tags.length > 0 ? thread.tags.join(', ') : 'None', inline: true }
+            { name: 'Tags', value: thread.tags.length > 0 ? thread.tags.join(', ') : 'None', inline: true },
+            { name: 'Thread Date', value: thread.threadDate ? new Date(thread.threadDate).toLocaleDateString() : 'Not specified', inline: true }
           ],
           thumbnail: {
             url: thread.featuredImage || ''
@@ -246,7 +277,10 @@ exports.createThread = async (threadData, userId) => {
  * @returns {Object} The updated thread
  */
 exports.updateThread = async (threadId, threadData, userId) => {
-  const { title, description, setting, featuredImage, tags, status, isPrivate } = threadData;
+  const { 
+    title, description, setting, featuredImage, 
+    tags, status, isPrivate, threadDate, taggedCharacters 
+  } = threadData;
   
   // Find thread
   const thread = await Thread.findByPk(threadId);
@@ -263,6 +297,27 @@ exports.updateThread = async (threadId, threadData, userId) => {
   // Process tags
   const tagArray = tags ? tags.split(',').map(tag => tag.trim()) : thread.tags;
   
+  // Prepare tagged characters array
+  const taggedCharactersArray = taggedCharacters 
+    ? (Array.isArray(taggedCharacters) 
+      ? taggedCharacters 
+      : taggedCharacters.split(',').map(id => parseInt(id)))
+    : [];
+  
+  // Validate tagged characters belong to the user
+  if (taggedCharactersArray.length > 0) {
+    const validCharacters = await Character.findAll({
+      where: {
+        id: taggedCharactersArray,
+        userId: userId
+      }
+    });
+    
+    if (validCharacters.length !== taggedCharactersArray.length) {
+      throw new Error('Some tagged characters are invalid');
+    }
+  }
+  
   // Update thread
   await thread.update({
     title: title || thread.title,
@@ -271,8 +326,17 @@ exports.updateThread = async (threadId, threadData, userId) => {
     tags: tagArray,
     featuredImage: featuredImage || thread.featuredImage,
     status: status || thread.status,
-    isPrivate: isPrivate === 'on' || isPrivate === true
+    isPrivate: isPrivate === 'on' || isPrivate === true,
+    threadDate: threadDate || thread.threadDate
   });
+  
+  // Update tagged characters
+  if (taggedCharactersArray.length > 0) {
+    // Remove existing tagged characters
+    await thread.removeTaggedCharacters();
+    // Add new tagged characters
+    await thread.addTaggedCharacters(taggedCharactersArray);
+  }
   
   return thread;
 };

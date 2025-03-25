@@ -100,6 +100,26 @@ Like.belongsTo(User, { foreignKey: 'userId' });
 SocialPost.hasMany(Like, { foreignKey: 'postId' });
 Like.belongsTo(SocialPost, { foreignKey: 'postId' });
 
+Thread.belongsToMany(Character, {
+  through: {
+    model: 'ThreadCharacters', // You might need to create this model
+    unique: false
+  },
+  foreignKey: 'threadId',
+  otherKey: 'characterId',
+  as: 'taggedCharacters'
+});
+
+Character.belongsToMany(Thread, {
+  through: {
+    model: 'ThreadCharacters',
+    unique: false
+  },
+  foreignKey: 'characterId',
+  otherKey: 'threadId',
+  as: 'taggedInThreads'
+});
+
 // Export models and Sequelize instance
 module.exports = {
   sequelize,

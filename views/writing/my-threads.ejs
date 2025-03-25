@@ -23,17 +23,52 @@
             <div class="thread-meta">
               <span><%= thread.posts.length %> posts</span>
               <span>Created <%= new Date(thread.createdAt).toLocaleDateString() %></span>
+              
+              <!-- New thread date display -->
+              <% if (thread.threadDate) { %>
+                <span class="thread-date">
+                  <i class="fas fa-calendar-alt"></i> 
+                  <%= new Date(thread.threadDate).toLocaleDateString() %>
+                </span>
+              <% } %>
+              
               <span class="thread-status <%= thread.status.toLowerCase() %>"><%= thread.status %></span>
+              
               <% if (thread.isPrivate) { %>
                 <span class="thread-privacy">Private</span>
               <% } %>
             </div>
+            
+            <!-- Tagged Characters -->
+            <% if (thread.taggedCharacters && thread.taggedCharacters.length > 0) { %>
+              <div class="thread-tagged-characters">
+                <% thread.taggedCharacters.slice(0, 3).forEach(character => { %>
+                  <div class="thread-tagged-character">
+                    <% if (character.avatarUrl) { %>
+                      <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                    <% } else { %>
+                      <div class="thread-tagged-character-placeholder">
+                        <%= character.name.charAt(0).toUpperCase() %>
+                      </div>
+                    <% } %>
+                  </div>
+                <% }); %>
+                
+                <% if (thread.taggedCharacters.length > 3) { %>
+                  <div class="thread-tagged-character-more">
+                    +<%= thread.taggedCharacters.length - 3 %>
+                  </div>
+                <% } %>
+              </div>
+            <% } %>
+            
             <% if (thread.description) { %>
               <div class="thread-description">
                 <%= thread.description.length > 100 ? thread.description.substring(0, 100) + '...' : thread.description %>
               </div>
             <% } %>
           </div>
+          
           <div class="thread-activity">
             <div class="thread-last-post">
               <% if (thread.lastPostAt) { %>
@@ -212,5 +247,54 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+
+  .thread-date {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-xs);
+  }
+  
+  .thread-tagged-characters {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+  }
+  
+  .thread-tagged-character {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .thread-tagged-character img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .thread-tagged-character-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+  
+  .thread-tagged-character-more {
+    background-color: rgba(90, 128, 149, 0.2);
+    color: var(--lighttext);
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
   }
 </style>

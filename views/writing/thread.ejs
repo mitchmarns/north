@@ -56,6 +56,37 @@ Copy    <% if (thread.setting) { %>
         </div>
       </div>
     <% } %>
+
+    <% if (thread.threadDate) { %>
+      <div class="mb-4">
+        <h4>Thread Date</h4>
+        <p><%= new Date(thread.threadDate).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) %></p>
+      </div>
+    <% } %>
+    
+    <% if (thread.taggedCharacters && thread.taggedCharacters.length > 0) { %>
+      <div>
+        <h4>Tagged Characters</h4>
+        <div class="thread-tagged-characters">
+          <% thread.taggedCharacters.forEach(character => { %>
+            <a href="/characters/<%= character.id %>" class="thread-tagged-character">
+              <% if (character.avatarUrl) { %>
+                <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+              <% } else { %>
+                <div class="thread-tagged-character-placeholder">
+                  <%= character.name.charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+              <span><%= character.name %></span>
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
   </div>
 </div>
 
@@ -435,6 +466,25 @@ Copy            <div class="post-info">
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .thread-tagged-characters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .thread-tagged-character {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(90, 128, 149, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    color: var(--lighttext);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
   }
 </style>
 <script>

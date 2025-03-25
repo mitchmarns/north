@@ -58,6 +58,49 @@
               placeholder="Comma-separated tags (e.g., fantasy, romance, action)"
             />
           </div>
+
+          <!-- If characters exist, add character tagging -->
+          <% if (typeof characters !== 'undefined' && characters.length > 0) { %>
+            <div class="form-group">
+              <label>Tagged Characters (Optional)</label>
+              <div class="character-tag-grid">
+                <% characters.forEach(character => { %>
+                  <div class="character-tag-item">
+                    <input 
+                      type="checkbox" 
+                      name="taggedCharacters" 
+                      id="tagged-character-<%= character.id %>" 
+                      value="<%= character.id %>"
+                      <%= typeof thread !== 'undefined' && thread.taggedCharacters && thread.taggedCharacters.includes(character.id) ? 'checked' : '' %>
+                    >
+                    <label for="tagged-character-<%= character.id %>" class="character-tag-label">
+                      <div class="character-tag-avatar">
+                        <% if (character.avatarUrl) { %>
+                          <img src="<%= character.avatarUrl %>" alt="<%= character.name %>">
+                        <% } else { %>
+                          <div class="character-avatar-placeholder"><%= character.name.charAt(0).toUpperCase() %></div>
+                        <% } %>
+                      </div>
+                      <div class="character-tag-name"><%= character.name %></div>
+                    </label>
+                  </div>
+                <% }); %>
+              </div>
+              <small style="color: rgba(255, 255, 255, 0.5);">Select characters involved in this thread</small>
+            </div>
+          <% } %>
+
+          <div class="form-group">
+            <label for="threadDate">Thread Date (Optional)</label>
+            <input 
+              type="date" 
+              id="threadDate" 
+              name="threadDate" 
+              class="form-control" 
+              value="<%= typeof thread !== 'undefined' && thread.threadDate ? new Date(thread.threadDate).toISOString().split('T')[0] : '' %>"
+            />
+            <small style="color: rgba(255, 255, 255, 0.5);">The specific date or setting of this thread</small>
+          </div>
         </div>
         
         <!-- Featured Image URL and Preview -->
@@ -228,6 +271,71 @@
   }
   
   .character-select-name {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .character-tag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+  }
+  
+  .character-tag-item {
+    text-align: center;
+  }
+  
+  .character-tag-item input[type="checkbox"] {
+    display: none;
+  }
+  
+  .character-tag-label {
+    display: block;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  
+  .character-tag-label:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .character-tag-item input[type="checkbox"]:checked + .character-tag-label {
+    border-color: var(--header);
+    background-color: rgba(90, 128, 149, 0.1);
+  }
+  
+  .character-tag-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  
+  .character-tag-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .character-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+  
+  .character-tag-name {
     font-size: var(--text-sm);
     white-space: nowrap;
     overflow: hidden;
