@@ -1,53 +1,15 @@
 const { Team, Character, User, Sequelize } = require('../models');
+const teamService = require('../services/teamService');
 const { validationResult } = require('express-validator');
 const teamCache = new Map(); 
 const CACHE_EXPIRY = 30 * 60 * 1000; 
+const teamService = require('../services/teamService');
 
 // Get all teams (public)
 exports.getAllTeams = async (req, res) => {
   try {
-    // Check cache first
-    const cacheKey = 'all_active_teams';
-    const cachedData = teamCache.get(cacheKey);
-    
-    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_EXPIRY)) {
-      console.log('Serving teams from cache');
-      return res.render('teams/index', {
-        title: 'Teams Directory',
-        teams: cachedData.data
-      });
-    }
-    
-    // Cache miss, fetch from database
-    const teams = await Team.findAll({
-      where: { 
-        isActive: true
-      },
-      order: [['name', 'ASC']]
-    });
-
-    // Process teams and add data
-    for (let team of teams) {
-      team.playerCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Player'
-        }
-      });
-      
-      team.staffCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Staff'
-        }
-      });
-    }
-    
-    // Update cache
-    teamCache.set(cacheKey, {
-      timestamp: Date.now(),
-      data: teams
-    });
+    // Get teams with counts using the service
+    const teams = await teamService.getAllTeamsWithCounts();
 
     res.render('teams/index', {
       title: 'Teams Directory',
@@ -63,56 +25,22 @@ exports.getAllTeams = async (req, res) => {
 // Get single team
 exports.getTeam = async (req, res) => {
   try {
-    const team = await Team.findByPk(req.params.id);
-
-    if (!team) {
-      req.flash('error_msg', 'Team not found');
-      return res.redirect('/teams');
-    }
-
-    // Count players and staff
-    const playerCount = await Character.count({
-      where: {
-        teamId: team.id,
-        role: 'Player'
-      }
-    });
-    
-    const staffCount = await Character.count({
-      where: {
-        teamId: team.id,
-        role: 'Staff'
-      }
-    });
-
-    // Get featured players (up to 6)
-    const featuredPlayers = await Character.findAll({
-      where: {
-        teamId: team.id,
-        role: 'Player',
-        isPrivate: false,
-        isArchived: false
-      },
-      include: [
-        {
-          model: User,
-          attributes: ['username']
-        }
-      ],
-      limit: 6,
-      order: [['createdAt', 'DESC']]
-    });
+    // Get team details using the service
+    const teamData = await teamService.getTeamWithDetails(req.params.id);
 
     res.render('teams/view', {
-      title: team.name,
-      team,
-      playerCount,
-      staffCount,
-      featuredPlayers
+      title: teamData.team.name,
+      ...teamData
     });
   } catch (error) {
     console.error('Error fetching team:', error);
-    req.flash('error_msg', 'An error occurred while fetching the team');
+    
+    if (error.message === 'Team not found') {
+      req.flash('error_msg', 'Team not found');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching the team');
+    }
+    
     res.redirect('/teams');
   }
 };
@@ -120,115 +48,56 @@ exports.getTeam = async (req, res) => {
 // Get team roster
 exports.getTeamRoster = async (req, res) => {
   try {
-    const team = await Team.findByPk(req.params.id);
-
-    if (!team) {
-      req.flash('error_msg', 'Team not found');
-      return res.redirect('/teams');
-    }
-
-    // Get players
-    const players = await Character.findAll({
-      where: {
-        teamId: team.id,
-        role: 'Player',
-        isArchived: false
-      },
-      include: [
-        {
-          model: User,
-          attributes: ['username']
-        }
-      ],
-      order: [
-        ['jerseyNumber', 'ASC'],
-        ['name', 'ASC']
-      ]
-    });
-
-    // Get staff
-    const staff = await Character.findAll({
-      where: {
-        teamId: team.id,
-        role: 'Staff',
-        isArchived: false
-      },
-      include: [
-        {
-          model: User,
-          attributes: ['username']
-        }
-      ],
-      order: [['name', 'ASC']]
-    });
-
-    // Count players and staff for display
-    const playerCount = players.length;
-    const staffCount = staff.length;
+    // Get team roster using the service
+    const rosterData = await teamService.getTeamRoster(req.params.id);
 
     res.render('teams/roster', {
-      title: `${team.name} Roster`,
-      team,
-      players,
-      staff,
-      playerCount,
-      staffCount
+      title: `${rosterData.team.name} Roster`,
+      ...rosterData
     });
   } catch (error) {
     console.error('Error fetching team roster:', error);
-    req.flash('error_msg', 'An error occurred while fetching the team roster');
+    
+    if (error.message === 'Team not found') {
+      req.flash('error_msg', 'Team not found');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching the team roster');
+    }
+    
     res.redirect('/teams');
   }
 };
 
-// Admin: Get all teams for admin
-exports.getAdminTeams = async (req, res) => {
+// Get all teams for authenticated users
+exports.getUserTeams = async (req, res) => {
   try {
-    const teams = await Team.findAll({
-      order: [['name', 'ASC']]
-    });
+    // Get all teams with counts
+    const teams = await teamService.getAllTeamsWithCounts();
 
-    // Count players and staff for each team
-    for (let team of teams) {
-      team.playerCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Player'
-        }
-      });
-      
-      team.staffCount = await Character.count({
-        where: {
-          teamId: team.id,
-          role: 'Staff'
-        }
-      });
-    }
-
-    res.render('teams/admin/index', {
+    res.render('teams/user-teams', {
       title: 'Team Management',
       teams
     });
   } catch (error) {
-    console.error('Error fetching teams for admin:', error);
+    console.error('Error fetching teams:', error);
     req.flash('error_msg', 'An error occurred while fetching teams');
     res.redirect('/dashboard');
   }
 };
 
-// Admin: Get team creation form
+// Get team creation form
 exports.getCreateTeam = (req, res) => {
-  res.render('teams/admin/create', {
+  res.render('teams/create', {
     title: 'Create a New Team'
   });
 };
 
-// Admin: Create team
+// Create team
 exports.createTeam = async (req, res) => {
   const errors = validationResult(req);
   
   if (!errors.isEmpty()) {
-    return res.render('teams/admin/create', {
+    return res.render('teams/create', {
       title: 'Create a New Team',
       errors: errors.array(),
       team: req.body
@@ -236,78 +105,61 @@ exports.createTeam = async (req, res) => {
   }
 
   try {
-    const {
-      name, shortName, city, foundedYear, description,
-      primaryColor, secondaryColor, tertiaryColor, logo, isActive
-    } = req.body;
+    // Add the current user's info to the team creation data
+    const teamData = {
+      ...req.body,
+      createdBy: req.user.id // Optional: track who created the team
+    };
 
-    // Create team
-    const team = await Team.create({
-      name,
-      shortName,
-      city,
-      foundedYear: foundedYear || null,
-      description: description || null,
-      primaryColor: primaryColor || null,
-      secondaryColor: secondaryColor || null,
-      tertiaryColor: tertiaryColor || null,
-      logo: logo || null,
-      isActive: isActive === 'on'
-    });
+    // Create team using the service
+    const team = await teamService.createTeam(teamData);
 
     req.flash('success_msg', `${team.name} has been created successfully`);
     res.redirect(`/teams/${team.id}`);
   } catch (error) {
     console.error('Error creating team:', error);
-    req.flash('error_msg', 'An error occurred while creating the team');
-    res.redirect('/teams/admin/teams/create');
+    
+    if (error.message.includes('already exists')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while creating the team');
+    }
+    
+    res.redirect('/teams/create');
   }
 };
 
-// Admin: Get team edit form
+// Get team edit form
 exports.getEditTeam = async (req, res) => {
   try {
-    const team = await Team.findByPk(req.params.id);
+    // Get team with details using the service
+    const teamData = await teamService.getTeamWithDetails(req.params.id);
 
-    if (!team) {
-      req.flash('error_msg', 'Team not found');
-      return res.redirect('/teams/admin/teams');
-    }
-
-    // Count players and staff
-    const playerCount = await Character.count({
-      where: {
-        teamId: team.id,
-        role: 'Player'
-      }
-    });
-    
-    const staffCount = await Character.count({
-      where: {
-        teamId: team.id,
-        role: 'Staff'
-      }
-    });
-
-    res.render('teams/admin/edit', {
-      title: `Edit ${team.name}`,
-      team,
-      playerCount,
-      staffCount
+    // Optional: Add a check to ensure the user has permission to edit
+    // For now, all authenticated users can edit
+    res.render('teams/edit', {
+      title: `Edit ${teamData.team.name}`,
+      ...teamData
     });
   } catch (error) {
     console.error('Error fetching team for edit:', error);
-    req.flash('error_msg', 'An error occurred while fetching the team');
-    res.redirect('/teams/admin/teams');
+    
+    if (error.message === 'Team not found') {
+      req.flash('error_msg', 'Team not found');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching the team');
+    }
+    
+    res.redirect('/teams');
   }
 };
 
-// Admin: Update team
+// Update team
 exports.updateTeam = async (req, res) => {
   const errors = validationResult(req);
   
   if (!errors.isEmpty()) {
-    return res.render('teams/admin/edit', {
+    return res.render('teams/edit', {
       title: 'Edit Team',
       errors: errors.array(),
       team: {
@@ -318,73 +170,41 @@ exports.updateTeam = async (req, res) => {
   }
 
   try {
-    // Find team
-    const team = await Team.findByPk(req.params.id);
-    
-    if (!team) {
-      req.flash('error_msg', 'Team not found');
-      return res.redirect('/teams/admin/teams');
-    }
-    
-    const {
-      name, shortName, city, foundedYear, description,
-      primaryColor, secondaryColor, tertiaryColor, logo, isActive
-    } = req.body;
-
-    // Update team
-    await team.update({
-      name,
-      shortName,
-      city,
-      foundedYear: foundedYear || null,
-      description: description || null,
-      primaryColor: primaryColor || null,
-      secondaryColor: secondaryColor || null,
-      tertiaryColor: tertiaryColor || null,
-      logo: logo || team.logo,
-      isActive: isActive === 'on'
-    });
+    // Update team using the service
+    const team = await teamService.updateTeam(req.params.id, req.body);
 
     req.flash('success_msg', `${team.name} has been updated successfully`);
     res.redirect(`/teams/${team.id}`);
   } catch (error) {
     console.error('Error updating team:', error);
-    req.flash('error_msg', 'An error occurred while updating the team');
-    res.redirect(`/teams/admin/teams/edit/${req.params.id}`);
+    
+    if (error.message === 'Team not found' || error.message.includes('already exists')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while updating the team');
+    }
+    
+    res.redirect(`/teams/edit/${req.params.id}`);
   }
 };
 
-// Admin: Delete team
+// Delete team (with additional safety checks)
 exports.deleteTeam = async (req, res) => {
   try {
-    // Find team
-    const team = await Team.findByPk(req.params.id);
-    
-    if (!team) {
-      req.flash('error_msg', 'Team not found');
-      return res.redirect('/teams/admin/teams');
-    }
-    
-    // Check if team has any characters
-    const characterCount = await Character.count({
-      where: {
-        teamId: team.id
-      }
-    });
-    
-    if (characterCount > 0) {
-      req.flash('error_msg', `Cannot delete ${team.name} because it has associated characters. Remove all characters from this team first.`);
-      return res.redirect('/teams/admin/teams');
-    }
-    
-    // Delete team
-    await team.destroy();
+    // Delete team using the service
+    await teamService.deleteTeam(req.params.id);
 
     req.flash('success_msg', 'Team has been deleted successfully');
-    res.redirect('/teams/admin/teams');
+    res.redirect('/teams');
   } catch (error) {
     console.error('Error deleting team:', error);
-    req.flash('error_msg', 'An error occurred while deleting the team');
-    res.redirect('/teams/admin/teams');
+    
+    if (error.message.includes('not found') || error.message.includes('Cannot delete')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while deleting the team');
+    }
+    
+    res.redirect('/teams');
   }
 };

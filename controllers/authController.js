@@ -1,17 +1,16 @@
 const { User } = require('../models');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const authService = require('../services/authService');
 
 // Check if username exists
 exports.checkUsernameExists = async (username) => {
-  const user = await User.findOne({ where: { username } });
-  return !!user;
+  return await authService.checkUsernameExists(username);
 };
 
 // Check if email exists
 exports.checkEmailExists = async (email) => {
-  const user = await User.findOne({ where: { email } });
-  return !!user;
+  return await authService.checkEmailExists(email);
 };
 
 // Register user
@@ -31,22 +30,22 @@ exports.register = async (req, res) => {
   }
 
   try {
-    const { username, email, password, displayName } = req.body;
-    
-    // Create user
-    const user = await User.create({
-      username,
-      email,
-      password, // Will be hashed by the model hooks
-      displayName: displayName || username,
-      lastLogin: new Date()
-    });
+    // Register user using the service
+    await authService.registerUser(req.body);
 
     req.flash('success_msg', 'You are now registered and can log in');
     res.redirect('/auth/login');
   } catch (error) {
     console.error('Registration error:', error);
-    req.flash('error_msg', 'An error occurred during registration');
+    
+    if (error.message.includes('Username is already taken')) {
+      req.flash('error_msg', 'Username is already taken');
+    } else if (error.message.includes('Email is already registered')) {
+      req.flash('error_msg', 'Email is already registered');
+    } else {
+      req.flash('error_msg', 'An error occurred during registration');
+    }
+    
     res.redirect('/auth/register');
   }
 };
@@ -54,15 +53,8 @@ exports.register = async (req, res) => {
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
-    // Get user with associated characters
-    const user = await User.findByPk(req.user.id, {
-      include: ['characters']
-    });
-
-    if (!user) {
-      req.flash('error_msg', 'User not found');
-      return res.redirect('/dashboard');
-    }
+    // Get user profile using the service
+    const user = await authService.getUserProfile(req.user.id);
 
     res.render('profile', {
       title: 'Your Profile',
@@ -84,13 +76,8 @@ exports.updateProfile = async (req, res) => {
   }
 
   try {
-    const { displayName, bio } = req.body;
-    
-    // Update user
-    await User.update(
-      { displayName, bio },
-      { where: { id: req.user.id } }
-    );
+    // Update profile using the service
+    await authService.updateUserProfile(req.user.id, req.body);
 
     req.flash('success_msg', 'Profile updated successfully');
     res.redirect('/auth/profile');
@@ -112,26 +99,20 @@ exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     
-    // Get user
-    const user = await User.findByPk(req.user.id);
-    
-    // Check current password
-    const isMatch = await user.validPassword(currentPassword);
-    
-    if (!isMatch) {
-      req.flash('error_msg', 'Current password is incorrect');
-      return res.redirect('/auth/profile');
-    }
-    
-    // Update password
-    user.password = newPassword;
-    await user.save();
+    // Change password using the service
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
 
     req.flash('success_msg', 'Password changed successfully');
     res.redirect('/auth/profile');
   } catch (error) {
     console.error('Password change error:', error);
-    req.flash('error_msg', 'An error occurred while changing your password');
+    
+    if (error.message === 'Current password is incorrect') {
+      req.flash('error_msg', 'Current password is incorrect');
+    } else {
+      req.flash('error_msg', 'An error occurred while changing your password');
+    }
+    
     res.redirect('/auth/profile');
   }
 };

@@ -1,5 +1,6 @@
 const characterService = require('../services/characterService');
 const teamService = require('../services/teamService');
+const relationshipService = require('../services/relationshipService');
 const { validationResult } = require('express-validator');
 const { Character, CharacterGallery, User } = require('../models');
 
@@ -235,127 +236,27 @@ exports.deleteCharacter = async (req, res) => {
 // Get character relationships
 exports.getCharacterRelationships = async (req, res) => {
   try {
-    const character = await Character.findByPk(req.params.id);
+    // Get relationships data using the service
+    const relationshipsData = await relationshipService.getCharacterRelationships(
+      req.params.id, 
+      req.user.id
+    );
     
-    if (!character) {
-      console.log('DEBUG: Character not found');
-      req.flash('error_msg', 'Character not found');
-      return res.redirect('/characters');
-    }
-    
-    console.log('DEBUG: Found character:', character.name);
-    console.log('DEBUG: Character owner ID:', character.userId);
-    console.log('DEBUG: Current user ID:', req.user.id);
-    
-    // Check if user owns the character
-    if (character.userId !== req.user.id) {
-      console.log('DEBUG: User not authorized');
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect('/characters');
-    }
-    
-    console.log('DEBUG: User authorized, fetching relationships...');
-    
-    // Get relationships
-    const relationships = await Relationship.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          { character1Id: characterId },
-          { character2Id: characterId }
-        ]
-      },
-      include: [
-        {
-          model: Character,
-          as: 'character1',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: Character,
-          as: 'character2',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: User,
-          as: 'requestedBy',
-          attributes: ['username']
-        }
-      ]
-    });
-    
-    console.log('DEBUG: Relationships found:', relationships ? relationships.length : 0);
-    
-    // Format relationships for display
-    let formattedRelationships = [];
-    if (relationships && relationships.length > 0) {
-      formattedRelationships = relationships.map(rel => {
-        const isCharacter1 = rel.character1Id === characterId;
-        const otherCharacter = isCharacter1 ? rel.character2 : rel.character1;
-        return {
-          id: rel.id,
-          otherCharacter: otherCharacter,
-          relationshipType: rel.relationshipType,
-          description: rel.description,
-          status: rel.status || 'Neutral',
-          isPending: rel.isPending || false,
-          isApproved: rel.isApproved || false,
-          canEdit: otherCharacter.userId === req.user.id || character.userId === req.user.id,
-          otherUserName: otherCharacter.User ? otherCharacter.User.username : 'Unknown'
-        };
-      });
-    }
-    
-    console.log('DEBUG: Formatted relationships:', formattedRelationships.length);
-    
-    // Get user's other characters for relationship creation
-    const userCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        id: {
-          [Sequelize.Op.ne]: characterId
-        },
-        isArchived: false
-      }
-    });
-    
-    console.log('DEBUG: User characters found:', userCharacters ? userCharacters.length : 0);
-    
-    // Get public characters from other users
-    const otherUsersCharacters = await Character.findAll({
-      where: {
-        userId: {
-          [Sequelize.Op.ne]: req.user.id
-        },
-        isPrivate: false,
-        isArchived: false
-      },
-      include: [
-        {
-          model: User,
-          attributes: ['username']
-        }
-      ],
-      limit: 50
-    });
-    
-    console.log('DEBUG: Other users characters found:', otherUsersCharacters ? otherUsersCharacters.length : 0);
-    console.log('DEBUG: Rendering template...');
-    
-    // Render the template with fallbacks for all arrays
     res.render('characters/relationships', {
-      title: `${character.name}'s Relationships`,
-      character,
-      relationships: formattedRelationships || [],
-      userCharacters: userCharacters || [],
-      otherUsersCharacters: otherUsersCharacters || []
+      title: `${relationshipsData.character.name}'s Relationships`,
+      ...relationshipsData
     });
-    
-    console.log('DEBUG: Template rendered successfully');
-    
   } catch (error) {
-    console.error('ERROR in getCharacterRelationships:', error);
-    console.error(error.stack);
-    req.flash('error_msg', 'An error occurred while fetching relationships');
+    console.error('Error fetching relationships:', error);
+    
+    if (error.message === 'Character not found') {
+      req.flash('error_msg', 'Character not found');
+    } else if (error.message === 'Not authorized') {
+      req.flash('error_msg', 'Not authorized');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching relationships');
+    }
+    
     res.redirect(`/characters/${req.params.id}`);
   }
 };
@@ -373,113 +274,30 @@ exports.addRelationship = async (req, res) => {
     const { character2Id, relationshipType, description, status } = req.body;
     const character1Id = parseInt(req.params.id);
     
-    // Debug log - this helps you see exactly what's being received
-    console.log('Creating relationship with params:', { 
-      character1Id, 
-      character2Id, 
-      relationshipType, 
-      description, 
-      status 
-    });
-    
     // Validate the character2Id is present
     if (!character2Id) {
       req.flash('error_msg', 'Please select a character for the relationship');
       return res.redirect(`/characters/${req.params.id}/relationships`);
     }
     
-    // Verify characters exist
+    // Add relationship using the service
+    await relationshipService.addRelationship(character1Id, character2Id, {
+      relationshipType,
+      description,
+      status
+    }, req.user.id);
+    
+    // Check if it's a self-relationship (same user owns both characters)
     const character1 = await Character.findByPk(character1Id);
     const character2 = await Character.findByPk(character2Id);
     
-    if (!character1 || !character2) {
-      req.flash('error_msg', 'One or both characters not found');
-      return res.redirect(`/characters/${req.params.id}/relationships`);
-    }
-    
-    // Check if user owns the first character
-    if (character1.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized to create relationships for this character');
-      return res.redirect(`/characters/${req.params.id}/relationships`);
-    }
-    
-    // Check if relationship already exists
-    const existingRelationship = await Relationship.findOne({
-      where: {
-        [Sequelize.Op.or]: [
-          {
-            character1Id: character1Id,
-            character2Id: character2Id
-          },
-          {
-            character1Id: character2Id,
-            character2Id: character1Id
-          }
-        ]
-      }
-    });
-    
-    if (existingRelationship) {
-      req.flash('error_msg', 'Relationship already exists');
-      return res.redirect(`/characters/${req.params.id}/relationships`);
-    }
-    
-    // Determine if this is a self-relationship or cross-user relationship
-    const isSelfRelationship = character1.userId === character2.userId;
-    
-    // Debug log
-    console.log('Creating relationship with isPending:', !isSelfRelationship);
-    console.log('Is self relationship?', isSelfRelationship);
-    console.log('Character1 userId:', character1.userId);
-    console.log('Character2 userId:', character2.userId);
-    
-    // Create relationship with appropriate status
-    const newRelationship = await Relationship.create({
-      character1Id,
-      character2Id,
-      relationshipType,
-      description: description || null,
-      status: status || 'Neutral',
-      isPending: !isSelfRelationship,  // Only pending if it involves another user's character
-      isApproved: isSelfRelationship,  // Auto-approved if both characters belong to the same user
-      requestedById: req.user.id
-    });
-    
-    console.log('Relationship created:', newRelationship);
-    
-    if (isSelfRelationship) {
+    if (character1.userId === character2.userId) {
       req.flash('success_msg', 'Relationship added successfully');
     } else {
       req.flash('success_msg', 'Relationship request sent. Waiting for the other player to approve.');
     }
     
     res.redirect(`/characters/${req.params.id}/relationships`);
-
-    // If it's a cross-user relationship that needs approval
-    if (!isSelfRelationship) {
-      const otherCharacter = await Character.findByPk(character2Id, {
-        include: [{ model: User, attributes: ['username'] }]
-      });
-      
-      // Send Discord notification
-      discordNotifier.sendNotification(
-        `New relationship request!`,
-        {
-          embeds: [{
-            title: `Relationship Request: ${character1.name} → ${otherCharacter.name}`,
-            description: `${character1.name} wants to be ${relationshipType} with ${otherCharacter.name}`,
-            color: 0xffc107, // Warning color
-            fields: [
-              { name: 'Requester', value: `${req.user.username}`, inline: true },
-              { name: 'Target', value: `${otherCharacter.User.username}`, inline: true },
-              { name: 'Status', value: status || 'Neutral', inline: true }
-            ],
-            timestamp: new Date()
-          }]
-        }
-      );
-    }
-
   } catch (error) {
     console.error('Error adding relationship:', error);
     req.flash('error_msg', `An error occurred while adding relationship: ${error.message}`);
@@ -532,77 +350,12 @@ exports.declineRelationship = async (req, res) => {
 // The function for handling pending relationship requests
 exports.getRelationshipRequests = async (req, res) => {
   try {
-    // Get all characters owned by the user
-    const userCharacters = await Character.findAll({
-      where: {
-        userId: req.user.id
-      }
-    });
-    
-    // Get IDs of all user's characters
-    const characterIds = userCharacters.map(char => char.id);
-    
-    // Find pending relationships involving user's characters
-    const pendingRelationships = await Relationship.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          {
-            character1Id: { [Sequelize.Op.in]: characterIds },
-            isPending: true,
-            requestedById: { [Sequelize.Op.ne]: req.user.id }
-          },
-          {
-            character2Id: { [Sequelize.Op.in]: characterIds },
-            isPending: true,
-            requestedById: { [Sequelize.Op.ne]: req.user.id }
-          }
-        ]
-      },
-      include: [
-        {
-          model: Character,
-          as: 'character1',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: Character,
-          as: 'character2',
-          include: [{ model: User, attributes: ['username'] }]
-        },
-        {
-          model: User,
-          as: 'requestedBy',
-          attributes: ['username']
-        }
-      ]
-    });
-    
-    // Format relationships for display
-    const formattedRequests = pendingRelationships.map(rel => {
-      // Determine which character belongs to the current user
-      const userCharacter = characterIds.includes(rel.character1Id) 
-        ? rel.character1 
-        : rel.character2;
-      
-      // Determine which character belongs to the other user
-      const otherCharacter = userCharacter.id === rel.character1Id
-        ? rel.character2
-        : rel.character1;
-      
-      return {
-        id: rel.id,
-        userCharacter: userCharacter,
-        otherCharacter: otherCharacter,
-        relationshipType: rel.relationshipType,
-        description: rel.description,
-        status: rel.status,
-        requestedBy: rel.requestedBy ? rel.requestedBy.username : 'Unknown'
-      };
-    });
+    // Get pending requests using the service
+    const requests = await relationshipService.getPendingRequests(req.user.id);
     
     res.render('characters/relationship-requests', {
       title: 'Pending Relationship Requests',
-      requests: formattedRequests
+      requests
     });
   } catch (error) {
     console.error('Error fetching relationship requests:', error);
@@ -622,45 +375,25 @@ exports.updateRelationship = async (req, res) => {
 
   try {
     const { relationshipType, description, status } = req.body;
-    const relationshipId = req.params.relationshipId;
     
-    // Find relationship
-    const relationship = await Relationship.findByPk(relationshipId, {
-      include: [
-        {
-          model: Character,
-          as: 'character1'
-        },
-        {
-          model: Character,
-          as: 'character2'
-        }
-      ]
-    });
-    
-    if (!relationship) {
-      req.flash('error_msg', 'Relationship not found');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Check if user owns at least one of the characters
-    if (relationship.character1.userId !== req.user.id && relationship.character2.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Update relationship
-    await relationship.update({
-      relationshipType,
-      description: description || null,
-      status: status || 'Neutral'
-    });
+    // Update relationship using the service
+    await relationshipService.updateRelationship(
+      req.params.relationshipId, 
+      { relationshipType, description, status }, 
+      req.user.id
+    );
     
     req.flash('success_msg', 'Relationship updated successfully');
-    res.redirect(req.headers.referer || `/characters/${relationship.character1Id}/relationships`);
+    res.redirect(req.headers.referer || '/characters');
   } catch (error) {
     console.error('Error updating relationship:', error);
-    req.flash('error_msg', 'An error occurred while updating relationship');
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while updating relationship');
+    }
+    
     res.redirect(req.headers.referer || '/characters');
   }
 };
@@ -668,41 +401,20 @@ exports.updateRelationship = async (req, res) => {
 // Delete relationship
 exports.deleteRelationship = async (req, res) => {
   try {
-    const relationshipId = req.params.relationshipId;
-    
-    // Find relationship
-    const relationship = await Relationship.findByPk(relationshipId, {
-      include: [
-        {
-          model: Character,
-          as: 'character1'
-        },
-        {
-          model: Character,
-          as: 'character2'
-        }
-      ]
-    });
-    
-    if (!relationship) {
-      req.flash('error_msg', 'Relationship not found');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Check if user owns at least one of the characters
-    if (relationship.character1.userId !== req.user.id && relationship.character2.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized');
-      return res.redirect(req.headers.referer || '/characters');
-    }
-    
-    // Delete relationship
-    await relationship.destroy();
+    // Delete relationship using the service
+    await relationshipService.deleteRelationship(req.params.relationshipId, req.user.id);
     
     req.flash('success_msg', 'Relationship deleted successfully');
-    res.redirect(req.headers.referer || `/characters/${relationship.character1Id}/relationships`);
+    res.redirect(req.headers.referer || '/characters');
   } catch (error) {
     console.error('Error deleting relationship:', error);
-    req.flash('error_msg', 'An error occurred while deleting relationship');
+    
+    if (error.message.includes('not found') || error.message.includes('not authorized')) {
+      req.flash('error_msg', error.message);
+    } else {
+      req.flash('error_msg', 'An error occurred while deleting relationship');
+    }
+    
     res.redirect(req.headers.referer || '/characters');
   }
 };
