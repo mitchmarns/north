@@ -74,6 +74,27 @@ router.get('/my-threads', isAuthenticated, async (req, res) => {
   }
 });
 
+router.get('/create', isAuthenticated, async (req, res) => {
+  try {
+    // Get user's characters for the form
+    const characters = await Character.findAll({
+      where: {
+        userId: req.user.id,
+        isArchived: false
+      }
+    });
+
+    res.render('writing/create', {
+      title: 'Create New Thread',
+      characters
+    });
+  } catch (error) {
+    console.error('Error loading create form:', error);
+    req.flash('error_msg', 'An error occurred while loading the form');
+    res.redirect('/writing/my-threads');
+  }
+});
+
 // Create thread route - Add validation and handling for new fields
 router.post(
   '/create',
