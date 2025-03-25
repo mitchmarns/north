@@ -1,7 +1,7 @@
 <!-- teams/index.ejs -->
 <div class="d-flex justify-between align-center mb-4">
   <h1>Teams Directory</h1>
-  <% if(user && user.isAdmin) { %>
+  <% if(user) { %>
     <a href="/teams/admin/teams/create" class="btn">
       <i class="fas fa-plus"></i> Create Team
     </a>
@@ -40,7 +40,7 @@
       <div class="card">
         <div class="card-body text-center">
           <p>No teams have been created yet.</p>
-          <% if(user && user.isAdmin) { %>
+          <% if(user) { %>
             <a href="/teams/admin/teams/create" class="btn">Create the First Team</a>
           <% } %>
         </div>
