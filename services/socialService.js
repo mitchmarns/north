@@ -1,5 +1,5 @@
 // services/socialService.js
-
+const discordNotifier = require('../utils/discordNotifier');
 const { SocialPost, Comment, Like, Character, User, sequelize, Sequelize } = require('../models');
 const Op = Sequelize.Op;
 
@@ -204,6 +204,78 @@ return {
 };
 
 /**
+ * Load more posts (pagination)
+ * @param {string} filter - Filter type (all, mine, following)
+ * @param {string} sort - Sort type (recent, popular)
+ * @param {number} page - Page number
+ * @param {number|null} userId - User ID if logged in
+ * @returns {Object} More posts
+ */
+exports.loadMorePosts = async (filter, sort, page, userId) => {
+  filter = filter || 'all';
+  sort = sort || 'recent';
+  page = parseInt(page) || 2;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+  
+  // Build where clause
+  let whereClause = {};
+  
+  if (filter === 'mine' && userId) {
+    whereClause.userId = userId;
+  } else {
+    whereClause.privacy = 'public';
+  }
+  
+  // Build order
+  let order = sort === 'popular' 
+    ? [['likeCount', 'DESC'], ['createdAt', 'DESC']] 
+    : [['createdAt', 'DESC']];
+  
+  // Single optimized query with selective includes
+  const posts = await SocialPost.findAll({
+    where: whereClause,
+    include: [
+      {
+        model: User,
+        attributes: ['id', 'username']
+      },
+      {
+        model: Character,
+        attributes: ['id', 'name', 'avatarUrl']
+      }
+    ],
+    order: order,
+    limit: limit,
+    offset: offset
+  });
+  
+  // Process user likes if logged in
+  if (userId && posts.length > 0) {
+    const postIds = posts.map(post => post.id);
+    
+    const userLikes = await Like.findAll({
+      where: {
+        userId: userId,
+        postId: { [Sequelize.Op.in]: postIds }
+      },
+      attributes: ['postId']
+    });
+    
+    const likedMap = {};
+    userLikes.forEach(like => {
+      likedMap[like.postId] = true;
+    });
+    
+    posts.forEach(post => {
+      post.dataValues.hasLiked = likedMap[post.id] || false;
+    });
+  }
+  
+  return { posts };
+};
+
+/**
 * Get a single post with comments
 * @param {number} postId - The post ID
 * @param {number|null} userId - User ID if logged in
@@ -316,6 +388,45 @@ return {
 };
 
 /**
+ * Get post for editing
+ * @param {number} postId - The post ID
+ * @param {number} userId - User ID
+ * @returns {Object} Post data for editing
+ */
+exports.getPostForEdit = async (postId, userId) => {
+  const post = await SocialPost.findByPk(postId, {
+    include: [
+      {
+        model: Character,
+        attributes: ['id', 'name']
+      }
+    ]
+  });
+  
+  if (!post) {
+    throw new Error('Post not found');
+  }
+  
+  // Check if user is the creator
+  if (post.userId !== userId) {
+    throw new Error('Not authorized to edit this post');
+  }
+  
+  // Get user's characters
+  const characters = await Character.findAll({
+    where: {
+      userId: userId,
+      isArchived: false
+    }
+  });
+  
+  return {
+    post,
+    characters
+  };
+};
+
+/**
 * Create a new social post
 * @param {Object} postData - Post data
 * @param {number} userId - User ID
@@ -418,6 +529,95 @@ switch (postType) {
 // Create post
 const post = await SocialPost.create(newPostData);
 return post;
+};
+
+/**
+ * Update a social post
+ * @param {number} postId - The post ID
+ * @param {Object} postData - Updated post data
+ * @param {number} userId - User ID
+ * @returns {Object} The updated post
+ */
+exports.updatePost = async (postId, postData, userId) => {
+  const { content, characterId, imageUrl, privacy } = postData;
+  
+  // Find post
+  const post = await SocialPost.findByPk(postId);
+  
+  if (!post) {
+    throw new Error('Post not found');
+  }
+  
+  // Check if user is the creator
+  if (post.userId !== userId) {
+    throw new Error('Not authorized to edit this post');
+  }
+  
+  // Verify character belongs to user if provided
+  if (characterId) {
+    const character = await Character.findOne({
+      where: {
+        id: characterId,
+        userId: userId
+      }
+    });
+    
+    if (!character) {
+      throw new Error('Invalid character selection');
+    }
+  }
+  
+  // Update post data based on type
+  const updateData = {
+    characterId: characterId || null,
+    content,
+    privacy: privacy || 'public',
+    isEdited: true
+  };
+  
+  // For image posts, update the image URL if provided
+  if (post.postType === 'image' && imageUrl) {
+    updateData.imageUrl = imageUrl.trim() !== '' ? imageUrl : null;
+  }
+  
+  // Update post
+  await post.update(updateData);
+  
+  return post;
+};
+
+/**
+ * Delete a social post
+ * @param {number} postId - The post ID
+ * @param {number} userId - User ID
+ * @returns {boolean} Success status
+ */
+exports.deletePost = async (postId, userId) => {
+  // Find post
+  const post = await SocialPost.findByPk(postId);
+  
+  if (!post) {
+    throw new Error('Post not found');
+  }
+  
+  // Check if user is the creator
+  if (post.userId !== userId) {
+    throw new Error('Not authorized to delete this post');
+  }
+  
+  // Delete associated comments and likes
+  await Comment.destroy({
+    where: { postId }
+  });
+  
+  await Like.destroy({
+    where: { postId }
+  });
+  
+  // Delete post
+  await post.destroy();
+  
+  return true;
 };
 
 /**

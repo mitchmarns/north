@@ -1,6 +1,7 @@
 // controllers/socialController.js
 const { SocialPost, Comment, Like, Character, User, sequelize, Sequelize } = require('../models');
 const { validationResult } = require('express-validator');
+const socialService = require('../services/socialService');
 const Op = Sequelize.Op;
 
 // Helper function to format time ago
@@ -47,152 +48,17 @@ exports.getFeed = async (req, res) => {
     const filter = req.query.filter || 'all';
     const sort = req.query.sort || 'recent';
     const page = parseInt(req.query.page) || 1;
-    const limit = 10; 
-    const offset = (page - 1) * limit;
     
-    // Build query based on filter type
-    let whereClause = {};
-    
-    if (filter === 'mine' && req.user) {
-      // Only show user's posts
-      whereClause.userId = req.user.id;
-    } else if (filter === 'following' && req.user) {
-      // Show posts from followed users/characters
-      // This would need a follows model/table
-      // For now, just show all public posts
-      whereClause.privacy = 'public';
-    } else {
-      // Show all public posts by default
-      whereClause.privacy = 'public';
-    }
-    
-    // Build order based on sort type
-    let order = [];
-    
-    if (sort === 'popular') {
-      order = [['likeCount', 'DESC'], ['createdAt', 'DESC']];
-    } else {
-      // Recent is default
-      order = [['createdAt', 'DESC']];
-    }
-    
-    // Get posts with user, character and comments
-    const rawPosts = await SocialPost.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'username']
-        },
-        {
-          model: Character,
-          attributes: ['id', 'name', 'avatarUrl']
-        },
-        {
-          model: Comment,
-          as: 'comments',
-          separate: true,
-          include: [
-            {
-              model: User,
-              attributes: ['id', 'username']
-            },
-            {
-              model: Character,
-              attributes: ['id', 'name', 'avatarUrl']
-            }
-          ],
-          limit: 3,
-          order: [['createdAt', 'DESC']]
-        }
-      ],
-      order: order,
-      limit: limit,
-      offset: offset
-    });
-    
-    // Format the posts to ensure user and character data is properly accessible
-    const posts = rawPosts.map(post => {
-      const formattedPost = post.toJSON();
-      
-      // Ensure user object is always present with required fields
-      if (!formattedPost.User) {
-        formattedPost.user = {
-          id: formattedPost.userId,
-          username: 'Unknown User'
-        };
-      } else {
-        formattedPost.user = formattedPost.User;
-      }
-      
-      // Ensure character data is correctly assigned if it exists
-      if (formattedPost.Character) {
-        formattedPost.character = formattedPost.Character;
-      }
-      
-      // Format comments to ensure user and character data
-      if (formattedPost.comments && formattedPost.comments.length > 0) {
-        formattedPost.comments = formattedPost.comments.map(comment => {
-          if (comment.User) {
-            comment.user = comment.User;
-          } else {
-            comment.user = { id: comment.userId, username: 'Unknown User' };
-          }
-          
-          if (comment.Character) {
-            comment.character = comment.Character;
-          }
-          
-          return comment;
-        });
-      }
-      
-      return formattedPost;
-    });
-    
-    // Initialize characters as empty array by default
-    let characters = [];
-    
-    // If user is logged in, check if they liked each post
-    if (req.user) {
-      // Get all likes from the user for these posts
-      const postIds = posts.map(post => post.id);
-      const userLikes = await Like.findAll({
-        where: {
-          userId: req.user.id,
-          postId: { [Op.in]: postIds }
-        }
-      });
-      
-      // Create a map of post IDs to liked status
-      const likedMap = {};
-      userLikes.forEach(like => {
-        likedMap[like.postId] = true;
-      });
-      
-      // Add hasLiked property to each post
-      posts.forEach(post => {
-        post.hasLiked = likedMap[post.id] || false;
-      });
-      
-      // Get user's characters for posting/commenting
-      characters = await Character.findAll({
-        where: {
-          userId: req.user.id,
-          isArchived: false
-        },
-        attributes: ['id', 'name', 'avatarUrl']
-      });
-    }
+    // Get feed data using the service
+    const feedData = await socialService.getFeed(filter, sort, page, req.user?.id);
     
     // Make the formatTimeAgo function available to the template
-    res.locals.formatTimeAgo = formatTimeAgo;
+    res.locals.formatTimeAgo = feedData.formatTimeAgo;
     
-    // Always pass characters variable to template, even if empty array
     res.render('social/feed', {
       title: 'Activity Feed',
-      posts,
-      characters,  // This will now always be defined
+      posts: feedData.posts,
+      characters: feedData.characters,
       filter,
       sort
     });
@@ -209,69 +75,13 @@ exports.loadMore = async (req, res) => {
     const filter = req.query.filter || 'all';
     const sort = req.query.sort || 'recent';
     const page = parseInt(req.query.page) || 2;
-    const limit = 10;
-    const offset = (page - 1) * limit;
     
-    // Build where clause
-    let whereClause = {};
-    
-    if (filter === 'mine' && req.user) {
-      whereClause.userId = req.user.id;
-    } else {
-      whereClause.privacy = 'public';
-    }
-    
-    // Build order
-    let order = sort === 'popular' 
-      ? [['likeCount', 'DESC'], ['createdAt', 'DESC']] 
-      : [['createdAt', 'DESC']];
-    
-    // Single optimized query with selective includes
-    const posts = await SocialPost.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'username']
-        },
-        {
-          model: Character,
-          attributes: ['id', 'name', 'avatarUrl']
-        }
-      ],
-      order: order,
-      limit: limit,
-      offset: offset
-    });
-    
-    // Process user likes if logged in
-    if (req.user) {
-      const postIds = posts.map(post => post.id);
-      
-      // Only if there are posts to check
-      if (postIds.length > 0) {
-        const userLikes = await Like.findAll({
-          where: {
-            userId: req.user.id,
-            postId: { [Sequelize.Op.in]: postIds }
-          },
-          attributes: ['postId']
-        });
-        
-        const likedMap = {};
-        userLikes.forEach(like => {
-          likedMap[like.postId] = true;
-        });
-        
-        posts.forEach(post => {
-          post.dataValues.hasLiked = likedMap[post.id] || false;
-        });
-      }
-    }
+    // Get more posts using the service
+    const postsData = await socialService.loadMorePosts(filter, sort, page, req.user?.id);
     
     res.json({
       success: true,
-      posts: posts
+      posts: postsData.posts
     });
   } catch (error) {
     console.error('Error loading more posts:', error);
@@ -292,141 +102,10 @@ exports.createPost = async (req, res) => {
   }
   
   try {
-    const { 
-      content, characterId, privacy, postType, 
-      imageCaption, 
-      songTitle, artistName, albumName, albumCoverUrl, musicThoughts 
-    } = req.body;
-
-    console.log('Received post data:', {
-      type: postType,
-      content,
-      characterId,
-      privacy
-    });
+    // Create post using the service
+    await socialService.createPost(req.body, req.user.id);
     
-    // Verify character belongs to user if provided
-    if (characterId) {
-      const character = await Character.findOne({
-        where: {
-          id: characterId,
-          userId: req.user.id
-        }
-      });
-      
-      if (!character) {
-        req.flash('error_msg', 'Invalid character selection');
-        return res.redirect('/social/feed');
-      }
-    }
-    
-    // Prepare post data based on type
-    let postData = {
-      userId: req.user.id,
-      characterId: characterId || null,
-      privacy: privacy || 'public',
-      postType: postType || 'text',
-      likeCount: 0,
-      commentCount: 0
-    };
-    
-    // Add content based on post type
-    switch (postType) {
-      case 'text':
-        // For text posts, content is required
-        if (!content || content.trim() === '') {
-          console.error('Text post validation failed: empty content');
-          req.flash('error_msg', 'Post content is required');
-          return res.redirect('/social/feed');
-        }
-        
-        console.log('Creating text post with content:', content);
-        postData.content = content;
-        break;
-        
-      case 'image':
-        // For image posts, at least one valid image URL is required
-        postData.content = imageCaption || '';
-        
-        // Handle multiple images
-        let imageUrls = [];
-        
-        // Check if mediaUrls exists in req.body
-        if (req.body.mediaUrls) {
-          if (Array.isArray(req.body.mediaUrls)) {
-            // Filter out empty URLs
-            imageUrls = req.body.mediaUrls.filter(url => url && url.trim() !== '');
-          } else if (typeof req.body.mediaUrls === 'string' && req.body.mediaUrls.trim() !== '') {
-            imageUrls = [req.body.mediaUrls.trim()];
-          }
-        }
-        
-        console.log('Processing image URLs:', {
-          rawMediaUrls: req.body.mediaUrls,
-          processedImageUrls: imageUrls,
-          isEmpty: imageUrls.length === 0
-        });
-        
-        if (imageUrls.length === 0) {
-          // Check if we received a single imageUrl from the old format
-          if (req.body.imageUrl && req.body.imageUrl.trim() !== '') {
-            imageUrls = [req.body.imageUrl.trim()];
-          } else {
-            console.error('Image post validation failed: no image URLs');
-            req.flash('error_msg', 'At least one image URL is required for image posts');
-            return res.redirect('/social/feed');
-          }
-        }
-        postData.mediaUrls = imageUrls;
-        break;
-        
-      case 'nowListening':
-        // For music posts, song title and artist are required
-        postData.content = musicThoughts && musicThoughts.trim() !== '' ? musicThoughts.trim() : '';
-        
-        if (!songTitle || songTitle.trim() === '') {
-          req.flash('error_msg', 'Song title is required for music posts');
-          return res.redirect('/social/feed');
-        }
-        
-        if (!artistName || artistName.trim() === '') {
-          req.flash('error_msg', 'Artist name is required for music posts');
-          return res.redirect('/social/feed');
-        }
-        
-        postData.songTitle = songTitle.trim();
-        postData.artistName = artistName.trim();
-        postData.albumName = albumName && albumName.trim() !== '' ? albumName.trim() : null;
-        postData.albumCoverUrl = albumCoverUrl && albumCoverUrl.trim() !== '' ? albumCoverUrl.trim() : null;
-        
-        // Add debug logging for nowListening posts
-        console.log('Creating nowListening post with data:', {
-          userId: postData.userId,
-          characterId: postData.characterId,
-          postType: postData.postType,
-          content: postData.content,
-          songTitle: postData.songTitle,
-          artistName: postData.artistName,
-          albumName: postData.albumName,
-          albumCoverUrl: postData.albumCoverUrl,
-          privacy: postData.privacy
-        });
-        break;
-        
-      default:
-        // Default to text post
-        postData.content = content;
-    }
-    
-    // Create post with error handling
-    try {
-      await SocialPost.create(postData);
-      req.flash('success_msg', 'Post created successfully');
-    } catch (createError) {
-      console.error('Error creating post in database:', createError);
-      req.flash('error_msg', `Database error: ${createError.message}`);
-    }
-    
+    req.flash('success_msg', 'Post created successfully');
     res.redirect('/social/feed');
   } catch (error) {
     console.error('Error creating post:', error);
@@ -438,117 +117,28 @@ exports.createPost = async (req, res) => {
 // View single post
 exports.getPost = async (req, res) => {
   try {
-    const rawPost = await SocialPost.findByPk(req.params.id, {
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'username']
-        },
-        {
-          model: Character,
-          attributes: ['id', 'name', 'avatarUrl']
-        },
-        {
-          model: Comment,
-          as: 'comments',
-          include: [
-            {
-              model: User,
-              attributes: ['id', 'username']
-            },
-            {
-              model: Character,
-              attributes: ['id', 'name', 'avatarUrl']
-            }
-          ],
-          order: [['createdAt', 'ASC']]
-        }
-      ]
-    });
-    
-    if (!rawPost) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/social/feed');
-    }
-    
-    // Format the post data to ensure it's properly structured
-    const post = rawPost.toJSON();
-    
-    // Ensure user object is always present with required fields
-    if (!post.User) {
-      post.user = {
-        id: post.userId,
-        username: 'Unknown User'
-      };
-    } else {
-      post.user = post.User;
-    }
-    
-    // Ensure character data is correctly assigned if it exists
-    if (post.Character) {
-      post.character = post.Character;
-    }
-    
-    // Format comments to ensure user and character data
-    if (post.comments && post.comments.length > 0) {
-      post.comments = post.comments.map(comment => {
-        if (comment.User) {
-          comment.user = comment.User;
-        } else {
-          comment.user = { id: comment.userId, username: 'Unknown User' };
-        }
-        
-        if (comment.Character) {
-          comment.character = comment.Character;
-        }
-        
-        return comment;
-      });
-    }
-    
-    // Check if post is private and user is not the creator
-    if (post.privacy === 'private' && (!req.user || post.userId !== req.user.id)) {
-      req.flash('error_msg', 'This post is private');
-      return res.redirect('/social/feed');
-    }
-    
-    // If user is logged in, check if they liked the post
-    let hasLiked = false;
-    let characters = [];
-    
-    if (req.user) {
-      const like = await Like.findOne({
-        where: {
-          userId: req.user.id,
-          postId: post.id
-        }
-      });
-      
-      hasLiked = !!like;
-      
-      // Get user's characters for commenting
-      characters = await Character.findAll({
-        where: {
-          userId: req.user.id,
-          isArchived: false
-        },
-        attributes: ['id', 'name', 'avatarUrl']
-      });
-    }
-    
-    post.hasLiked = hasLiked;
+    // Get post data using the service
+    const postData = await socialService.getPost(req.params.id, req.user?.id);
     
     // Make the formatTimeAgo function available to the template
-    res.locals.formatTimeAgo = formatTimeAgo;
+    res.locals.formatTimeAgo = postData.formatTimeAgo;
     
     res.render('social/post', {
       title: 'View Post',
-      post,
-      characters
+      post: postData.post,
+      characters: postData.characters
     });
   } catch (error) {
     console.error('Error fetching post:', error);
-    req.flash('error_msg', 'An error occurred while fetching the post');
+    
+    if (error.message === 'Post not found') {
+      req.flash('error_msg', 'Post not found');
+    } else if (error.message === 'This post is private') {
+      req.flash('error_msg', 'This post is private');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching the post');
+    }
+    
     res.redirect('/social/feed');
   }
 };
@@ -556,42 +146,25 @@ exports.getPost = async (req, res) => {
 // Edit post form
 exports.getEditPost = async (req, res) => {
   try {
-    const post = await SocialPost.findByPk(req.params.id, {
-      include: [
-        {
-          model: Character,
-          attributes: ['id', 'name']
-        }
-      ]
-    });
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/social/feed');
-    }
-    
-    // Check if user is the creator
-    if (post.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized to edit this post');
-      return res.redirect('/social/feed');
-    }
-    
-    // Get user's characters
-    const characters = await Character.findAll({
-      where: {
-        userId: req.user.id,
-        isArchived: false
-      }
-    });
+    // Get post data for editing using the service
+    const editData = await socialService.getPostForEdit(req.params.id, req.user.id);
     
     res.render('social/edit', {
       title: 'Edit Post',
-      post,
-      characters
+      post: editData.post,
+      characters: editData.characters
     });
   } catch (error) {
     console.error('Error fetching post for edit:', error);
-    req.flash('error_msg', 'An error occurred while loading the edit form');
+    
+    if (error.message === 'Post not found') {
+      req.flash('error_msg', 'Post not found');
+    } else if (error.message === 'Not authorized to edit this post') {
+      req.flash('error_msg', 'Not authorized to edit this post');
+    } else {
+      req.flash('error_msg', 'An error occurred while loading the edit form');
+    }
+    
     res.redirect('/social/feed');
   }
 };
@@ -606,51 +179,22 @@ exports.updatePost = async (req, res) => {
   }
   
   try {
-    const { content, characterId, imageUrl, privacy } = req.body;
-    
-    // Find post
-    const post = await SocialPost.findByPk(req.params.id);
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/social/feed');
-    }
-    
-    // Check if user is the creator
-    if (post.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized to edit this post');
-      return res.redirect('/social/feed');
-    }
-    
-    // Verify character belongs to user if provided
-    if (characterId) {
-      const character = await Character.findOne({
-        where: {
-          id: characterId,
-          userId: req.user.id
-        }
-      });
-      
-      if (!character) {
-        req.flash('error_msg', 'Invalid character selection');
-        return res.redirect(`/social/post/${req.params.id}/edit`);
-      }
-    }
-    
-    // Update post - imageUrl is now optional
-    await post.update({
-      characterId: characterId || null,
-      content,
-      imageUrl: imageUrl && imageUrl.trim() !== '' ? imageUrl : null,
-      privacy: privacy || 'public',
-      isEdited: true
-    });
+    // Update post using the service
+    const post = await socialService.updatePost(req.params.id, req.body, req.user.id);
     
     req.flash('success_msg', 'Post updated successfully');
     res.redirect(`/social/post/${post.id}`);
   } catch (error) {
     console.error('Error updating post:', error);
-    req.flash('error_msg', 'An error occurred while updating your post');
+    
+    if (error.message === 'Post not found') {
+      req.flash('error_msg', 'Post not found');
+    } else if (error.message === 'Not authorized to edit this post') {
+      req.flash('error_msg', 'Not authorized to edit this post');
+    } else {
+      req.flash('error_msg', 'An error occurred while updating your post');
+    }
+    
     res.redirect(`/social/post/${req.params.id}/edit`);
   }
 };
@@ -658,28 +202,22 @@ exports.updatePost = async (req, res) => {
 // Delete post
 exports.deletePost = async (req, res) => {
   try {
-    // Find post
-    const post = await SocialPost.findByPk(req.params.id);
-    
-    if (!post) {
-      req.flash('error_msg', 'Post not found');
-      return res.redirect('/social/feed');
-    }
-    
-    // Check if user is the creator
-    if (post.userId !== req.user.id) {
-      req.flash('error_msg', 'Not authorized to delete this post');
-      return res.redirect('/social/feed');
-    }
-    
-    // Delete post
-    await post.destroy();
+    // Delete post using the service
+    await socialService.deletePost(req.params.id, req.user.id);
     
     req.flash('success_msg', 'Post deleted successfully');
     res.redirect('/social/feed');
   } catch (error) {
     console.error('Error deleting post:', error);
-    req.flash('error_msg', 'An error occurred while deleting the post');
+    
+    if (error.message === 'Post not found') {
+      req.flash('error_msg', 'Post not found');
+    } else if (error.message === 'Not authorized to delete this post') {
+      req.flash('error_msg', 'Not authorized to delete this post');
+    } else {
+      req.flash('error_msg', 'An error occurred while deleting the post');
+    }
+    
     res.redirect('/social/feed');
   }
 };
@@ -687,50 +225,10 @@ exports.deletePost = async (req, res) => {
 // Like or unlike post
 exports.likePost = async (req, res) => {
   try {
-    const { action } = req.body;
-    const postId = req.params.id;
+    // Like/unlike post using the service
+    const result = await socialService.likePost(req.params.id, req.body.action, req.user.id);
     
-    // Find post
-    const post = await SocialPost.findByPk(postId);
-    
-    if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
-    }
-    
-    // Check if user has already liked the post
-    const existingLike = await Like.findOne({
-      where: {
-        userId: req.user.id,
-        postId
-      }
-    });
-    
-    // Handle like/unlike based on action
-    if (action === 'like' && !existingLike) {
-      // Create like
-      await Like.create({
-        userId: req.user.id,
-        postId
-      });
-      
-      // Increment like count
-      await post.increment('likeCount');
-      await post.reload();
-      
-      return res.json({ success: true, count: post.likeCount });
-    } else if (action === 'unlike' && existingLike) {
-      // Remove like
-      await existingLike.destroy();
-      
-      // Decrement like count
-      await post.decrement('likeCount');
-      await post.reload();
-      
-      return res.json({ success: true, count: post.likeCount });
-    }
-    
-    // No change needed
-    return res.json({ success: true, count: post.likeCount });
+    return res.json({ success: true, count: result.count });
   } catch (error) {
     console.error('Error handling post like:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
