@@ -1,6 +1,7 @@
 const characterService = require('../services/characterService');
 const teamService = require('../services/teamService');
 const { validationResult } = require('express-validator');
+const { Character, CharacterGallery, User } = require('../models');
 
 // Get all characters (public)
 exports.getAllCharacters = async (req, res) => {
@@ -753,8 +754,16 @@ exports.getUploadGalleryImage = async (req, res) => {
 };
 
 // Upload gallery image
-exports.getUploadGalleryImage = async (req, res) => {
+exports.uploadGalleryImage = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/${req.params.id}/gallery/upload`);
+  }
+  
   try {
+    const { imageUrl, caption } = req.body;
     const characterId = req.params.id;
     
     // Find character
@@ -771,14 +780,25 @@ exports.getUploadGalleryImage = async (req, res) => {
       return res.redirect(`/characters/${characterId}`);
     }
     
-    res.render('characters/upload-image', {
-      title: `Add to ${character.name}'s Gallery`,
-      character
+    // Get highest display order
+    const highestOrder = await CharacterGallery.max('displayOrder', {
+      where: { characterId }
+    }) || 0;
+    
+    // Create new gallery image
+    await CharacterGallery.create({
+      characterId,
+      imageUrl,
+      caption: caption || null,
+      displayOrder: highestOrder + 1
     });
+    
+    req.flash('success_msg', 'Image added to gallery');
+    res.redirect(`/characters/${characterId}/gallery`);
   } catch (error) {
-    console.error('Error loading upload form:', error);
-    req.flash('error_msg', 'An error occurred while loading the upload form');
-    res.redirect(`/characters/${req.params.id}`);
+    console.error('Error uploading gallery image:', error);
+    req.flash('error_msg', 'An error occurred while uploading the image');
+    res.redirect(`/characters/${req.params.id}/gallery/upload`);
   }
 };
 
