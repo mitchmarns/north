@@ -29,7 +29,7 @@ exports.getUserCharacters = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
 
-    const characters = await characterService.getUserCharacters(req.user.id);
+    const result = await characterService.getUserCharacters(req.user.id, page, limit);
 
     res.render('characters/my-characters', {
       title: 'My Characters',
