@@ -21,3 +21,19 @@
   flex: 1;
   padding: 0 15px;
 }
+
+.col-wide {
+  flex: 0 0 60%;
+}
+
+.col-narrow {
+  flex: 0 0 40%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .col-wide,
+  .col-narrow {
+    flex: 0 0 100%;
+  }
+}
