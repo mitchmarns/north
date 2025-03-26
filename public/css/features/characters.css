@@ -66,3 +66,29 @@
   margin-right: 5px;
   margin-bottom: 5px;
 }
+
+.character-image-placeholder {
+  background-color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.character-initial {
+  font-size: 2rem;
+  color: #999;
+}
+
+.character-tag-private {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: var(--danger);
+}
+
+.character-tag-archived {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: var(--warning);
+}
+
+.inline-form {
+  display: inline;
+}
