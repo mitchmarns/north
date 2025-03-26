@@ -1,0 +1,27 @@
+<!-- views/characters/add-relationship-image.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Add Image to Gallery</h1>
+  <a href="/characters/relationships/<%= relationship.id %>/gallery" class="btn btn-outline">
+    <i class="ph-arrow-left-duotone"></i> Back to Gallery
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="mb-0">Add to <%= relationship.character1.name %> & <%= relationship.character2.name %>'s Gallery</h3>
+  </div>
+  <div class="card-body">
+    <form action="/characters/relationships/<%= relationship.id %>/gallery/add" method="POST">
+      <div class="row">
+        <div class="col" style="flex: 0 0 60%;">
+          <div class="form-group">
+            <label for="imageUrl">Image URL *</label>
+            <input 
+              type="url" 
+              id="imageUrl" 
+              name="imageUrl" 
+              class="form-control" 
+              placeholder="https://example.com/image.jpg"
+              required
+            />
+            <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
