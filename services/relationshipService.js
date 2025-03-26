@@ -537,3 +537,106 @@ exports.checkRelationshipExists = async (character1Id, character2Id) => {
     }
   });
 };
+
+/**
+ * Get details for a single relationship
+ * @param {number} relationshipId - The relationship ID
+ * @param {number} userId - User ID for authorization
+ * @returns {Object} Relationship details
+ */
+exports.getRelationshipDetails = async (relationshipId, userId) => {
+  // Find relationship with characters and users
+  const relationship = await Relationship.findByPk(relationshipId, {
+    include: [
+      {
+        model: Character,
+        as: 'character1',
+        include: [{ model: User, attributes: ['username', 'id'] }]
+      },
+      {
+        model: Character,
+        as: 'character2',
+        include: [{ model: User, attributes: ['username', 'id'] }]
+      },
+      {
+        model: User,
+        as: 'requestedBy',
+        attributes: ['username', 'id']
+      }
+    ]
+  });
+  
+  if (!relationship) {
+    throw new Error('Relationship not found');
+  }
+  
+  // Check if user owns one of the characters in the relationship
+  const isCharacter1Owner = relationship.character1.userId === userId;
+  const isCharacter2Owner = relationship.character2.userId === userId;
+  
+  if (!isCharacter1Owner && !isCharacter2Owner) {
+    throw new Error('Not authorized to view this relationship');
+  }
+  
+  // Get any shared threads between the characters
+  const sharedThreads = await Thread.findAll({
+    include: [
+      {
+        model: Character,
+        as: 'threadTags',
+        where: {
+          id: {
+            [Op.in]: [relationship.character1Id, relationship.character2Id]
+          }
+        }
+      },
+      {
+        model: Post,
+        as: 'posts',
+        attributes: ['id']
+      },
+      {
+        model: User,
+        as: 'creator',
+        attributes: ['username']
+      }
+    ],
+    order: [['updatedAt', 'DESC']],
+    limit: 5
+  });
+  
+  // Get recent messages between the two characters
+  const recentMessages = await Message.findAll({
+    where: {
+      [Op.or]: [
+        {
+          senderId: relationship.character1Id,
+          receiverId: relationship.character2Id
+        },
+        {
+          senderId: relationship.character2Id,
+          receiverId: relationship.character1Id
+        }
+      ],
+      isDeleted: false
+    },
+    include: [
+      {
+        model: Character,
+        as: 'sender',
+        attributes: ['id', 'name', 'avatarUrl']
+      }
+    ],
+    order: [['createdAt', 'DESC']],
+    limit: 5
+  });
+  
+  // Format relationship data
+  return {
+    relationship,
+    isCharacter1Owner,
+    isCharacter2Owner,
+    sharedThreads,
+    recentMessages
+  };
+};

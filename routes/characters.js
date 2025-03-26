@@ -165,6 +165,8 @@ router.post('/:id/gallery/order', isAuthenticated, characterController.updateGal
 
 // Character playlist routes
 router.get('/:id/playlist', characterController.getCharacterPlaylist);
+router.get('/relationships/view/:relationshipId', isAuthenticated, characterController.getRelationshipDetails);
+
 router.post(
   '/:id/playlist',
   isAuthenticated,

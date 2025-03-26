@@ -792,3 +792,31 @@ exports.updateStats = async (req, res) => {
     res.redirect(`/characters/${req.params.id}/stats/edit`);
   }
 };
+
+// Get relationship details
+exports.getRelationshipDetails = async (req, res) => {
+  try {
+    // Get relationship details using the service
+    const relationshipData = await relationshipService.getRelationshipDetails(
+      req.params.relationshipId,
+      req.user.id
+    );
+    
+    res.render('characters/relationship-detail', {
+      title: `${relationshipData.relationship.character1.name} & ${relationshipData.relationship.character2.name}`,
+      ...relationshipData
+    });
+  } catch (error) {
+    console.error('Error fetching relationship details:', error);
+    
+    if (error.message === 'Relationship not found') {
+      req.flash('error_msg', 'Relationship not found');
+    } else if (error.message === 'Not authorized to view this relationship') {
+      req.flash('error_msg', 'Not authorized to view this relationship');
+    } else {
+      req.flash('error_msg', 'An error occurred while fetching relationship details');
+    }
+    
+    res.redirect('/characters/my-characters');
+  }
+};

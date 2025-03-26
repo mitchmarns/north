@@ -58,6 +58,9 @@
               </div>
               
               <div class="relationship-actions ml-auto">
+                <a href="/characters/relationships/view/<%= request.id %>" class="btn btn-sm" title="View relationship details">
+                  <i class="fas fa-info-circle"></i> Details
+                </a>
                 <form action="/characters/relationships/<%= request.id %>/approve" method="POST" style="display: inline;">
                   <button type="submit" class="btn btn-sm btn-success">
                     <i class="fas fa-check"></i> Approve
@@ -73,7 +76,13 @@
             
             <% if (request.description) { %>
               <div class="relationship-description">
-                <strong>Description:</strong> <%= request.description %>
+                <strong>Description:</strong> 
+                <% if (request.description.length > 150) { %>
+                  <%= request.description.substring(0, 150) %>... 
+                  <a href="/characters/relationships/view/<%= request.id %>" class="read-more-link">Read More</a>
+                <% } else { %>
+                  <%= request.description %>
+                <% } %>
               </div>
             <% } %>
             

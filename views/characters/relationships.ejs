@@ -57,6 +57,12 @@
                     </div>
                     
                     <div class="relationship-actions">
+                      <!-- Add View Details button -->
+                      <a href="/characters/relationships/view/<%= rel.id %>" class="btn btn-sm" title="View relationship details">
+                        <i class="fas fa-info-circle"></i>
+                      </a>
+                      
+                      <!-- Existing action buttons go here -->
                       <% if (!rel.isPending || rel.canEdit) { %>
                         <button class="btn btn-sm" onclick="editRelationship('<%= rel.id %>', '<%= rel.relationshipType %>', `<%= rel.description || '' %>`, '<%= rel.status %>')">
                           <i class="fas fa-edit"></i>
@@ -88,12 +94,15 @@
                 
                 <% if (rel.description) { %>
                   <div class="relationship-description">
-                    <%= rel.description %>
+                    <% if (rel.description.length > 150) { %>
+                      <%= rel.description.substring(0, 150) %>... 
+                      <a href="/characters/relationships/view/<%= rel.id %>" class="read-more-link">Read More</a>
+                    <% } else { %>
+                      <%= rel.description %>
+                    <% } %>
                   </div>
                 <% } %>
               </div>
-            <% }); %>
-          </div>
         <% } else { %>
           <p class="text-center">No relationships have been defined yet.</p>
         <% } %>

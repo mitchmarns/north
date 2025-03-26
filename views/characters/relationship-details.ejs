@@ -1,0 +1,730 @@
+<!-- views/characters/relationship-detail.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Relationship Details</h1>
+  <div>
+    <% if (relationship.character1.userId === user.id) { %>
+      <a href="/characters/<%= relationship.character1.id %>/relationships" class="btn btn-outline mr-2">
+        <i class="fas fa-arrow-left"></i> Back to <%= relationship.character1.name %>'s Relationships
+      </a>
+    <% } else { %>
+      <a href="/characters/<%= relationship.character2.id %>/relationships" class="btn btn-outline mr-2">
+        <i class="fas fa-arrow-left"></i> Back to <%= relationship.character2.name %>'s Relationships
+      </a>
+    <% } %>
+  </div>
+</div>
+
+<div class="relationship-header-card card mb-4">
+  <div class="card-body">
+    <div class="relationship-characters-display">
+      <div class="relationship-character">
+        <% if (relationship.character1.avatarUrl) { %>
+          <img src="<%= relationship.character1.avatarUrl %>" alt="<%= relationship.character1.name %>" class="relationship-avatar">
+        <% } else { %>
+          <div class="relationship-avatar-placeholder">
+            <%= relationship.character1.name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <div class="relationship-name">
+          <a href="/characters/<%= relationship.character1.id %>"><%= relationship.character1.name %></a>
+          <small>by <%= relationship.character1.User.username %></small>
+        </div>
+      </div>
+      
+      <div class="relationship-type-container">
+        <div class="relationship-type">
+          <strong><%= relationship.type %></strong>
+          <span class="relationship-status <%= relationship.status.toLowerCase() %>">
+            <%= relationship.status %>
+          </span>
+        </div>
+        <div class="relationship-direction">
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+      </div>
+      
+      <div class="relationship-character">
+        <% if (relationship.character2.avatarUrl) { %>
+          <img src="<%= relationship.character2.avatarUrl %>" alt="<%= relationship.character2.name %>" class="relationship-avatar">
+        <% } else { %>
+          <div class="relationship-avatar-placeholder">
+            <%= relationship.character2.name.charAt(0).toUpperCase() %>
+          </div>
+        <% } %>
+        <div class="relationship-name">
+          <a href="/characters/<%= relationship.character2.id %>"><%= relationship.character2.name %></a>
+          <small>by <%= relationship.character2.User.username %></small>
+        </div>
+      </div>
+    </div>
+    
+    <% if (relationship.isCharacter1Owner || relationship.isCharacter2Owner) { %>
+      <div class="relationship-actions mt-3 text-right">
+        <button class="btn btn-sm" onclick="showEditRelationshipModal()">
+          <i class="fas fa-edit"></i> Edit Relationship
+        </button>
+        <form action="/characters/relationships/<%= relationship.id %>?_method=DELETE" method="POST" style="display: inline;">
+          <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Left Column: Relationship Details -->
+  <div class="col" style="flex: 0 0 60%;">
+    <!-- Relationship Description -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">About This Relationship</h3>
+      </div>
+      <div class="card-body">
+        <% if (relationship.description) { %>
+          <div class="relationship-description">
+            <%= relationship.description %>
+          </div>
+        <% } else { %>
+          <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 20px;">
+            No description has been added for this relationship yet.
+          </p>
+        <% } %>
+        
+        <div class="relationship-meta mt-4">
+          <div class="d-flex align-center justify-between">
+            <div>
+              <small><strong>Relationship status:</strong> <%= relationship.status %></small><br>
+              <small><strong>Established by:</strong> <%= relationship.requestedBy %></small>
+              <% if (relationship.isPending) { %>
+                <br><small class="text-warning"><strong>Status:</strong> Pending approval</small>
+              <% } %>
+            </div>
+            <div>
+              <% if (relationship.relationship.createdAt) { %>
+                <small><strong>Created:</strong> <%= new Date(relationship.relationship.createdAt).toLocaleDateString() %></small>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Shared Threads -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0">Shared Threads</h3>
+      </div>
+      <div class="card-body">
+        <% if (sharedThreads && sharedThreads.length > 0) { %>
+          <div class="thread-list">
+            <% sharedThreads.forEach(thread => { %>
+              <div class="thread-item">
+                <a href="/writing/thread/<%= thread.id %>" class="thread-link">
+                  <div class="thread-content">
+                    <div class="thread-title"><%= thread.title %></div>
+                    <div class="thread-meta">
+                      <span><%= thread.posts.length %> posts</span>
+                      <span>Created by <%= thread.creator.username %></span>
+                      <span>Last active <%= new Date(thread.updatedAt).toLocaleDateString() %></span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            <% }); %>
+          </div>
+          
+          <div class="text-center mt-3">
+            <a href="/writing/create" class="btn btn-sm">
+              <i class="fas fa-plus"></i> Start New Thread
+            </a>
+          </div>
+        <% } else { %>
+          <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 20px;">
+            No shared threads found between these characters.
+          </p>
+          
+          <div class="text-center">
+            <a href="/writing/create" class="btn">
+              <i class="fas fa-plus"></i> Start a Thread Together
+            </a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Recent Messages -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0">Recent Interactions</h3>
+      </div>
+      <div class="card-body">
+        <% if (recentMessages && recentMessages.length > 0) { %>
+          <div class="message-list">
+            <% recentMessages.forEach(message => { %>
+              <div class="message <%= message.senderId === relationship.character1.id ? 'message-left' : 'message-right' %>">
+                <div class="message-avatar">
+                  <% if (message.sender.avatarUrl) { %>
+                    <img src="<%= message.sender.avatarUrl %>" alt="<%= message.sender.name %>">
+                  <% } else { %>
+                    <span><%= message.sender.name.charAt(0) %></span>
+                  <% } %>
+                </div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <span class="message-sender"><%= message.sender.name %></span>
+                    <span class="message-time"><%= new Date(message.createdAt).toLocaleDateString() %></span>
+                  </div>
+                  <div class="message-body">
+                    <%= message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+          
+          <% if ((relationship.isCharacter1Owner || relationship.isCharacter2Owner) && relationship.isApproved) { %>
+            <div class="text-center mt-3">
+              <% if (relationship.isCharacter1Owner) { %>
+                <a href="/messages/<%= relationship.character1.id %>/<%= relationship.character2.id %>" class="btn btn-sm">
+                  <i class="fas fa-comment"></i> View Full Conversation
+                </a>
+              <% } else { %>
+                <a href="/messages/<%= relationship.character2.id %>/<%= relationship.character1.id %>" class="btn btn-sm">
+                  <i class="fas fa-comment"></i> View Full Conversation
+                </a>
+              <% } %>
+            </div>
+          <% } %>
+        <% } else { %>
+          <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 20px;">
+            No recent messages between these characters.
+          </p>
+          
+          <% if ((relationship.isCharacter1Owner || relationship.isCharacter2Owner) && relationship.isApproved) { %>
+            <div class="text-center">
+              <% if (relationship.isCharacter1Owner) { %>
+                <a href="/messages/<%= relationship.character1.id %>/<%= relationship.character2.id %>" class="btn">
+                  <i class="fas fa-comment"></i> Start a Conversation
+                </a>
+              <% } else { %>
+                <a href="/messages/<%= relationship.character2.id %>/<%= relationship.character1.id %>" class="btn">
+                  <i class="fas fa-comment"></i> Start a Conversation
+                </a>
+              <% } %>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Right Column: Character Summaries -->
+  <div class="col" style="flex: 0 0 40%;">
+    <!-- Character 1 Summary -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h3 class="mb-0"><%= relationship.character1.name %></h3>
+      </div>
+      <div class="card-body">
+        <div class="character-summary">
+          <div class="character-avatar-container">
+            <% if (relationship.character1.avatarUrl) { %>
+              <img src="<%= relationship.character1.avatarUrl %>" alt="<%= relationship.character1.name %>" class="character-summary-avatar">
+            <% } else { %>
+              <div class="character-summary-avatar-placeholder">
+                <%= relationship.character1.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="character-details">
+            <% if (relationship.character1.shortBio) { %>
+              <p class="character-bio"><%= relationship.character1.shortBio %></p>
+            <% } %>
+            
+            <div class="character-quick-info">
+              <% if (relationship.character1.age) { %>
+                <div class="info-item">
+                  <span class="info-label">Age:</span>
+                  <span class="info-value"><%= relationship.character1.age %></span>
+                </div>
+              <% } %>
+              
+              <% if (relationship.character1.gender) { %>
+                <div class="info-item">
+                  <span class="info-label">Gender:</span>
+                  <span class="info-value"><%= relationship.character1.gender %></span>
+                </div>
+              <% } %>
+            </div>
+            
+            <div class="mt-3">
+              <a href="/characters/<%= relationship.character1.id %>" class="btn btn-sm">
+                <i class="fas fa-user"></i> View Profile
+              </a>
+              
+              <% if (relationship.character1.userId === user.id) { %>
+                <a href="/characters/edit/<%= relationship.character1.id %>" class="btn btn-sm">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Character 2 Summary -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0"><%= relationship.character2.name %></h3>
+      </div>
+      <div class="card-body">
+        <div class="character-summary">
+          <div class="character-avatar-container">
+            <% if (relationship.character2.avatarUrl) { %>
+              <img src="<%= relationship.character2.avatarUrl %>" alt="<%= relationship.character2.name %>" class="character-summary-avatar">
+            <% } else { %>
+              <div class="character-summary-avatar-placeholder">
+                <%= relationship.character2.name.charAt(0).toUpperCase() %>
+              </div>
+            <% } %>
+          </div>
+          
+          <div class="character-details">
+            <% if (relationship.character2.shortBio) { %>
+              <p class="character-bio"><%= relationship.character2.shortBio %></p>
+            <% } %>
+            
+            <div class="character-quick-info">
+              <% if (relationship.character2.age) { %>
+                <div class="info-item">
+                  <span class="info-label">Age:</span>
+                  <span class="info-value"><%= relationship.character2.age %></span>
+                </div>
+              <% } %>
+              
+              <% if (relationship.character2.gender) { %>
+                <div class="info-item">
+                  <span class="info-label">Gender:</span>
+                  <span class="info-value"><%= relationship.character2.gender %></span>
+                </div>
+              <% } %>
+            </div>
+            
+            <div class="mt-3">
+              <a href="/characters/<%= relationship.character2.id %>" class="btn btn-sm">
+                <i class="fas fa-user"></i> View Profile
+              </a>
+              
+              <% if (relationship.character2.userId === user.id) { %>
+                <a href="/characters/edit/<%= relationship.character2.id %>" class="btn btn-sm">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Relationship Modal -->
+<div id="editRelationshipModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Edit Relationship</h3>
+      <span class="close-modal" onclick="closeEditModal()">
+        <i class="fas fa-times"></i>
+      </span>
+    </div>
+    <div class="modal-body">
+      <form id="editRelationshipForm" action="/characters/relationships/<%= relationship.id %>?_method=PUT" method="POST">
+        <div class="form-group">
+          <label for="edit_relationshipType">Relationship Type</label>
+          <input 
+            type="text" 
+            id="edit_relationshipType" 
+            name="relationshipType" 
+            class="form-control" 
+            value="<%= relationship.type %>"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="edit_status">Status</label>
+          <select id="edit_status" name="status" class="form-control">
+            <option value="Neutral" <%= relationship.status === 'Neutral' ? 'selected' : '' %>>Neutral</option>
+            <option value="Positive" <%= relationship.status === 'Positive' ? 'selected' : '' %>>Positive</option>
+            <option value="Negative" <%= relationship.status === 'Negative' ? 'selected' : '' %>>Negative</option>
+            <option value="Complicated" <%= relationship.status === 'Complicated' ? 'selected' : '' %>>Complicated</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit_description">Description</label>
+          <textarea 
+            id="edit_description" 
+            name="description" 
+            class="form-control" 
+            rows="6"
+          ><%= relationship.description || '' %></textarea>
+        </div>
+        
+        <div class="form-group text-right">
+          <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Relationship Header Styling */
+  .relationship-characters-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+  }
+  
+  .relationship-character {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 40%;
+  }
+  
+  .relationship-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid var(--header);
+  }
+  
+  .relationship-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    border: 3px solid var(--header);
+  }
+  
+  .relationship-name {
+    font-size: var(--text-lg);
+    font-weight: var(--semibold);
+  }
+  
+  .relationship-name a {
+    color: var(--header);
+    text-decoration: none;
+  }
+  
+  .relationship-name a:hover {
+    text-decoration: underline;
+  }
+  
+  .relationship-name small {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: var(--regular);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .relationship-type-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 20%;
+    gap: 10px;
+  }
+  
+  .relationship-type {
+    text-align: center;
+    font-size: var(--text-lg);
+    padding: 5px 15px;
+    background-color: rgba(90, 128, 149, 0.2);
+    border-radius: var(--radius-md);
+  }
+  
+  .relationship-direction {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .relationship-status {
+    display: inline-block;
+    font-size: var(--text-xs);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 5px;
+  }
+  
+  .relationship-status.positive {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: var(--success);
+  }
+  
+  .relationship-status.neutral {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--lighttext);
+  }
+  
+  .relationship-status.negative {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: var(--danger);
+  }
+  
+  .relationship-status.complicated {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--warning);
+  }
+  
+  /* Character Summary Styling */
+  .character-summary {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .character-avatar-container {
+    flex-shrink: 0;
+  }
+  
+  .character-summary-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .character-summary-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+  }
+  
+  .character-details {
+    flex: 1;
+  }
+  
+  .character-bio {
+    font-size: var(--text-sm);
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .character-quick-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .info-item {
+    font-size: var(--text-sm);
+  }
+  
+  .info-label {
+    font-weight: var(--semibold);
+    margin-right: 5px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  /* Modal Styling */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-md);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h3 {
+    margin: 0;
+  }
+  
+  .close-modal {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .close-modal:hover {
+    color: var(--lighttext);
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  /* Interaction Styling */
+  .message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .message {
+    display: flex;
+    max-width: 80%;
+  }
+  
+  .message-left {
+    align-self: flex-start;
+  }
+  
+  .message-right {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+  
+  .message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 10px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+  
+  .message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .message-avatar span {
+    width: 100%;
+    height: 100%;
+    background-color: #555;
+    color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--bold);
+  }
+  
+  .message-content {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 12px 16px;
+    border-radius: 16px;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .message-right .message-content {
+    background-color: rgba(90, 128, 149, 0.2);
+  }
+  
+  .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .message-sender {
+    font-weight: var(--medium);
+    color: var(--header);
+    font-size: var(--text-sm);
+  }
+  
+  .message-time {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 10px;
+  }
+  
+  .message-body {
+    white-space: pre-line;
+    line-height: 1.5;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .relationship-characters-display {
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .relationship-character {
+      width: 100%;
+    }
+    
+    .relationship-type-container {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .row {
+      flex-direction: column;
+    }
+    
+    .col {
+      flex: 1 !important;
+      width: 100% !important;
+    }
+  }
+</style>
+
+<script>
+  function showEditRelationshipModal() {
+    document.getElementById('editRelationshipModal').style.display = 'flex';
+  }
+  
+  function closeEditModal() {
+    document.getElementById('editRelationshipModal').style.display = 'none';
+  }
+  
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    const modal = document.getElementById('editRelationshipModal');
+    if (event.target === modal) {
+      closeEditModal();
+    }
+  }
+</script>

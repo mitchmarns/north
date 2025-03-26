@@ -174,40 +174,58 @@
     <% if (relationships && relationships.length > 0) { %>
       <div class="card">
         <div class="card-header">
-          <h3 class="mb-0">Relationships</h3>
+          <div class="d-flex justify-between align-center">
+            <h3 class="mb-0">Relationships</h3>
+            <% if (isOwner) { %>
+              <a href="/characters/<%= character.id %>/relationships" class="btn btn-sm">
+                <i class="fas fa-edit"></i> Manage
+              </a>
+            <% } %>
+          </div>
         </div>
         <div class="card-body" style="padding: 0;">
           <ul style="list-style: none; padding: 0; margin: 0;">
             <% relationships.forEach(rel => { %>
               <li style="padding: 10px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                <div class="d-flex align-center">
-                  <% if (rel.otherCharacter.avatarUrl) { %>
-                    <img src="<%= rel.otherCharacter.avatarUrl %>" alt="<%= rel.otherCharacter.name %>" 
-                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; margin-right: 10px;">
-                  <% } else { %>
-                    <div style="width: 40px; height: 40px; background-color: #555; border-radius: 50%; margin-right: 10px; 
-                                display: flex; align-items: center; justify-content: center; color: #eee;">
-                      <%= rel.otherCharacter.name.charAt(0).toUpperCase() %>
-                    </div>
-                  <% } %>
-                  
-                  <div>
-                    <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
-                    <div style="font-size: var(--text-sm);">
-                      <%= rel.relationshipType %>
-                      
-                      <% if (rel.status) { %>
-                        <span class="relationship-status <%= rel.status.toLowerCase() %>">
-                          <%= rel.status %>
-                        </span>
-                      <% } %>
+                <div class="d-flex align-center justify-between">
+                  <div class="d-flex align-center">
+                    <% if (rel.otherCharacter.avatarUrl) { %>
+                      <img src="<%= rel.otherCharacter.avatarUrl %>" alt="<%= rel.otherCharacter.name %>" 
+                           style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; margin-right: 10px;">
+                    <% } else { %>
+                      <div style="width: 40px; height: 40px; background-color: #555; border-radius: 50%; margin-right: 10px; 
+                                  display: flex; align-items: center; justify-content: center; color: #eee;">
+                        <%= rel.otherCharacter.name.charAt(0).toUpperCase() %>
+                      </div>
+                    <% } %>
+                    
+                    <div>
+                      <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
+                      <div style="font-size: var(--text-sm);">
+                        <%= rel.relationshipType %>
+                        
+                        <% if (rel.status) { %>
+                          <span class="relationship-status <%= rel.status.toLowerCase() %>">
+                            <%= rel.status %>
+                          </span>
+                        <% } %>
+                      </div>
                     </div>
                   </div>
+                  
+                  <a href="/characters/relationships/view/<%= rel.id %>" class="btn btn-sm" title="View relationship details">
+                    <i class="fas fa-info-circle"></i>
+                  </a>
                 </div>
                 
                 <% if (rel.description) { %>
                   <div class="mt-1" style="font-size: var(--text-sm); color: rgba(255, 255, 255, 0.7); padding-left: 50px;">
-                    <%= rel.description %>
+                    <% if (rel.description.length > 100) { %>
+                      <%= rel.description.substring(0, 100) %>... 
+                      <a href="/characters/relationships/view/<%= rel.id %>" style="font-size: var(--text-xs);">Read More</a>
+                    <% } else { %>
+                      <%= rel.description %>
+                    <% } %>
                   </div>
                 <% } %>
               </li>
