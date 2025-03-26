@@ -64,6 +64,12 @@
     
     <% if (isCharacter1Owner || isCharacter2Owner) { %>
       <div class="relationship-actions mt-3 text-right">
+        <a href="/characters/relationships/<%= relationship.id %>/gallery" class="btn btn-sm mr-2">
+          <i class="fas fa-images"></i> Gallery
+        </a>
+        <a href="/characters/relationships/<%= relationship.id %>/playlist" class="btn btn-sm mr-2">
+          <i class="fas fa-music"></i> Playlist
+        </a>
         <button class="btn btn-sm" onclick="showEditRelationshipModal()">
           <i class="fas fa-edit"></i> Edit Relationship
         </button>

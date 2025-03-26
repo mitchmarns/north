@@ -1,6 +1,7 @@
 // controllers/messageController.js
 const messageService = require('../services/messageService');
 const { validationResult } = require('express-validator');
+const { Character, User, Relationship, Sequelize } = require('../models');
 
 // Get all character's conversations (inbox)
 exports.getInbox = async (req, res) => {
