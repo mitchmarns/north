@@ -820,3 +820,459 @@ exports.getRelationshipDetails = async (req, res) => {
     res.redirect('/characters/my-characters');
   }
 };
+
+// Get relationship gallery
+exports.getRelationshipGallery = async (req, res) => {
+  try {
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship with characters and users
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      req.flash('error_msg', 'Relationship not found');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    
+    // Update order for each image
+    for (let i = 0; i < imageIds.length; i++) {
+      await RelationshipGallery.update(
+        { displayOrder: i },
+        { where: { id: imageIds[i], relationshipId } }
+      );
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating gallery order:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+// Get relationship playlist
+exports.getRelationshipPlaylist = async (req, res) => {
+  try {
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship with characters and users
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      req.flash('error_msg', 'Relationship not found');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Check if user owns one of the characters in the relationship
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to view this relationship playlist');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Get playlist songs
+    const playlistSongs = await RelationshipPlaylist.findAll({
+      where: { relationshipId },
+      include: [
+        {
+          model: User,
+          as: 'uploader',
+          attributes: ['username']
+        }
+      ],
+      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+    });
+    
+    res.render('characters/relationship-playlist', {
+      title: `Playlist: ${relationship.character1.name} & ${relationship.character2.name}`,
+      relationship,
+      playlistSongs,
+      isCharacter1Owner,
+      isCharacter2Owner
+    });
+  } catch (error) {
+    console.error('Error fetching relationship playlist:', error);
+    req.flash('error_msg', 'An error occurred while fetching the playlist');
+    res.redirect('/characters/my-characters');
+  }
+};
+
+// Add song to playlist
+exports.addPlaylistSong = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/relationships/${req.params.relationshipId}/playlist`);
+  }
+  
+  try {
+    const { songTitle, artistName, albumName, albumCoverUrl, songUrl, description } = req.body;
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1'
+        },
+        {
+          model: Character,
+          as: 'character2'
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      req.flash('error_msg', 'Relationship not found');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to add songs to this relationship');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Get highest display order
+    const highestOrder = await RelationshipPlaylist.max('displayOrder', {
+      where: { relationshipId }
+    }) || 0;
+    
+    // Create new playlist song
+    await RelationshipPlaylist.create({
+      relationshipId,
+      songTitle,
+      artistName,
+      albumName: albumName || null,
+      albumCoverUrl: albumCoverUrl || null,
+      songUrl: songUrl || null,
+      description: description || null,
+      uploadedBy: req.user.id,
+      displayOrder: highestOrder + 1
+    });
+    
+    req.flash('success_msg', 'Song added to playlist');
+    res.redirect(`/characters/relationships/${relationshipId}/playlist`);
+  } catch (error) {
+    console.error('Error adding playlist song:', error);
+    req.flash('error_msg', 'An error occurred while adding the song');
+    res.redirect(`/characters/relationships/${req.params.relationshipId}/playlist`);
+  }
+};
+
+// Delete playlist song
+exports.deletePlaylistSong = async (req, res) => {
+  try {
+    const songId = req.params.songId;
+    const relationshipId = req.params.relationshipId;
+    
+    // Find song
+    const song = await RelationshipPlaylist.findByPk(songId, {
+      include: [
+        {
+          model: Relationship,
+          include: [
+            {
+              model: Character,
+              as: 'character1'
+            },
+            {
+              model: Character,
+              as: 'character2'
+            }
+          ]
+        }
+      ]
+    });
+    
+    if (!song) {
+      req.flash('error_msg', 'Song not found');
+      return res.redirect(`/characters/relationships/${relationshipId}/playlist`);
+    }
+    
+    // Check if user owns one of the characters in the relationship
+    const relationship = song.Relationship;
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to delete songs from this relationship');
+      return res.redirect(`/characters/relationships/${relationshipId}/playlist`);
+    }
+    
+    // Delete song
+    await song.destroy();
+    
+    req.flash('success_msg', 'Song removed from playlist');
+    res.redirect(`/characters/relationships/${relationshipId}/playlist`);
+  } catch (error) {
+    console.error('Error deleting playlist song:', error);
+    req.flash('error_msg', 'An error occurred while deleting the song');
+    res.redirect(`/characters/relationships/${req.params.relationshipId}/playlist`);
+  }
+}; in the relationship
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to view this relationship gallery');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Get gallery images
+    const galleryImages = await RelationshipGallery.findAll({
+      where: { relationshipId },
+      include: [
+        {
+          model: User,
+          as: 'uploader',
+          attributes: ['username']
+        }
+      ],
+      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+    });
+    
+    res.render('characters/relationship-gallery', {
+      title: `Gallery: ${relationship.character1.name} & ${relationship.character2.name}`,
+      relationship,
+      galleryImages,
+      isCharacter1Owner,
+      isCharacter2Owner
+    });
+  } catch (error) {
+    console.error('Error fetching relationship gallery:', error);
+    req.flash('error_msg', 'An error occurred while fetching the gallery');
+    res.redirect('/characters/my-characters');
+  }
+};
+
+// Add gallery image form
+exports.getAddGalleryImage = async (req, res) => {
+  try {
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        },
+        {
+          model: Character,
+          as: 'character2',
+          include: [{ model: User, attributes: ['username', 'id'] }]
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      req.flash('error_msg', 'Relationship not found');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to add images to this relationship');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    res.render('characters/add-relationship-image', {
+      title: `Add Image: ${relationship.character1.name} & ${relationship.character2.name}`,
+      relationship,
+      isCharacter1Owner,
+      isCharacter2Owner
+    });
+  } catch (error) {
+    console.error('Error loading add image form:', error);
+    req.flash('error_msg', 'An error occurred while loading the form');
+    res.redirect('/characters/relationships/view/' + req.params.relationshipId);
+  }
+};
+
+// Add gallery image
+exports.addGalleryImage = async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash('error_msg', errors.array()[0].msg);
+    return res.redirect(`/characters/relationships/${req.params.relationshipId}/gallery/add`);
+  }
+  
+  try {
+    const { imageUrl, caption } = req.body;
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1'
+        },
+        {
+          model: Character,
+          as: 'character2'
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      req.flash('error_msg', 'Relationship not found');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to add images to this relationship');
+      return res.redirect('/characters/my-characters');
+    }
+    
+    // Get highest display order
+    const highestOrder = await RelationshipGallery.max('displayOrder', {
+      where: { relationshipId }
+    }) || 0;
+    
+    // Create new gallery image
+    await RelationshipGallery.create({
+      relationshipId,
+      imageUrl,
+      caption: caption || null,
+      uploadedBy: req.user.id,
+      displayOrder: highestOrder + 1
+    });
+    
+    req.flash('success_msg', 'Image added to gallery');
+    res.redirect(`/characters/relationships/${relationshipId}/gallery`);
+  } catch (error) {
+    console.error('Error adding gallery image:', error);
+    req.flash('error_msg', 'An error occurred while adding the image');
+    res.redirect(`/characters/relationships/${req.params.relationshipId}/gallery/add`);
+  }
+};
+
+// Delete gallery image
+exports.deleteGalleryImage = async (req, res) => {
+  try {
+    const imageId = req.params.imageId;
+    const relationshipId = req.params.relationshipId;
+    
+    // Find image
+    const image = await RelationshipGallery.findByPk(imageId, {
+      include: [
+        {
+          model: Relationship,
+          include: [
+            {
+              model: Character,
+              as: 'character1'
+            },
+            {
+              model: Character,
+              as: 'character2'
+            }
+          ]
+        }
+      ]
+    });
+    
+    if (!image) {
+      req.flash('error_msg', 'Image not found');
+      return res.redirect(`/characters/relationships/${relationshipId}/gallery`);
+    }
+    
+    // Check if user owns one of the characters in the relationship
+    const relationship = image.Relationship;
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      req.flash('error_msg', 'Not authorized to delete images from this relationship');
+      return res.redirect(`/characters/relationships/${relationshipId}/gallery`);
+    }
+    
+    // Delete image
+    await image.destroy();
+    
+    req.flash('success_msg', 'Image deleted from gallery');
+    res.redirect(`/characters/relationships/${relationshipId}/gallery`);
+  } catch (error) {
+    console.error('Error deleting gallery image:', error);
+    req.flash('error_msg', 'An error occurred while deleting the image');
+    res.redirect(`/characters/relationships/${req.params.relationshipId}/gallery`);
+  }
+};
+
+// Update gallery image order
+exports.updateGalleryOrder = async (req, res) => {
+  try {
+    const { imageIds } = req.body;
+    const relationshipId = req.params.relationshipId;
+    
+    // Find relationship
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1'
+        },
+        {
+          model: Character,
+          as: 'character2'
+        }
+      ]
+    });
+    
+    if (!relationship) {
+      return res.status(404).json({ success: false, message: 'Relationship not found' });
+    }
+    
+    // Check if user owns one of the characters
+  

@@ -248,6 +248,97 @@ router.put(
   characterController.updateStats
 );
 
+// Relationship Gallery routes
+router.get(
+  '/relationships/:relationshipId/gallery',
+  isAuthenticated,
+  characterController.getRelationshipGallery
+);
+
+router.get(
+  '/relationships/:relationshipId/gallery/add',
+  isAuthenticated,
+  characterController.getAddGalleryImage
+);
+
+router.post(
+  '/relationships/:relationshipId/gallery/add',
+  isAuthenticated,
+  [
+    body('imageUrl')
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid image URL'),
+    body('caption')
+      .optional()
+      .trim()
+      .isLength({ max: 255 })
+      .withMessage('Caption cannot exceed 255 characters')
+  ],
+  characterController.addGalleryImage
+);
+
+router.delete(
+  '/relationships/:relationshipId/gallery/:imageId',
+  isAuthenticated,
+  characterController.deleteGalleryImage
+);
+
+router.post(
+  '/relationships/:relationshipId/gallery/order',
+  isAuthenticated,
+  characterController.updateGalleryOrder
+);
+
+// Relationship Playlist routes
+router.get(
+  '/relationships/:relationshipId/playlist',
+  isAuthenticated,
+  characterController.getRelationshipPlaylist
+);
+
+router.post(
+  '/relationships/:relationshipId/playlist',
+  isAuthenticated,
+  [
+    body('songTitle')
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Song title is required and cannot exceed 100 characters'),
+    body('artistName')
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Artist name is required and cannot exceed 100 characters'),
+    body('albumName')
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Album name cannot exceed 100 characters'),
+    body('albumCoverUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid album cover URL'),
+    body('songUrl')
+      .optional()
+      .trim()
+      .isURL()
+      .withMessage('Please enter a valid song URL'),
+    body('description')
+      .optional()
+      .trim()
+      .isLength({ max: 255 })
+      .withMessage('Description cannot exceed 255 characters')
+  ],
+  characterController.addPlaylistSong
+);
+
+router.delete(
+  '/relationships/:relationshipId/playlist/:songId',
+  isAuthenticated,
+  characterController.deletePlaylistSong
+);
+
 // View character - This must be the last route because it uses a catch-all parameter
 router.get('/:id', characterController.getCharacter);
 

@@ -38,6 +38,8 @@ const SocialPost = require('./socialPost')(sequelize, Sequelize.DataTypes);
 const Comment = require('./comment')(sequelize, Sequelize.DataTypes);
 const Like = require('./like')(sequelize, Sequelize.DataTypes);
 const ThreadCharacters = require('./threadCharacters')(sequelize, Sequelize.DataTypes);
+const RelationshipGallery = require('./relationshipGallery')(sequelize, Sequelize.DataTypes);
+const RelationshipPlaylist = require('./relationshipPlaylist')(sequelize, Sequelize.DataTypes);
 
 // Define model associations
 User.hasMany(Character, { foreignKey: 'userId', as: 'characters' });
@@ -116,6 +118,18 @@ Character.belongsToMany(Thread, {
   as: 'taggedInThreads'
 });
 
+// Relationship Gallery associations
+Relationship.hasMany(RelationshipGallery, { foreignKey: 'relationshipId', as: 'galleryImages' });
+RelationshipGallery.belongsTo(Relationship, { foreignKey: 'relationshipId' });
+User.hasMany(RelationshipGallery, { foreignKey: 'uploadedBy', as: 'uploadedGalleryImages' });
+RelationshipGallery.belongsTo(User, { foreignKey: 'uploadedBy', as: 'uploader' });
+
+// Relationship Playlist associations
+Relationship.hasMany(RelationshipPlaylist, { foreignKey: 'relationshipId', as: 'playlistSongs' });
+RelationshipPlaylist.belongsTo(Relationship, { foreignKey: 'relationshipId' });
+User.hasMany(RelationshipPlaylist, { foreignKey: 'uploadedBy', as: 'uploadedPlaylistSongs' });
+RelationshipPlaylist.belongsTo(User, { foreignKey: 'uploadedBy', as: 'uploader' });
+
 // Export models and Sequelize instance
 module.exports = {
   sequelize,
@@ -131,5 +145,7 @@ module.exports = {
   SocialPost,
   Comment,
   Like,
-  ThreadCharacters  // Export this model as well
+  ThreadCharacters,
+  RelationshipGallery,
+  RelationshipPlaylist
 };
