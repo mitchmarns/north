@@ -50,6 +50,27 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.gallery-grid.reordering {
+  cursor: move;
+}
+
+.gallery-item.draggable {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gallery-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.gallery-item.drag-over {
+  border: 2px dashed var(--header);
+}
+
+.float-right {
+  float: right;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .gallery-grid {

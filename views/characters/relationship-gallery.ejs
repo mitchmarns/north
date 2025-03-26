@@ -1,371 +1,86 @@
-<!-- views/characters/relationship-gallery.ejs -->
-<div class="d-flex justify-between align-center mb-4">
-  <h1>Relationship Gallery</h1>
-  <div>
-    <a href="/characters/relationships/<%= relationship.id %>/gallery/add" class="btn btn-sm mr-2">
-      <i class="ph-duotone ph-file-image"></i> Add Image
-    </a>
-    <a href="/characters/relationships/view/<%= relationship.id %>" class="btn btn-sm btn-outline">
-      <i class="ph-duotone ph-arrow-left"></i> Back to Relationship
-    </a>
+<div class="container">
+  <div class="d-flex justify-between mb-3">
+    <h1>Relationship Gallery</h1>
+    <div>
+      <a href="/characters/relationships/<%= relationship.id %>/gallery/add" class="btn btn-sm mr-2">
+        <i class="fas fa-image"></i> Add Image
+      </a>
+      <a href="/characters/relationships/view/<%= relationship.id %>" class="btn btn-sm btn-outline">
+        <i class="fas fa-arrow-left"></i> Back to Relationship
+      </a>
+    </div>
   </div>
-</div>
 
-<div class="card mb-4">
-  <div class="card-header">
-    <h3 class="mb-0"><%= relationship.character1.name %> & <%= relationship.character2.name %>'s Gallery</h3>
-  </div>
-  <div class="card-body">
-    <% if (typeof galleryImages !== 'undefined' && galleryImages.length > 0) { %>
-      <div class="image-gallery">
-        <% galleryImages.forEach(image => { %>
-          <div class="gallery-item" data-id="<%= image.id %>">
-            <div class="gallery-image-container">
-              <img src="<%= image.imageUrl %>" alt="Gallery Image" class="gallery-image">
-              <div class="gallery-image-actions">
-                <form action="/characters/relationships/<%= relationship.id %>/gallery/<%= image.id %>?_method=DELETE" method="POST">
-                  <button type="submit" class="btn btn-sm btn-danger delete-confirm">
-                    <i class="ph-duotone ph-trash"></i>
-                  </button>
-                </form>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h3 class="mb-0"><%= relationship.character1.name %> & <%= relationship.character2.name %>'s Gallery</h3>
+    </div>
+    <div class="card-body">
+      <% if (typeof galleryImages !== 'undefined' && galleryImages.length > 0) { %>
+        <div class="gallery-grid" data-relationship-id="<%= relationship.id %>">
+          <% galleryImages.forEach(image => { %>
+            <div class="gallery-item" data-id="<%= image.id %>">
+              <div class="gallery-image-wrapper">
+                <img src="<%= image.imageUrl %>" alt="Gallery Image" class="gallery-image">
               </div>
-              <div class="gallery-image-uploader">
-                <small>Added by <%= image.uploader.username %></small>
+              <% if (image.caption) { %>
+                <div class="gallery-caption">
+                  <%= image.caption %>
+                </div>
+              <% } %>
+              <div class="image-metadata">
+                Added by <%= image.uploader.username %>
+                <% if (isCharacter1Owner || isCharacter2Owner) { %>
+                  <form action="/characters/relationships/<%= relationship.id %>/gallery/<%= image.id %>?_method=DELETE" method="POST" class="inline-form float-right">
+                    <button type="submit" class="delete-confirm" style="background: none; border: none; color: var(--danger); cursor: pointer;">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                <% } %>
               </div>
             </div>
-            <% if (image.caption) { %>
-              <div class="gallery-image-caption">
-                <%= image.caption %>
-              </div>
-            <% } %>
+          <% }); %>
+        </div>
+        
+        <% if (galleryImages.length > 1 && (isCharacter1Owner || isCharacter2Owner)) { %>
+          <div class="text-center mt-3">
+            <button id="reorderBtn" class="btn btn-sm">
+              <i class="fas fa-sort"></i> Reorder Images
+            </button>
+            <button id="saveOrderBtn" class="btn btn-sm btn-success" style="display: none;">
+              <i class="fas fa-check"></i> Save Order
+            </button>
+            <button id="cancelOrderBtn" class="btn btn-sm btn-outline" style="display: none;">
+              <i class="fas fa-times"></i> Cancel
+            </button>
           </div>
-        <% }); %>
-      </div>
-      
-      <% if (galleryImages.length > 1) { %>
-        <div class="text-center mt-4">
-          <button id="reorderBtn" class="btn btn-sm">
-            <i class="ph-duotone ph-arrows-out"></i> Reorder Images
-          </button>
-          <button id="saveOrderBtn" class="btn btn-sm btn-success" style="display: none;">
-            <i class="ph-duotone ph-check"></i> Save Order
-          </button>
-          <button id="cancelOrderBtn" class="btn btn-sm btn-outline" style="display: none;">
-            <i class="ph-duotone ph-x"></i> Cancel
-          </button>
+        <% } %>
+      <% } else { %>
+        <div class="text-center p-4">
+          <p class="mb-3">No images have been added to the gallery yet.</p>
+          <a href="/characters/relationships/<%= relationship.id %>/gallery/add" class="btn">
+            <i class="fas fa-image"></i> Add Your First Image
+          </a>
         </div>
       <% } %>
-    <% } else { %>
-      <div class="text-center p-4">
-        <p class="mb-3">No images have been added to the gallery yet.</p>
-        <a href="/characters/relationships/<%= relationship.id %>/gallery/add" class="btn">
-          <i class="ph-duotone ph-file-image"></i> Add Your First Image
-        </a>
-      </div>
-    <% } %>
-  </div>
-</div>
-
-<!-- Image viewer modal -->
-<div id="imageViewerModal" class="modal" style="display: none;">
-  <div class="modal-content gallery-modal">
-    <span class="close-modal" id="closeImageViewer">
-      <i class="ph-duotone ph-x"></i>
-    </span>
-    <div class="image-viewer-container">
-      <img id="viewerImage" src="" alt="Gallery Image">
     </div>
-    <div class="image-viewer-caption" id="viewerCaption"></div>
+  </div>
+
+  <!-- Image viewer modal -->
+  <div id="imageViewerModal" class="message-modal" style="display: none;">
+    <div class="message-modal-content">
+      <div class="message-modal-header">
+        <h3>Image Viewer</h3>
+        <span class="close-message-modal" id="closeImageViewer">
+          <i class="fas fa-times"></i>
+        </span>
+      </div>
+      <div class="message-modal-body">
+        <div class="text-center">
+          <img id="viewerImage" src="" alt="Gallery Image" style="max-width: 100%; max-height: 70vh;">
+        </div>
+        <div id="viewerCaption" class="mt-2 text-center"></div>
+      </div>
+    </div>
   </div>
 </div>
-
-<style>
-  .image-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-  }
-  
-  .gallery-item {
-    transition: transform 0.3s ease;
-    cursor: pointer;
-    position: relative;
-  }
-  
-  .gallery-item:hover {
-    transform: scale(1.03);
-  }
-  
-  .gallery-image-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius-md);
-    aspect-ratio: 1/1;
-    background-color: #333;
-  }
-  
-  .gallery-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: var(--graypicture);
-    transition: all 0.3s ease;
-  }
-  
-  .gallery-item:hover .gallery-image {
-    filter: none;
-  }
-  
-  .gallery-image-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  .gallery-item:hover .gallery-image-actions {
-    opacity: 1;
-  }
-  
-  .gallery-image-uploader {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-xs);
-  }
-  
-  .gallery-image-caption {
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    font-size: var(--text-sm);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  /* Reordering styles */
-  .reordering .gallery-item {
-    cursor: grab;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .reordering .gallery-item:hover {
-    box-shadow: var(--shadow-lg);
-  }
-  
-  .gallery-item.dragging {
-    opacity: 0.8;
-    cursor: grabbing;
-  }
-  
-  /* Image viewer modal */
-  .gallery-modal {
-    max-width: 90%;
-    width: auto;
-    max-height: 90vh;
-    padding: 0;
-    background-color: transparent;
-  }
-  
-  .image-viewer-container {
-    position: relative;
-    margin: 0 auto;
-    max-height: 80vh;
-    overflow: hidden;
-    border-radius: var(--radius-md);
-    background-color: #111;
-  }
-  
-  .image-viewer-container img {
-    max-width: 100%;
-    max-height: 80vh;
-    margin: 0 auto;
-    display: block;
-    object-fit: contain;
-  }
-  
-  .image-viewer-caption {
-    padding: 15px;
-    text-align: center;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-  }
-  
-  .close-modal {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 100;
-    background-color: rgba(0, 0, 0, 0.5);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: background-color 0.3s ease;
-  }
-  
-  .close-modal:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-</style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    const reorderBtn = document.getElementById('reorderBtn');
-    const saveOrderBtn = document.getElementById('saveOrderBtn');
-    const cancelOrderBtn = document.getElementById('cancelOrderBtn');
-    const gallery = document.querySelector('.image-gallery');
-    const modal = document.getElementById('imageViewerModal');
-    const viewerImage = document.getElementById('viewerImage');
-    const viewerCaption = document.getElementById('viewerCaption');
-    const closeModalBtn = document.getElementById('closeImageViewer');
-    
-    let isReordering = false;
-    let draggedItem = null;
-    
-    // Image click to view larger
-    galleryItems.forEach(item => {
-      item.addEventListener('click', function(e) {
-        // Only open viewer if not in reordering mode and not clicking delete button
-        if (!isReordering && !e.target.closest('.gallery-image-actions')) {
-          const img = item.querySelector('.gallery-image');
-          const caption = item.querySelector('.gallery-image-caption');
-          
-          viewerImage.src = img.src;
-          viewerCaption.textContent = caption ? caption.textContent.trim() : '';
-          
-          modal.style.display = 'flex';
-          document.body.style.overflow = 'hidden'; // Prevent scrolling
-        }
-      });
-    });
-    
-    // Close modal when clicking close button or outside the image
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-      });
-    }
-    
-    if (modal) {
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          modal.style.display = 'none';
-          document.body.style.overflow = 'auto'; // Re-enable scrolling
-        }
-      });
-    }
-    
-    // Enable reordering
-    if (reorderBtn) {
-      reorderBtn.addEventListener('click', function() {
-        isReordering = true;
-        gallery.classList.add('reordering');
-        reorderBtn.style.display = 'none';
-        saveOrderBtn.style.display = 'inline-block';
-        cancelOrderBtn.style.display = 'inline-block';
-        
-        enableGallerySorting();
-      });
-    }
-    
-    // Save new order
-    if (saveOrderBtn) {
-      saveOrderBtn.addEventListener('click', async function() {
-        const items = document.querySelectorAll('.gallery-item');
-        const imageIds = Array.from(items).map(item => item.getAttribute('data-id'));
-        
-        try {
-          const response = await fetch(`/characters/relationships/<%= relationship.id %>/gallery/order`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ imageIds })
-          });
-          
-          const data = await response.json();
-          
-          if (data.success) {
-            location.reload();
-          } else {
-            alert('Failed to save order: ' + data.message);
-          }
-        } catch (error) {
-          console.error('Error saving order:', error);
-          alert('An error occurred while saving the order');
-        }
-      });
-    }
-    
-    // Cancel reordering
-    if (cancelOrderBtn) {
-      cancelOrderBtn.addEventListener('click', function() {
-        location.reload();
-      });
-    }
-    
-    // Handle delete confirmations
-    const deleteButtons = document.querySelectorAll('.delete-confirm');
-    deleteButtons.forEach(button => {
-      button.addEventListener('click', function(e) {
-        if (!confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
-          e.preventDefault();
-        }
-      });
-    });
-  });
-  
-  // Function for enabling drag and drop sorting in the gallery
-  function enableGallerySorting() {
-    const galleryContainer = document.querySelector('.image-gallery');
-    let draggedItem = null;
-    
-    // Make items draggable
-    document.querySelectorAll('.gallery-item').forEach(item => {
-      item.setAttribute('draggable', 'true');
-      
-      item.addEventListener('dragstart', function() {
-        draggedItem = this;
-        setTimeout(() => this.classList.add('dragging'), 0);
-      });
-      
-      item.addEventListener('dragend', function() {
-        this.classList.remove('dragging');
-        draggedItem = null;
-      });
-      
-      item.addEventListener('dragover', e => e.preventDefault());
-      
-      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        if (draggedItem !== this) {
-          // Get all items
-          const allItems = [...galleryContainer.querySelectorAll('.gallery-item')];
-          const draggedIndex = allItems.indexOf(draggedItem);
-          const droppedIndex = allItems.indexOf(this);
-          
-          // Reorder in DOM
-          if (draggedIndex < droppedIndex) {
-            galleryContainer.insertBefore(draggedItem, this.nextSibling);
-          } else {
-            galleryContainer.insertBefore(draggedItem, this);
-          }
-        }
-      });
-    });
-  }
-</script>
