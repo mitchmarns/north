@@ -67,3 +67,15 @@ textarea.form-control {
 .form-control.is-invalid ~ .invalid-feedback {
   display: block;
 }
+
+.form-help-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--text-sm);
+  margin-top: 5px;
+}
+
+/* Checkbox label styling */
+.checkbox-label {
+  margin-left: 10px;
+  margin-bottom: 0;
+}

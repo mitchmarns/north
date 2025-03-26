@@ -3,11 +3,11 @@
 
 <div class="form-group">
   <div class="mb-2" id="avatar-preview-container">
-    <div style="width: 100%; height: 250px; background-color: #555; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;" id="avatar-preview">
+    <div class="avatar-preview" id="avatar-preview">
       <% if (character.avatarUrl) { %>
-        <img src="<%= character.avatarUrl %>" alt="Avatar Preview" style="width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius-md);">
+        <img src="<%= character.avatarUrl %>" alt="Avatar Preview">
       <% } else { %>
-        <i class="fas fa-user-circle" style="font-size: 3rem; color: #999;"></i>
+        <i class="ph-duotone ph-user-circle"></i>
       <% } %>
     </div>
   </div>
@@ -21,7 +21,7 @@
     placeholder="https://example.com/image.jpg"
     value="<%= character.avatarUrl || '' %>"
   />
-  <small style="color: rgba(255, 255, 255, 0.5);">Enter a direct link to an image (JPG, PNG, or GIF)</small>
+  <small class="form-help-text">Enter a direct link to an image (JPG, PNG, or GIF)</small>
 </div>
 
 <div class="form-group">
@@ -39,11 +39,11 @@
 <div class="form-group mt-4">
   <div class="d-flex align-center mb-2">
     <input type="checkbox" id="isPrivate" name="isPrivate" <%= character.isPrivate ? 'checked' : '' %>>
-    <label for="isPrivate" style="margin-left: 10px; margin-bottom: 0;">Make this character private</label>
+    <label for="isPrivate" class="checkbox-label">Make this character private</label>
   </div>
   <div class="d-flex align-center">
     <input type="checkbox" id="isArchived" name="isArchived" <%= character.isArchived ? 'checked' : '' %>>
-    <label for="isArchived" style="margin-left: 10px; margin-bottom: 0;">Archive this character</label>
+    <label for="isArchived" class="checkbox-label">Archive this character</label>
   </div>
-  <small style="color: rgba(255, 255, 255, 0.5);">Archived characters won't appear in the main listings</small>
+  <small class="form-help-text">Archived characters won't appear in the main listings</small>
 </div>

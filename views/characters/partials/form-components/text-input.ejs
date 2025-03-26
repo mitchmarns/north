@@ -12,7 +12,7 @@
     <%= attributes || '' %>
   />
   <% if (typeof helpText !== 'undefined' && helpText) { %>
-    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+    <small class="form-help-text"><%= helpText %></small>
   <% } %>
 </div>
 
@@ -29,7 +29,7 @@
     <%= attributes || '' %>
   ><%= value || '' %></textarea>
   <% if (typeof helpText !== 'undefined' && helpText) { %>
-    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+    <small class="form-help-text"><%= helpText %></small>
   <% } %>
 </div>
 
@@ -57,7 +57,7 @@
     <% }); %>
   </select>
   <% if (typeof helpText !== 'undefined' && helpText) { %>
-    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+    <small class="form-help-text"><%= helpText %></small>
   <% } %>
 </div>
 
@@ -71,9 +71,9 @@
       <%= checked ? 'checked' : '' %>
       <%= attributes || '' %>
     >
-    <label for="<%= id %>" style="margin-left: 10px; margin-bottom: 0;"><%= label %></label>
+    <label for="<%= id %>" class="checkbox-label"><%= label %></label>
   </div>
   <% if (typeof helpText !== 'undefined' && helpText) { %>
-    <small style="color: rgba(255, 255, 255, 0.5);"><%= helpText %></small>
+    <small class="form-help-text"><%= helpText %></small>
   <% } %>
 </div>

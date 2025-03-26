@@ -1,0 +1,43 @@
+/* Avatar preview container */
+.avatar-preview-container {
+  margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 250px;
+  background-color: #555;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Avatar image */
+.avatar-preview img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+/* Default avatar icon */
+.avatar-placeholder-icon {
+  font-size: 3rem;
+  color: #999;
+}
+
+.avatar-error {
+  width: 100%;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.avatar-error i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
