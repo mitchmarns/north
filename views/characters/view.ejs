@@ -80,25 +80,25 @@
         <% if (isOwner) { %>
           <div class="mt-3">
             <a href="/characters/edit/<%= character.id %>" class="btn btn-sm">
-              <i class="ph-pencil-simple-duotone"></i> Edit Character
+              <i class="ph-duotone ph-pencil-simple"></i> Edit Character
             </a>
             <a href="/characters/<%= character.id %>/relationships" class="btn btn-sm btn-outline mt-2">
-              <i class="ph-users-duotone"></i> Manage Relationships
+              <i class="ph-duotone ph-users"></i> Manage Relationships
             </a>
             <a href="/messages/<%= character.id %>" class="btn btn-sm mt-2">
-              <i class="ph-chat-text-duotone"></i> Messages
+              <i class="ph-duotone ph-chat-circle-text"></i> Messages
               <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
                 <span class="notification-badge-small"><%= unreadMessages %></span>
               <% } %>
             </a>
             <a href="/characters/<%= character.id %>/gallery" class="sidebar-link">
-              <i class="ph-images-duotone"></i> View Photo Gallery
+              <i class="ph-duotone ph-images"></i> View Photo Gallery
             </a>
             <a href="/characters/<%= character.id %>/playlist" class="sidebar-link">
-              <i class="ph-music-notes-duotone"></i> Character Playlist
+              <i class="ph-duotone ph-music-notes"></i> Character Playlist
             </a>
             <a href="/characters/<%= character.id %>/stats/edit" class="sidebar-link">
-              <i class="ph-chart-bar-duotone"></i> Edit Character Stats
+              <i class="ph-duotone ph-chart-bar"></i> Edit Character Stats
             </a>
           </div>
         <% } else if (typeof user !== 'undefined' && user) { %>
@@ -107,14 +107,14 @@
             <% if (typeof canMessage !== 'undefined' && canMessage) { %>
               <!-- Only show if the user has a character with a relationship to this one -->
               <a href="#" class="btn btn-sm message-btn" onclick="showMessageModal()">
-                <i class="ph-envelope-simple-duotone"></i> Send Message
+                <i class="ph-duotone ph-envelope-simple"></i> Send Message
               </a>
             <% } %>
             <a href="/characters/<%= character.id %>/gallery" class="sidebar-link mt-2">
-              <i class="ph-images-duotone"></i> View Photo Gallery
+              <i class="ph-duotone ph-images"></i> View Photo Gallery
             </a>
             <a href="/characters/<%= character.id %>/playlist" class="sidebar-link mt-2">
-              <i class="ph-music-notes-duotone"></i> Character Playlist
+              <<i class="ph-duotone ph-music-notes"></i> Character Playlist
             </a>
           </div>
           
@@ -124,7 +124,7 @@
               <div class="modal-header">
                 <h3>Send Message to <%= character.name %></h3>
                 <span class="close-modal" onclick="closeMessageModal()">
-                  <i class="ph-x-duotone"></i>
+                  <i class="ph-duotone ph-x"></i>
                 </span>
               </div>
               <div class="modal-body">
@@ -151,7 +151,7 @@
                   <div class="form-group text-right">
                     <button type="button" class="btn btn-outline" onclick="closeMessageModal()">Cancel</button>
                     <button type="submit" class="btn">
-                      <i class="ph-paper-plane-right-duotone"></i> Send
+                      <i class="ph-duotone ph-paper-plane"></i> Send
                     </button>
                   </div>
                 </form>
@@ -242,19 +242,19 @@
       <div class="card-header">
         <div class="character-tabs">
           <a href="#tab-personality" class="character-tab active">
-            <i class="ph-brain-duotone"></i> Personality
+            <i class="ph-duotone ph-brain"></i> Personality
           </a>
           <a href="#tab-appearance" class="character-tab">
-            <i class="ph-image-duotone"></i> Appearance
+            <i class="ph-duotone ph-image"></i> Appearance
           </a>
           <a href="#tab-background" class="character-tab">
-            <i class="ph-book-open-duotone"></i> Background
+            <i class="ph-duotone ph-book-open"></i> Background
           </a>
           <a href="#tab-stats" class="character-tab">
-            <i class="ph-chart-bar-duotone"></i> Stats
+            <i class="ph-duotone ph-chart-bar"></i> Stats
           </a>
           <a href="#tab-details" class="character-tab">
-            <i class="ph-note-duotone"></i> Details
+            <i class="ph-duotone ph-note"></i> Details
           </a>
         </div>
       </div>
@@ -344,7 +344,7 @@
                 <div class="text-center p-4">
                   <p class="mb-3">No stats have been added yet.</p>
                   <a href="/characters/<%= character.id %>/stats/edit" class="btn">
-                    <i class="ph-plus-circle-duotone"></i> Add Character Stats
+                    <i class="ph-duotone ph-plus-circle"></i> Add Character Stats
                   </a>
                 </div>
               <% } else if (!character.strength && !character.dexterity && !character.constitution && 
@@ -477,7 +477,7 @@
                   <% if (isOwner) { %>
                     <div class="text-center mt-4">
                       <a href="/characters/<%= character.id %>/stats/edit" class="btn btn-sm">
-                        <i class="ph-pencil-simple-duotone"></i> Edit Stats
+                        <i class="ph-duotone ph-pencil-simple"></i> Edit Stats
                       </a>
                     </div>
                   <% } %>

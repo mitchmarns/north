@@ -2,7 +2,7 @@
 <div class="d-flex justify-between align-center mb-4">
   <h1>Add Image to Gallery</h1>
   <a href="/characters/relationships/<%= relationship.id %>/gallery" class="btn btn-outline">
-    <i class="ph-arrow-left-duotone"></i> Back to Gallery
+    <i class="ph-duotone ph-arrow-left"></i> Back to Gallery
   </a>
 </div>
 
@@ -45,7 +45,7 @@
             <label>Image Preview</label>
             <div class="image-preview-container">
               <div id="imagePreview">
-                <i class="ph-image-duotone"></i>
+                <i class="ph-duotone ph-image"></i>
                 <p>Image preview will appear here</p>
               </div>
             </div>
@@ -110,14 +110,14 @@
         };
         img.onerror = function() {
           imagePreview.innerHTML = `
-            <i class="ph-warning-duotone" style="color: var(--danger);"></i>
+            <i class="ph-duotone ph-warning" style="color: var(--danger);"></i>
             <p>Invalid image URL</p>
           `;
         };
         img.src = url;
       } else {
         imagePreview.innerHTML = `
-          <i class="ph-image-duotone"></i>
+          <i class="ph-duotone ph-image"></i>
           <p>Image preview will appear here</p>
         `;
       }

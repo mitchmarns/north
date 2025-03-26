@@ -2,7 +2,7 @@
 <div class="d-flex justify-between align-center mb-4">
   <h1><%= character.name %>'s Playlist</h1>
   <a href="/characters/<%= character.id %>" class="btn btn-outline">
-    <i class="ph-arrow-left-duotone"></i> Back to Character
+    <i class="ph-duotone ph-arrow-left"></i> Back to Character
   </a>
 </div>
 
@@ -22,7 +22,7 @@
                 </div>
               <% } else { %>
                 <div class="album-cover album-cover-placeholder">
-                  <i class="ph-music-notes-duotone"></i>
+                  <i class="ph-duotone ph-music-notes"></i>
                 </div>
               <% } %>
               
@@ -44,14 +44,14 @@
             <div class="song-actions">
               <% if (song.songUrl) { %>
                 <a href="<%= song.songUrl %>" target="_blank" class="btn btn-sm">
-                  <i class="ph-play-duotone"></i> Listen
+                  <i class="ph-duotone ph-play"></i> Listen
                 </a>
               <% } %>
               
               <% if (isOwner) { %>
                 <form action="/characters/<%= character.id %>/playlist/<%= song.id %>?_method=DELETE" method="POST" style="display: inline;">
                   <button type="submit" class="btn btn-sm btn-danger delete-confirm">
-                    <i class="ph-trash-duotone"></i> Remove
+                    <i class="ph-duotone ph-trash"></i> Remove
                   </button>
                 </form>
               <% } %>
@@ -280,7 +280,7 @@
       // Create album cover preview
       const previewContainer = document.createElement('div');
       previewContainer.id = 'albumCoverPreview';
-      previewContainer.innerHTML = '<i class="ph-image-duotone"></i>';
+      previewContainer.innerHTML = '<i class="ph-duotone ph-image"></i>';
       
       albumCoverUrlInput.parentNode.appendChild(previewContainer);
       
@@ -295,11 +295,11 @@
             previewContainer.appendChild(img);
           };
           img.onerror = function() {
-            previewContainer.innerHTML = '<i class="ph-warning-duotone" style="color: var(--danger);"></i>';
+            previewContainer.innerHTML = '<i class="ph-duotone ph-warning" style="color: var(--danger);"></i>';
           };
           img.src = url;
         } else {
-          previewContainer.innerHTML = '<i class="ph-image-duotone"></i>';
+          previewContainer.innerHTML = '<<i class="ph-duotone ph-image"></i>';
         }
       });
     }

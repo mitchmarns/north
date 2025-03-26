@@ -4,11 +4,11 @@
   <div>
     <% if (isOwner) { %>
       <a href="/characters/<%= character.id %>/gallery/upload" class="btn btn-sm mr-2">
-        <i class="ph-image-plus-duotone"></i> Add Image
+        <i class="ph-duotone ph-file-image"></i> Add Image
       </a>
     <% } %>
     <a href="/characters/<%= character.id %>" class="btn btn-sm btn-outline">
-      <i class="ph-arrow-left-duotone"></i> Back to Character
+      <i class="ph-duotone ph-arrow-left"></i> Back to Character
     </a>
   </div>
 </div>
@@ -28,7 +28,7 @@
                 <div class="gallery-image-actions">
                   <form action="/characters/<%= character.id %>/gallery/<%= image.id %>?_method=DELETE" method="POST">
                     <button type="submit" class="btn btn-sm btn-danger delete-confirm">
-                      <i class="ph-trash-duotone"></i>
+                      <i class="ph-duotone ph-trash"></i>
                     </button>
                   </form>
                 </div>
@@ -46,13 +46,13 @@
       <% if (isOwner && galleryImages.length > 1) { %>
         <div class="text-center mt-4">
           <button id="reorderBtn" class="btn btn-sm">
-            <i class="ph-arrows-out-duotone"></i> Reorder Images
+            <i class="ph-duotone ph-arrows-out"></i> Reorder Images
           </button>
           <button id="saveOrderBtn" class="btn btn-sm btn-success" style="display: none;">
-            <i class="ph-check-duotone"></i> Save Order
+            <i class="ph-duotone ph-check"></i> Save Order
           </button>
           <button id="cancelOrderBtn" class="btn btn-sm btn-outline" style="display: none;">
-            <i class="ph-x-duotone"></i> Cancel
+            <i class="ph-duotone ph-x"></i> Cancel
           </button>
         </div>
       <% } %>
@@ -61,7 +61,7 @@
         <p class="mb-3">No images have been added to the gallery yet.</p>
         <% if (isOwner) { %>
           <a href="/characters/<%= character.id %>/gallery/upload" class="btn">
-            <i class="ph-image-plus-duotone"></i> Add Your First Image
+            <i class="ph-duotone ph-file-image"></i> Add Your First Image
           </a>
         <% } %>
       </div>
@@ -74,7 +74,7 @@
   <div id="imageViewerModal" class="modal" style="display: none;">
     <div class="modal-content gallery-modal">
       <span class="close-modal" id="closeImageViewer">
-        <i class="ph-x-duotone"></i>
+        <i class="ph-duotone ph-x"></i>
       </span>
       <div class="image-viewer-container">
         <img id="viewerImage" src="" alt="<%= character.name %>">
