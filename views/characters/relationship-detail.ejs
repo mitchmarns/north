@@ -106,8 +106,8 @@
               <% } %>
             </div>
             <div>
-              <% if (relationship.relationship.createdAt) { %>
-                <small><strong>Created:</strong> <%= new Date(relationship.relationship.createdAt).toLocaleDateString() %></small>
+              <% if (relationship.createdAt) { %>
+                <small><strong>Created:</strong> <%= new Date(relationship.createdAt).toLocaleDateString() %></small>
               <% } %>
             </div>
           </div>
@@ -271,7 +271,7 @@
                 <i class="fas fa-user"></i> View Profile
               </a>
               
-              <% if (relationship.character1.userId === user.id) { %>
+              <% if (user && relationship.character1.userId === user.id) { %>
                 <a href="/characters/edit/<%= relationship.character1.id %>" class="btn btn-sm">
                   <i class="fas fa-edit"></i> Edit
                 </a>
@@ -325,7 +325,7 @@
                 <i class="fas fa-user"></i> View Profile
               </a>
               
-              <% if (relationship.character2.userId === user.id) { %>
+              <% if (user && relationship.character2.userId === user.id) { %>
                 <a href="/characters/edit/<%= relationship.character2.id %>" class="btn btn-sm">
                   <i class="fas fa-edit"></i> Edit
                 </a>
