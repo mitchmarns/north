@@ -1,130 +1,159 @@
-<!-- views/characters/partials/details-tabs.ejs -->
-<div class="character-tabs mb-4">
-  <div class="character-tab-links">
-    <a href="#tab-personality" class="character-tab-link active">Personality</a>
-    <a href="#tab-appearance" class="character-tab-link">Appearance</a>
-    <a href="#tab-background" class="character-tab-link">Background</a>
-    <a href="#tab-details" class="character-tab-link">Additional Details</a>
-  </div>
+<!-- Stats Tab -->
+<div id="tab-stats" class="character-tab-pane">
+  <h3 class="mb-3">Character Stats</h3>
   
-  <div class="character-tab-content">
-    <!-- Personality Tab -->
-    <div id="tab-personality" class="character-tab-pane active">
-      <div class="form-group">
-        <label for="personality">Personality</label>
-        <textarea 
-          id="personality" 
-          name="personality" 
-          class="form-control" 
-          rows="8"
-        ><%= character.personality || '' %></textarea>
-      </div>
-      
-      <div class="row">
-        <div class="col">
-          <div class="form-group">
-            <label for="likes">Likes</label>
-            <textarea 
-              id="likes" 
-              name="likes" 
-              class="form-control" 
-              rows="4"
-            ><%= character.likes || '' %></textarea>
-          </div>
+  <div class="stats-container">
+    <div class="stats-grid">
+      <!-- Strength -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="strength">Strength</label>
+          <span class="attribute-value" id="strengthValue"><%= character.strength || 0 %></span>
         </div>
-        
-        <div class="col">
-          <div class="form-group">
-            <label for="dislikes">Dislikes</label>
-            <textarea 
-              id="dislikes" 
-              name="dislikes" 
-              class="form-control" 
-              rows="4"
-            ><%= character.dislikes || '' %></textarea>
-          </div>
+        <input 
+          type="range" 
+          id="strength" 
+          name="strength" 
+          min="0" 
+          max="100" 
+          value="<%= character.strength || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Physical power, lifting capacity, and melee damage.
         </div>
       </div>
       
-      <div class="row">
-        <div class="col">
-          <div class="form-group">
-            <label for="fears">Fears</label>
-            <textarea 
-              id="fears" 
-              name="fears" 
-              class="form-control" 
-              rows="4"
-            ><%= character.fears || '' %></textarea>
-          </div>
+      <!-- Dexterity -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="dexterity">Dexterity</label>
+          <span class="attribute-value" id="dexterityValue"><%= character.dexterity || 0 %></span>
         </div>
-        
-        <div class="col">
-          <div class="form-group">
-            <label for="goals">Goals</label>
-            <textarea 
-              id="goals" 
-              name="goals" 
-              class="form-control" 
-              rows="4"
-            ><%= character.goals || '' %></textarea>
-          </div>
+        <input 
+          type="range" 
+          id="dexterity" 
+          name="dexterity" 
+          min="0" 
+          max="100" 
+          value="<%= character.dexterity || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Agility, reflexes, balance, and precision.
         </div>
-      </div>
-    </div>
-    
-    <!-- Appearance Tab -->
-    <div id="tab-appearance" class="character-tab-pane">
-      <div class="form-group">
-        <label for="appearance">Physical Appearance</label>
-        <textarea 
-          id="appearance" 
-          name="appearance" 
-          class="form-control" 
-          rows="12"
-        ><%= character.appearance || '' %></textarea>
-      </div>
-    </div>
-    
-    <!-- Background Tab -->
-    <div id="tab-background" class="character-tab-pane">
-      <div class="form-group">
-        <label for="background">Character Background</label>
-        <textarea 
-          id="background" 
-          name="background" 
-          class="form-control" 
-          rows="12"
-        ><%= character.background || '' %></textarea>
-      </div>
-    </div>
-    
-    <!-- Additional Details Tab -->
-    <div id="tab-details" class="character-tab-pane">
-      <div class="form-group">
-        <label for="skills">Skills & Abilities</label>
-        <textarea 
-          id="skills" 
-          name="skills" 
-          class="form-control" 
-          rows="6"
-        ><%= character.skills || '' %></textarea>
       </div>
       
-      <div class="form-group">
-        <label for="fullBio">Full Biography</label>
-        <!-- Include text styling toolbar -->
-        <%- include('../partials/text-styling-toolbar') %>
-        <textarea 
-          id="fullBio" 
-          name="fullBio" 
-          class="form-control formattable-textarea" 
-          rows="12"
-        ><%= character.fullBio || '' %></textarea>
-        <small style="color: rgba(255, 255, 255, 0.5);">Use this for any additional information about your character</small>
+      <!-- Constitution -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="constitution">Constitution</label>
+          <span class="attribute-value" id="constitutionValue"><%= character.constitution || 0 %></span>
+        </div>
+        <input 
+          type="range" 
+          id="constitution" 
+          name="constitution" 
+          min="0" 
+          max="100" 
+          value="<%= character.constitution || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Health, stamina, and vital force.
+        </div>
+      </div>
+      
+      <!-- Intelligence -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="intelligence">Intelligence</label>
+          <span class="attribute-value" id="intelligenceValue"><%= character.intelligence || 0 %></span>
+        </div>
+        <input 
+          type="range" 
+          id="intelligence" 
+          name="intelligence" 
+          min="0" 
+          max="100" 
+          value="<%= character.intelligence || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Learning ability, memory, and reasoning.
+        </div>
+      </div>
+      
+      <!-- Wisdom -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="wisdom">Wisdom</label>
+          <span class="attribute-value" id="wisdomValue"><%= character.wisdom || 0 %></span>
+        </div>
+        <input 
+          type="range" 
+          id="wisdom" 
+          name="wisdom" 
+          min="0" 
+          max="100" 
+          value="<%= character.wisdom || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Perception, intuition, and insight.
+        </div>
+      </div>
+      
+      <!-- Charisma -->
+      <div class="stat-item">
+        <div class="attribute-header">
+          <label for="charisma">Charisma</label>
+          <span class="attribute-value" id="charismaValue"><%= character.charisma || 0 %></span>
+        </div>
+        <input 
+          type="range" 
+          id="charisma" 
+          name="charisma" 
+          min="0" 
+          max="100" 
+          value="<%= character.charisma || 0 %>" 
+          class="attribute-slider"
+        />
+        <div class="attribute-description">
+          Force of personality, persuasiveness, and leadership.
+        </div>
       </div>
     </div>
-
     
+    <div class="row mt-4">
+      <div class="col">
+        <div class="form-group">
+          <label for="personalityType">Personality Type (Optional)</label>
+          <input 
+            type="text" 
+            id="personalityType" 
+            name="personalityType" 
+            class="form-control" 
+            value="<%= character.personalityType || '' %>" 
+            placeholder="e.g., INFJ, 4w5, etc."
+          />
+          <small class="form-text text-muted">MBTI, Enneagram, or other personality system</small>
+        </div>
+      </div>
+      
+      <div class="col">
+        <div class="form-group">
+          <label for="occupation">Occupation (Optional)</label>
+          <input 
+            type="text" 
+            id="occupation" 
+            name="occupation" 
+            class="form-control" 
+            value="<%= character.occupation || '' %>" 
+            placeholder="e.g., Doctor, Mechanic, Student, etc."
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </div>
