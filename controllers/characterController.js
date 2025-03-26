@@ -2,8 +2,15 @@ const characterService = require('../services/characterService');
 const teamService = require('../services/teamService');
 const relationshipService = require('../services/relationshipService');
 const { validationResult } = require('express-validator');
-const { Character, CharacterGallery, User } = require('../models');
-
+const { 
+  Character, 
+  CharacterGallery, 
+  User, 
+  Relationship,
+  RelationshipGallery,
+  RelationshipPlaylist,
+  Sequelize
+} = require('../models');
 // Get all characters (public)
 exports.getAllCharacters = async (req, res) => {
   try {
