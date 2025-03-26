@@ -2,13 +2,17 @@
 <div class="d-flex justify-between align-center mb-4">
   <h1>Relationship Details</h1>
   <div>
-    <% if (relationship.character1.userId === user.id) { %>
+    <% if (relationship.character1.userId === user?.id) { %>
       <a href="/characters/<%= relationship.character1.id %>/relationships" class="btn btn-outline mr-2">
         <i class="fas fa-arrow-left"></i> Back to <%= relationship.character1.name %>'s Relationships
       </a>
-    <% } else { %>
+    <% } else if (relationship.character2.userId === user?.id) { %>
       <a href="/characters/<%= relationship.character2.id %>/relationships" class="btn btn-outline mr-2">
         <i class="fas fa-arrow-left"></i> Back to <%= relationship.character2.name %>'s Relationships
+      </a>
+    <% } else { %>
+      <a href="/characters" class="btn btn-outline mr-2">
+        <i class="fas fa-arrow-left"></i> Back to Characters
       </a>
     <% } %>
   </div>
@@ -58,7 +62,7 @@
       </div>
     </div>
     
-    <% if (relationship.isCharacter1Owner || relationship.isCharacter2Owner) { %>
+    <% if (isCharacter1Owner || isCharacter2Owner) { %>
       <div class="relationship-actions mt-3 text-right">
         <button class="btn btn-sm" onclick="showEditRelationshipModal()">
           <i class="fas fa-edit"></i> Edit Relationship
@@ -184,9 +188,9 @@
             <% }); %>
           </div>
           
-          <% if ((relationship.isCharacter1Owner || relationship.isCharacter2Owner) && relationship.isApproved) { %>
+          <% if ((isCharacter1Owner || isCharacter2Owner) && relationship.isApproved) { %>
             <div class="text-center mt-3">
-              <% if (relationship.isCharacter1Owner) { %>
+              <% if (isCharacter1Owner) { %>
                 <a href="/messages/<%= relationship.character1.id %>/<%= relationship.character2.id %>" class="btn btn-sm">
                   <i class="fas fa-comment"></i> View Full Conversation
                 </a>
@@ -196,15 +200,17 @@
                 </a>
               <% } %>
             </div>
-          <% } %>
+          <% } else if (user && (relationship.character1.userId === user.id || relationship.character2.userId === user.id)) { %>
+            <!-- Show message for non-owners who are logged in -->
+            <div class="text-center mt-3">
+              <p class="text-muted">You need to have a relationship with this character to view their messages.</p>
+            </div>
+          <% } %>          
         <% } else { %>
-          <p class="text-center" style="color: rgba(255, 255, 255, 0.5); padding: 20px;">
-            No recent messages between these characters.
-          </p>
           
-          <% if ((relationship.isCharacter1Owner || relationship.isCharacter2Owner) && relationship.isApproved) { %>
+          <% if ((isCharacter1Owner || isCharacter2Owner) && relationship.isApproved) { %>
             <div class="text-center">
-              <% if (relationship.isCharacter1Owner) { %>
+              <% if (isCharacter1Owner) { %>
                 <a href="/messages/<%= relationship.character1.id %>/<%= relationship.character2.id %>" class="btn">
                   <i class="fas fa-comment"></i> Start a Conversation
                 </a>

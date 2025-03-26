@@ -1,6 +1,6 @@
 // services/relationshipService.js
 
-const { Relationship, Character, User, Sequelize } = require('../models');
+const { Relationship, Character, User, Message, Thread, Sequelize } = require('../models');
 const Op = Sequelize.Op;
 const discordNotifier = require('../utils/discordNotifier');
 
@@ -544,7 +544,7 @@ exports.checkRelationshipExists = async (character1Id, character2Id) => {
  * @param {number} userId - User ID for authorization
  * @returns {Object} Relationship details
  */
-exports.getRelationshipDetails = async (relationshipId, userId) => {
+exports.getRelationshipDetails = async (relationshipId, userId = null) => {
   // Find relationship with characters and users
   const relationship = await Relationship.findByPk(relationshipId, {
     include: [
@@ -571,65 +571,76 @@ exports.getRelationshipDetails = async (relationshipId, userId) => {
   }
   
   // Check if user owns one of the characters in the relationship
-  const isCharacter1Owner = relationship.character1.userId === userId;
-  const isCharacter2Owner = relationship.character2.userId === userId;
-  
-  if (!isCharacter1Owner && !isCharacter2Owner) {
-    throw new Error('Not authorized to view this relationship');
-  }
+  // Only do this check if userId is provided, otherwise allow viewing
+  const isCharacter1Owner = userId ? relationship.character1.userId === userId : false;
+  const isCharacter2Owner = userId ? relationship.character2.userId === userId : false;
   
   // Get any shared threads between the characters
-  const sharedThreads = await Thread.findAll({
-    include: [
-      {
-        model: Character,
-        as: 'threadTags',
-        where: {
-          id: {
-            [Op.in]: [relationship.character1Id, relationship.character2Id]
-          }
-        }
-      },
-      {
-        model: Post,
-        as: 'posts',
-        attributes: ['id']
-      },
-      {
-        model: User,
-        as: 'creator',
-        attributes: ['username']
-      }
-    ],
-    order: [['updatedAt', 'DESC']],
-    limit: 5
-  });
+  const { Thread, Post, User: UserModel } = require('../models'); // Import Thread from models
   
-  // Get recent messages between the two characters
-  const recentMessages = await Message.findAll({
-    where: {
-      [Op.or]: [
+  let sharedThreads = [];
+  try {
+    sharedThreads = await Thread.findAll({
+      include: [
         {
-          senderId: relationship.character1Id,
-          receiverId: relationship.character2Id
+          model: Character,
+          as: 'threadTags',
+          where: {
+            id: {
+              [Sequelize.Op.in]: [relationship.character1Id, relationship.character2Id]
+            }
+          }
         },
         {
-          senderId: relationship.character2Id,
-          receiverId: relationship.character1Id
+          model: Post,
+          as: 'posts',
+          attributes: ['id']
+        },
+        {
+          model: UserModel,
+          as: 'creator',
+          attributes: ['username']
         }
       ],
-      isDeleted: false
-    },
-    include: [
-      {
-        model: Character,
-        as: 'sender',
-        attributes: ['id', 'name', 'avatarUrl']
-      }
-    ],
-    order: [['createdAt', 'DESC']],
-    limit: 5
-  });
+      order: [['updatedAt', 'DESC']],
+      limit: 5
+    });
+  } catch (error) {
+    console.error('Error fetching shared threads:', error);
+    // Continue without threads data
+  }
+  
+  // Get recent messages between the two characters
+  let recentMessages = [];
+  try {
+    recentMessages = await Message.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            senderId: relationship.character1Id,
+            receiverId: relationship.character2Id
+          },
+          {
+            senderId: relationship.character2Id,
+            receiverId: relationship.character1Id
+          }
+        ],
+        isDeleted: false
+      },
+      include: [
+        {
+          model: Character,
+          as: 'sender',
+          attributes: ['id', 'name', 'avatarUrl']
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: 5
+    });
+  } catch (error) {
+    console.error('Error fetching recent messages:', error);
+    // Continue without messages data
+  }
   
   // Format relationship data
   return {
