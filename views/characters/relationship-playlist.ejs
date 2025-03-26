@@ -1,0 +1,329 @@
+<!-- views/characters/relationship-playlist.ejs -->
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Relationship Playlist</h1>
+  <a href="/characters/relationships/view/<%= relationship.id %>" class="btn btn-outline">
+    <i class="ph-arrow-left-duotone"></i> Back to Relationship
+  </a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h3 class="mb-0"><%= relationship.character1.name %> & <%= relationship.character2.name %>'s Playlist</h3>
+  </div>
+  <div class="card-body">
+    <% if (typeof playlistSongs !== 'undefined' && playlistSongs.length > 0) { %>
+      <div class="playlist-container">
+        <% playlistSongs.forEach(song => { %>
+          <div class="playlist-item">
+            <div class="song-info">
+              <% if (song.albumCoverUrl) { %>
+                <div class="album-cover">
+                  <img src="<%= song.albumCoverUrl %>" alt="<%= song.albumName || song.songTitle %>">
+                </div>
+              <% } else { %>
+                <div class="album-cover album-cover-placeholder">
+                  <i class="ph-music-notes-duotone"></i>
+                </div>
+              <% } %>
+              
+              <div class="song-details">
+                <div class="song-title"><%= song.songTitle %></div>
+                <div class="song-artist"><%= song.artistName %></div>
+                <% if (song.albumName) { %>
+                  <div class="song-album"><%= song.albumName %></div>
+                <% } %>
+                <div class="song-uploader">
+                  <small>Added by <%= song.uploader.username %></small>
+                </div>
+              </div>
+            </div>
+            
+            <% if (song.description) { %>
+              <div class="song-description">
+                "<%= song.description %>"
+              </div>
+            <% } %>
+            
+            <div class="song-actions">
+              <% if (song.songUrl) { %>
+                <a href="<%= song.songUrl %>" target="_blank" class="btn btn-sm">
+                  <i class="ph-play-duotone"></i> Listen
+                </a>
+              <% } %>
+              
+              <form action="/characters/relationships/<%= relationship.id %>/playlist/<%= song.id %>?_method=DELETE" method="POST" style="display: inline;">
+                <button type="submit" class="btn btn-sm btn-danger delete-confirm">
+                  <i class="ph-trash-duotone"></i> Remove
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="text-center p-4">
+        <p class="mb-3">No songs have been added to the playlist yet.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (isCharacter1Owner || isCharacter2Owner) { %>
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Add Song to Playlist</h3>
+    </div>
+    <div class="card-body">
+      <form action="/characters/relationships/<%= relationship.id %>/playlist" method="POST">
+        <div class="row">
+          <div class="col">
+            <div class="form-group">
+              <label for="songTitle">Song Title *</label>
+              <input 
+                type="text" 
+                id="songTitle" 
+                name="songTitle" 
+                class="form-control" 
+                placeholder="Enter song title"
+                required
+              />
+            </div>
+          </div>
+          
+          <div class="col">
+            <div class="form-group">
+              <label for="artistName">Artist Name *</label>
+              <input 
+                type="text" 
+                id="artistName" 
+                name="artistName" 
+                class="form-control" 
+                placeholder="Enter artist name"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col">
+            <div class="form-group">
+              <label for="albumName">Album Name (Optional)</label>
+              <input 
+                type="text" 
+                id="albumName" 
+                name="albumName" 
+                class="form-control" 
+                placeholder="Enter album name"
+              />
+            </div>
+          </div>
+          
+          <div class="col">
+            <div class="form-group">
+              <label for="albumCoverUrl">Album Cover URL (Optional)</label>
+              <input 
+                type="url" 
+                id="albumCoverUrl" 
+                name="albumCoverUrl" 
+                class="form-control" 
+                placeholder="https://example.com/album-cover.jpg"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="songUrl">Song URL (Optional)</label>
+          <input 
+            type="url" 
+            id="songUrl" 
+            name="songUrl" 
+            class="form-control" 
+            placeholder="https://music-service.com/song-link"
+          />
+          <small style="color: rgba(255, 255, 255, 0.5);">Link to streaming service, YouTube, etc.</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Why This Song? (Optional)</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            class="form-control" 
+            rows="3"
+            placeholder="Explain why this song represents this relationship"
+          ></textarea>
+        </div>
+        
+        <div class="form-group text-right">
+          <button type="submit" class="btn">Add to Playlist</button>
+        </div>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<style>
+  .playlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .playlist-item {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    transition: background-color var(--transition-fast);
+  }
+  
+  .playlist-item:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .song-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .album-cover {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  
+  .album-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .album-cover-placeholder {
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+  }
+  
+  .song-details {
+    flex: 1;
+  }
+  
+  .song-title {
+    font-size: var(--text-lg);
+    font-weight: var(--semibold);
+    margin-bottom: 3px;
+  }
+  
+  .song-artist {
+    font-size: var(--text-base);
+    margin-bottom: 3px;
+  }
+  
+  .song-album {
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    margin-bottom: 3px;
+  }
+  
+  .song-uploader {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .song-description {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--header);
+  }
+  
+  .song-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  #albumCoverPreview {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: 10px;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #albumCoverPreview i {
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  #albumCoverPreview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const albumCoverUrlInput = document.getElementById('albumCoverUrl');
+    
+    if (albumCoverUrlInput) {
+      // Create album cover preview
+      const previewContainer = document.createElement('div');
+      previewContainer.id = 'albumCoverPreview';
+      previewContainer.innerHTML = '<i class="ph-music-notes-duotone"></i>';
+      
+      albumCoverUrlInput.parentNode.appendChild(previewContainer);
+      
+      albumCoverUrlInput.addEventListener('input', function() {
+        previewAlbumCover();
+      });
+    }
+    
+    // Handle delete confirmations
+    const deleteButtons = document.querySelectorAll('.delete-confirm');
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        if (!confirm('Are you sure you want to remove this song from the playlist?')) {
+          e.preventDefault();
+        }
+      });
+    });
+  });
+  
+  // Album cover preview function
+  function previewAlbumCover() {
+    const albumCoverUrl = document.getElementById('albumCoverUrl').value.trim();
+    const previewContainer = document.getElementById('albumCoverPreview');
+    
+    if (albumCoverUrl) {
+      const img = new Image();
+      img.onload = function() {
+        previewContainer.innerHTML = '';
+        previewContainer.appendChild(img);
+      };
+      img.onerror = function() {
+        previewContainer.innerHTML = '<i class="ph-warning-duotone" style="color: var(--danger);"></i>';
+      };
+      img.src = albumCoverUrl;
+    } else {
+      previewContainer.innerHTML = '<i class="ph-music-notes-duotone"></i>';
+    }
+  }
+</script>

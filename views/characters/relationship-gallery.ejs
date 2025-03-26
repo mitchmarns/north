@@ -278,41 +278,7 @@
         saveOrderBtn.style.display = 'inline-block';
         cancelOrderBtn.style.display = 'inline-block';
         
-        // Set up drag and drop for gallery items
-        galleryItems.forEach(item => {
-          item.setAttribute('draggable', 'true');
-          
-          item.addEventListener('dragstart', function() {
-            draggedItem = item;
-            setTimeout(() => {
-              item.classList.add('dragging');
-            }, 0);
-          });
-          
-          item.addEventListener('dragend', function() {
-            item.classList.remove('dragging');
-            draggedItem = null;
-          });
-          
-          item.addEventListener('dragover', function(e) {
-            e.preventDefault();
-          });
-          
-          item.addEventListener('drop', function(e) {
-            e.preventDefault();
-            if (draggedItem !== item) {
-              const allItems = [...gallery.querySelectorAll('.gallery-item')];
-              const draggedIndex = allItems.indexOf(draggedItem);
-              const droppedIndex = allItems.indexOf(item);
-              
-              if (draggedIndex < droppedIndex) {
-                gallery.insertBefore(draggedItem, item.nextSibling);
-              } else {
-                gallery.insertBefore(draggedItem, item);
-              }
-            }
-          });
-        });
+        enableGallerySorting();
       });
     }
     
@@ -362,4 +328,44 @@
       });
     });
   });
+  
+  // Function for enabling drag and drop sorting in the gallery
+  function enableGallerySorting() {
+    const galleryContainer = document.querySelector('.image-gallery');
+    let draggedItem = null;
+    
+    // Make items draggable
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.setAttribute('draggable', 'true');
+      
+      item.addEventListener('dragstart', function() {
+        draggedItem = this;
+        setTimeout(() => this.classList.add('dragging'), 0);
+      });
+      
+      item.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+        draggedItem = null;
+      });
+      
+      item.addEventListener('dragover', e => e.preventDefault());
+      
+      item.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (draggedItem !== this) {
+          // Get all items
+          const allItems = [...galleryContainer.querySelectorAll('.gallery-item')];
+          const draggedIndex = allItems.indexOf(draggedItem);
+          const droppedIndex = allItems.indexOf(this);
+          
+          // Reorder in DOM
+          if (draggedIndex < droppedIndex) {
+            galleryContainer.insertBefore(draggedItem, this.nextSibling);
+          } else {
+            galleryContainer.insertBefore(draggedItem, this);
+          }
+        }
+      });
+    });
+  }
 </script>

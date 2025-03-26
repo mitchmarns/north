@@ -564,25 +564,39 @@ exports.deleteGalleryImage = async (req, res) => {
 exports.updateGalleryOrder = async (req, res) => {
   try {
     const { imageIds } = req.body;
-    const characterId = req.params.id;
+    const relationshipId = req.params.relationshipId;
     
-    // Find character
-    const character = await Character.findByPk(characterId);
+    // Find relationship
+    const relationship = await Relationship.findByPk(relationshipId, {
+      include: [
+        {
+          model: Character,
+          as: 'character1'
+        },
+        {
+          model: Character,
+          as: 'character2'
+        }
+      ]
+    });
     
-    if (!character) {
-      return res.status(404).json({ success: false, message: 'Character not found' });
+    if (!relationship) {
+      return res.status(404).json({ success: false, message: 'Relationship not found' });
     }
     
-    // Check if user owns the character
-    if (character.userId !== req.user.id) {
+    // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
     
     // Update order for each image
     for (let i = 0; i < imageIds.length; i++) {
-      await CharacterGallery.update(
+      await RelationshipGallery.update(
         { displayOrder: i },
-        { where: { id: imageIds[i], characterId } }
+        { where: { id: imageIds[i], relationshipId } }
       );
     }
     
@@ -847,26 +861,39 @@ exports.getRelationshipGallery = async (req, res) => {
       return res.redirect('/characters/my-characters');
     }
     
-    // Check if user owns one of the characters
+    // Check if user owns one of the characters in the relationship
     const isCharacter1Owner = relationship.character1.userId === req.user.id;
     const isCharacter2Owner = relationship.character2.userId === req.user.id;
     
     if (!isCharacter1Owner && !isCharacter2Owner) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
+      req.flash('error_msg', 'Not authorized to view this relationship gallery');
+      return res.redirect('/characters/my-characters');
     }
     
-    // Update order for each image
-    for (let i = 0; i < imageIds.length; i++) {
-      await RelationshipGallery.update(
-        { displayOrder: i },
-        { where: { id: imageIds[i], relationshipId } }
-      );
-    }
+    // Get gallery images
+    const galleryImages = await RelationshipGallery.findAll({
+      where: { relationshipId },
+      include: [
+        {
+          model: User,
+          as: 'uploader',
+          attributes: ['username']
+        }
+      ],
+      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
+    });
     
-    return res.json({ success: true });
+    res.render('characters/relationship-gallery', {
+      title: `Gallery: ${relationship.character1.name} & ${relationship.character2.name}`,
+      relationship,
+      galleryImages,
+      isCharacter1Owner,
+      isCharacter2Owner
+    });
   } catch (error) {
-    console.error('Error updating gallery order:', error);
-    return res.status(500).json({ success: false, message: 'An error occurred' });
+    console.error('Error fetching relationship gallery:', error);
+    req.flash('error_msg', 'An error occurred while fetching the gallery');
+    res.redirect('/characters/my-characters');
   }
 };
 
@@ -1050,40 +1077,6 @@ exports.deletePlaylistSong = async (req, res) => {
     req.flash('error_msg', 'An error occurred while deleting the song');
     res.redirect(`/characters/relationships/${req.params.relationshipId}/playlist`);
   }
-}; in the relationship
-    const isCharacter1Owner = relationship.character1.userId === req.user.id;
-    const isCharacter2Owner = relationship.character2.userId === req.user.id;
-    
-    if (!isCharacter1Owner && !isCharacter2Owner) {
-      req.flash('error_msg', 'Not authorized to view this relationship gallery');
-      return res.redirect('/characters/my-characters');
-    }
-    
-    // Get gallery images
-    const galleryImages = await RelationshipGallery.findAll({
-      where: { relationshipId },
-      include: [
-        {
-          model: User,
-          as: 'uploader',
-          attributes: ['username']
-        }
-      ],
-      order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']]
-    });
-    
-    res.render('characters/relationship-gallery', {
-      title: `Gallery: ${relationship.character1.name} & ${relationship.character2.name}`,
-      relationship,
-      galleryImages,
-      isCharacter1Owner,
-      isCharacter2Owner
-    });
-  } catch (error) {
-    console.error('Error fetching relationship gallery:', error);
-    req.flash('error_msg', 'An error occurred while fetching the gallery');
-    res.redirect('/characters/my-characters');
-  }
 };
 
 // Add gallery image form
@@ -1251,6 +1244,7 @@ exports.deleteGalleryImage = async (req, res) => {
 };
 
 // Update gallery image order
+// Update gallery image order
 exports.updateGalleryOrder = async (req, res) => {
   try {
     const { imageIds } = req.body;
@@ -1275,4 +1269,25 @@ exports.updateGalleryOrder = async (req, res) => {
     }
     
     // Check if user owns one of the characters
+    const isCharacter1Owner = relationship.character1.userId === req.user.id;
+    const isCharacter2Owner = relationship.character2.userId === req.user.id;
+    
+    if (!isCharacter1Owner && !isCharacter2Owner) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    
+    // Update order for each image
+    for (let i = 0; i < imageIds.length; i++) {
+      await RelationshipGallery.update(
+        { displayOrder: i },
+        { where: { id: imageIds[i], relationshipId } }
+      );
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating gallery order:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
   
