@@ -3,16 +3,18 @@ const { Sequelize } = require('sequelize');
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/database')[env];
 
-// Initialize Sequelize with MySQL database
+// Initialize Sequelize with Oracle database
 const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
+  process.env.DB_NAME,     // Database name
+  process.env.DB_USER,     // Username
+  process.env.DB_PASSWORD, // Password
   {
-    ...config,
-    dialect: 'mysql',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 1521,
+    dialect: 'oracle',
+    dialectModule: require('oracledb'),
     dialectOptions: {
-      socketPath: '/var/run/mysqld/mysqld.sock'
+      connectString: `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
     },
     pool: {
       max: 15,
@@ -21,9 +23,15 @@ const sequelize = new Sequelize(
       acquire: 30000, 
       evict: 30000  
     },
-    logging: process.env.NODE_ENV === 'production' ? false : console.log
+    logging: process.env.NODE_ENV === 'production' ? false : console.log,
+    define: {
+      // Use Oracle-compatible timestamps
+      timestamps: true,
+      underscored: true  // Use snake_case for automatically added attributes
+    }
   }
 );
+
 
 // Import models
 const User = require('./user')(sequelize, Sequelize.DataTypes);
