@@ -33,7 +33,7 @@
                         <%= rel.otherCharacter.name.charAt(0).toUpperCase() %>
                       </div>
                     <% } %>
-            }
+                    
                     <div style="flex: 1;">
                       <h4 class="mb-0">
                         <a href="/characters/<%= rel.otherCharacter.id %>"><%= rel.otherCharacter.name %></a>
@@ -103,6 +103,8 @@
                   </div>
                 <% } %>
               </div>
+            <% }); // CLOSED THE FOREACH LOOP HERE %>
+          </div>
         <% } else { %>
           <p class="text-center">No relationships have been defined yet.</p>
         <% } %>
